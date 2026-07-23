@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "naked-eye",
+  "version": "2026.07.1",
+  "downloadUrl": "/api/astronomy/catalogs/naked-eye/2026.07.1",
+  "mediaType": "application/json",
+  "contentEncoding": "gzip",
+  "sha256": "da22697b181f4ecc9e918cb5738545f40b4dfb14283341532dc629c0c19531a0",
+  "contentLength": 568846,
+  "starCount": 8870,
+  "constellationCount": 88,
+  "sources": [
+    {
+      "catalog": "Hipparcos Catalogue",
+      "release": "I/239 (ESA 1997)",
+      "url": "https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239",
+      "credit": "ESA, 1997, The Hipparcos and Tycho Catalogues"
+    },
+    {
+      "catalog": "Hipparcos-2",
+      "release": "I/311 (van Leeuwen 2007)",
+      "url": "https://cdsarc.cds.unistra.fr/viz-bin/cat/I/311",
+      "credit": "F. van Leeuwen, 2007, Hipparcos, the New Reduction"
+    },
+    {
+      "catalog": "Gaia",
+      "release": "DR3",
+      "url": "https://www.cosmos.esa.int/web/gaia/dr3",
+      "credit": "ESA/Gaia/DPAC"
+    },
+    {
+      "catalog": "D3-Celestial constellation geometry",
+      "release": "7e720a3de062059d4c5400a379146a601d9010e0",
+      "url": "https://github.com/ofrohn/d3-celestial/tree/7e720a3de062059d4c5400a379146a601d9010e0",
+      "credit": "Olaf Frohn and D3-Celestial contributors (BSD-3-Clause)"
+    }
+  ],
+  "publishedAt": "2026-07-23T00:00:00Z"
+}

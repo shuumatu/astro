@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -17,9 +18,15 @@ class CatalogApplicationTest {
     private MockMvc mockMvc;
 
     @Test
-    void startsWithoutAPublishedCatalogAndReportsItAsUnavailable() throws Exception {
+    void servesThePublishedManifestAndCatalog() throws Exception {
         mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/manifest"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value("CATALOG_UNAVAILABLE"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value("2026.07.1"))
+                .andExpect(jsonPath("$.starCount").value(8870));
+
+        mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/2026.07.1"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Encoding", "gzip"))
+                .andExpect(header().exists("ETag"));
     }
 }

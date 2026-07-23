@@ -3,6 +3,10 @@ info:
   title: Astro Astronomy Catalog API
   version: 0.1.0
   description: Versioned catalog discovery for browser-side sky chart calculations.
+servers:
+  - url: /
+    description: Current host through the API gateway
+security: []
 paths:
   /api/astronomy/catalogs/naked-eye/manifest:
     get:
@@ -26,6 +30,53 @@ paths:
                 $ref: "#/components/schemas/CatalogManifest"
         "503":
           description: No validated catalog has been published yet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/astronomy/catalogs/naked-eye/{version}:
+    get:
+      operationId: getNakedEyeCatalog
+      summary: Download an immutable version of the naked-eye catalog
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+      responses:
+        "200":
+          description: Gzip-compressed catalog bytes.
+          headers:
+            Content-Encoding:
+              schema:
+                type: string
+                const: gzip
+            Content-Length:
+              schema:
+                type: integer
+                minimum: 1
+            Cache-Control:
+              schema:
+                type: string
+              description: Public immutable caching for the versioned resource.
+            ETag:
+              schema:
+                type: string
+              description: SHA-256 of the encoded response bytes, surrounded by quotes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkyCatalog"
+        "404":
+          description: The requested catalog version is not published.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: The published asset failed integrity validation.
           content:
             application/json:
               schema:
@@ -104,6 +155,142 @@ components:
         credit:
           type: string
           minLength: 1
+    SkyCatalog:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - catalogId
+        - referenceFrame
+        - visualMagnitudeLimit
+        - stars
+        - constellations
+      properties:
+        schemaVersion:
+          type: integer
+          const: 1
+        catalogId:
+          type: string
+          const: naked-eye
+        referenceFrame:
+          type: string
+          const: ICRS
+        visualMagnitudeLimit:
+          type: number
+          const: 6.5
+        stars:
+          type: array
+          items:
+            $ref: "#/components/schemas/StarRecord"
+        constellations:
+          type: array
+          minItems: 88
+          maxItems: 88
+          items:
+            $ref: "#/components/schemas/ConstellationRecord"
+    StarRecord:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - hipId
+        - gaiaDr3Id
+        - tycho2Id
+        - hdId
+        - raDeg
+        - decDeg
+        - epochYear
+        - pmRaMasPerYear
+        - pmDecMasPerYear
+        - parallaxMas
+        - visualMagnitude
+        - colorIndex
+        - spectralType
+        - astrometrySource
+      properties:
+        id:
+          type: string
+          pattern: "^HIP:[1-9][0-9]*$"
+        hipId:
+          type: integer
+          minimum: 1
+        gaiaDr3Id:
+          type: [string, "null"]
+          pattern: "^[0-9]+$"
+        tycho2Id:
+          type: [string, "null"]
+          pattern: "^[0-9]+-[0-9]+-[0-9]+$"
+        hdId:
+          type: [integer, "null"]
+          minimum: 1
+        raDeg:
+          type: number
+          minimum: 0
+          exclusiveMaximum: 360
+        decDeg:
+          type: number
+          minimum: -90
+          maximum: 90
+        epochYear:
+          type: number
+          enum: [1991.25, 2016]
+        pmRaMasPerYear:
+          type: [number, "null"]
+          description: Proper motion in right ascension, mu_alpha*cos(delta), in mas/year.
+        pmDecMasPerYear:
+          type: [number, "null"]
+        parallaxMas:
+          type: [number, "null"]
+        visualMagnitude:
+          type: number
+          maximum: 6.5
+          description: Johnson V magnitude from the original Hipparcos catalogue.
+        colorIndex:
+          type: [number, "null"]
+          description: Johnson B-V colour index.
+        spectralType:
+          type: [string, "null"]
+        astrometrySource:
+          type: string
+          enum: [GAIA_DR3, HIPPARCOS_2, HIPPARCOS]
+    ConstellationRecord:
+      type: object
+      additionalProperties: false
+      required: [id, rank, labelPositions, lines]
+      properties:
+        id:
+          type: string
+          pattern: "^[A-Z][A-Za-z]{2}$"
+          description: Stable three-letter IAU constellation abbreviation used as an i18n key.
+        rank:
+          type: integer
+          minimum: 1
+          maximum: 3
+        labelPositions:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/EquatorialCoordinate"
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: array
+            minItems: 2
+            items:
+              $ref: "#/components/schemas/EquatorialCoordinate"
+    EquatorialCoordinate:
+      type: array
+      description: Right ascension and declination in ICRS degrees.
+      prefixItems:
+        - type: number
+          minimum: 0
+          exclusiveMaximum: 360
+        - type: number
+          minimum: -90
+          maximum: 90
+      minItems: 2
+      maxItems: 2
     ApiError:
       type: object
       additionalProperties: false
@@ -111,4 +298,4 @@ components:
       properties:
         code:
           type: string
-          enum: [CATALOG_UNAVAILABLE]
+          enum: [CATALOG_UNAVAILABLE, CATALOG_NOT_FOUND]

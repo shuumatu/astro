@@ -6,6 +6,7 @@ import org.springframework.core.io.Resource;
 @ConfigurationProperties(prefix = "astro.catalog.naked-eye")
 public class NakedEyeCatalogProperties {
     private Resource manifestLocation;
+    private Resource assetLocation;
 
     public Resource getManifestLocation() {
         return manifestLocation;
@@ -13,5 +14,13 @@ public class NakedEyeCatalogProperties {
 
     public void setManifestLocation(Resource manifestLocation) {
         this.manifestLocation = manifestLocation;
+    }
+
+    public Resource getAssetLocation() {
+        return assetLocation;
+    }
+
+    public void setAssetLocation(Resource assetLocation) {
+        this.assetLocation = assetLocation;
     }
 }

@@ -18,8 +18,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class CatalogControllerTest {
     private final CatalogManifestService service = mock(CatalogManifestService.class);
+    private final CatalogAssetService assetService = mock(CatalogAssetService.class);
     private final MockMvc mockMvc = MockMvcBuilders
-            .standaloneSetup(new CatalogController(service))
+            .standaloneSetup(new CatalogController(service, assetService))
             .setControllerAdvice(new CatalogExceptionHandler())
             .build();
 
@@ -47,6 +48,32 @@ class CatalogControllerTest {
                 .andExpect(jsonPath("$.code").value("CATALOG_UNAVAILABLE"));
     }
 
+    @Test
+    void returnsAnImmutableEncodedCatalog() throws Exception {
+        CatalogManifest manifest = manifest();
+        byte[] content = new byte[]{31, -117, 8};
+        when(assetService.getAsset(manifest.version())).thenReturn(new CatalogAsset(manifest, content));
+
+        mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/" + manifest.version()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(content().bytes(content))
+                .andExpect(header().string("Content-Encoding", "gzip"))
+                .andExpect(header().string("Content-Length", "1024"))
+                .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"))
+                .andExpect(header().string("ETag", '"' + manifest.sha256() + '"'));
+    }
+
+    @Test
+    void returnsAStableErrorCodeForAnUnknownVersion() throws Exception {
+        when(assetService.getAsset("unknown"))
+                .thenThrow(new CatalogNotFoundException("Naked-eye catalog version not found: unknown"));
+
+        mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/unknown"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATALOG_NOT_FOUND"));
+    }
+
     private CatalogManifest manifest() {
         return new CatalogManifest(
                 1,
@@ -54,7 +81,7 @@ class CatalogControllerTest {
                 "test-catalog-1",
                 URI.create("/api/astronomy/catalogs/naked-eye/test-catalog-1"),
                 "application/json",
-                "br",
+                "gzip",
                 "0".repeat(64),
                 1024,
                 9000,

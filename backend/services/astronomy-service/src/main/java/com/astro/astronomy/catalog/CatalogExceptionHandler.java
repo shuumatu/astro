@@ -12,4 +12,10 @@ public class CatalogExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(new ApiError("CATALOG_UNAVAILABLE"));
     }
+
+    @ExceptionHandler(CatalogNotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(CatalogNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("CATALOG_NOT_FOUND"));
+    }
 }

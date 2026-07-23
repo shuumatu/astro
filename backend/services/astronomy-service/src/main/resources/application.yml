@@ -7,6 +7,7 @@ astro:
   catalog:
     naked-eye:
       manifest-location: classpath:catalogs/naked-eye/manifest.json
+      asset-location: classpath:catalogs/naked-eye/catalog.json.gz
 management:
   endpoints:
     web:
