@@ -1,0 +1,35 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: identity-service
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/identity/**
+        - id: content-service
+          uri: ${CONTENT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/content/**
+        - id: learning-service
+          uri: ${LEARNING_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/learning/**
+        - id: astronomy-service
+          uri: ${ASTRONOMY_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/astronomy/**
+        - id: media-service
+          uri: ${MEDIA_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/media/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
