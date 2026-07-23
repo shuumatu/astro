@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: astronomy-service
+astro:
+  catalog:
+    naked-eye:
+      manifest-location: classpath:catalogs/naked-eye/manifest.json
 management:
   endpoints:
     web:

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "naked-eye",
+  "version": "test-catalog-1",
+  "downloadUrl": "/api/astronomy/catalogs/naked-eye/test-catalog-1",
+  "mediaType": "application/json",
+  "contentEncoding": "br",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "contentLength": 1024,
+  "starCount": 9000,
+  "constellationCount": 88,
+  "sources": [
+    {
+      "catalog": "Gaia",
+      "release": "DR3",
+      "url": "https://www.cosmos.esa.int/web/gaia/dr3",
+      "credit": "ESA/Gaia/DPAC"
+    }
+  ],
+  "publishedAt": "2026-07-23T00:00:00Z"
+}

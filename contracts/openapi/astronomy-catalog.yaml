@@ -1,0 +1,114 @@
+openapi: 3.1.0
+info:
+  title: Astro Astronomy Catalog API
+  version: 0.1.0
+  description: Versioned catalog discovery for browser-side sky chart calculations.
+paths:
+  /api/astronomy/catalogs/naked-eye/manifest:
+    get:
+      operationId: getNakedEyeCatalogManifest
+      summary: Get the currently published naked-eye catalog
+      responses:
+        "200":
+          description: The published catalog manifest.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Requires revalidation so clients discover a newly published version.
+            ETag:
+              schema:
+                type: string
+              description: Changes when the published catalog version changes.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogManifest"
+        "503":
+          description: No validated catalog has been published yet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+components:
+  schemas:
+    CatalogManifest:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - catalogId
+        - version
+        - downloadUrl
+        - mediaType
+        - contentEncoding
+        - sha256
+        - contentLength
+        - starCount
+        - constellationCount
+        - sources
+        - publishedAt
+      properties:
+        schemaVersion:
+          type: integer
+          minimum: 1
+        catalogId:
+          type: string
+          const: naked-eye
+        version:
+          type: string
+          minLength: 1
+        downloadUrl:
+          type: string
+          format: uri-reference
+        mediaType:
+          type: string
+          const: application/json
+        contentEncoding:
+          type: string
+          enum: [identity, br, gzip]
+        sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        contentLength:
+          type: integer
+          minimum: 1
+        starCount:
+          type: integer
+          minimum: 1
+        constellationCount:
+          type: integer
+          minimum: 1
+        sources:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CatalogSource"
+        publishedAt:
+          type: string
+          format: date-time
+    CatalogSource:
+      type: object
+      additionalProperties: false
+      required: [catalog, release, url, credit]
+      properties:
+        catalog:
+          type: string
+          minLength: 1
+        release:
+          type: string
+          minLength: 1
+        url:
+          type: string
+          format: uri
+        credit:
+          type: string
+          minLength: 1
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code:
+          type: string
+          enum: [CATALOG_UNAVAILABLE]
