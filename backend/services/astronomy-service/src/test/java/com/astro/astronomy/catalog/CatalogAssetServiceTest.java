@@ -60,7 +60,7 @@ class CatalogAssetServiceTest {
 
     private CatalogManifest manifest(long contentLength, String sha256) {
         return new CatalogManifest(
-                1,
+                2,
                 "naked-eye",
                 "test-catalog-1",
                 URI.create("/api/astronomy/catalogs/naked-eye/test-catalog-1"),
@@ -71,7 +71,6 @@ class CatalogAssetServiceTest {
                 "1".repeat(64),
                 4096,
                 9000,
-                88,
                 List.of(new CatalogSource(
                         "Gaia",
                         "DR3",

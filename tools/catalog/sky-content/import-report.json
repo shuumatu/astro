@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "importedAt": "2026-07-24",
+  "upstreams": [
+    {
+      "id": "stellarium-skycultures",
+      "version": "014fbb5e59233d133c22f9811af96b67d05a95c9",
+      "url": "https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9"
+    },
+    {
+      "id": "d3-celestial-boundaries",
+      "version": "7e720a3de062059d4c5400a379146a601d9010e0",
+      "url": "https://raw.githubusercontent.com/ofrohn/d3-celestial/7e720a3de062059d4c5400a379146a601d9010e0/data/constellations.bounds.json"
+    },
+    {
+      "id": "iau-wgsn",
+      "version": "retrieved-2026-07-24",
+      "url": "https://iauarchive.eso.org/public/themes/naming_stars/",
+      "snapshotSha256": "67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d"
+    }
+  ],
+  "counts": {
+    "chinese": {
+      "starNameRecords": 3021,
+      "figures": 312,
+      "groups": 5,
+      "regions": 0,
+      "omittedFiguresWithoutHipPaths": 6
+    },
+    "western": {
+      "starNameRecords": 338,
+      "officialIauNames": 338,
+      "unmatchedIauNames": 110,
+      "figures": 88,
+      "groups": 1,
+      "regions": 88,
+      "upstreamBoundaryFeatures": 89
+    },
+    "supplementalHipparcosIds": 230
+  },
+  "modifications": [
+    "Excluded Stellarium illustrations, thumbnails and long-form mythology.",
+    "Converted Stellarium integer HIP paths to HIP:<id> object references.",
+    "Expanded Chinese generated star names into explicit zh-CN and zh-TW records.",
+    "Added explicit searchable aliases 织女星 and 織女星 for HIP:91262.",
+    "Omitted Chinese figures with no HIP path; their count is recorded above.",
+    "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
+    "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
+    "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist."
+  ]
+}

@@ -21,12 +21,27 @@ class CatalogApplicationTest {
     void servesThePublishedManifestAndCatalog() throws Exception {
         mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/manifest"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.version").value("2026.07.1"))
+                .andExpect(jsonPath("$.version").value("2026.07.2"))
                 .andExpect(jsonPath("$.starCount").value(8870));
 
-        mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/2026.07.1"))
+        mockMvc.perform(get("/api/astronomy/catalogs/naked-eye/2026.07.2"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Encoding", "gzip"))
+                .andExpect(header().exists("ETag"));
+    }
+
+    @Test
+    void servesThePublishedSkyContentManifestAndAssets() throws Exception {
+        mockMvc.perform(get("/api/astronomy/catalogs/sky-content/manifest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value("2026.07.1"))
+                .andExpect(jsonPath("$.defaultCultureId").value("chinese-traditional"))
+                .andExpect(jsonPath("$.assets.length()").value(4));
+
+        mockMvc.perform(get("/api/astronomy/catalogs/sky-content/culture-chinese-traditional/2026.07.1"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Encoding", "gzip"))
+                .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"))
                 .andExpect(header().exists("ETag"));
     }
 }

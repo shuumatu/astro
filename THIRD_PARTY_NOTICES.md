@@ -27,9 +27,43 @@ in the Gaia Multilateral Agreement.
 - Release documentation: https://www.cosmos.esa.int/web/gaia/dr3
 - Archive: https://gea.esac.esa.int/archive/
 
-## D3-Celestial constellation geometry
+## Stellarium Sky Cultures: Chinese and Western
 
-Constellation line and label geometry is derived from D3-Celestial at commit
+Chinese star and asterism names, Chinese and Western figure names, and figure line data
+are adapted from Stellarium Sky Cultures at commit
+`014fbb5e59233d133c22f9811af96b67d05a95c9`. The culture descriptions license their
+text and line/data content under CC BY-SA (the upstream files do not identify a version).
+
+The Chinese culture was initially contributed by Karrie Berglund of Digitalis Education
+Solutions based on Hong Kong Space Museum star maps. Sun Shuwei contributed more than
+200 star officials and more than 3,000 stars, primarily based on Yi Shitong's *Chinese
+and Western Contrast Star Chart and Catalogue 1950.0*. Text was reworked by the
+Stellarium team. The Western culture data is credited to the Stellarium team.
+
+This project converts integer HIP paths to stable `HIP:<id>` references, expands
+generated Chinese star names into explicit simplified and traditional records, omits
+figures without HIP paths, and does not import illustrations or long-form mythology.
+The exact import report is `tools/catalog/sky-content/import-report.json`. Redistributors
+must preserve attribution and apply the upstream CC BY-SA terms to adapted culture data.
+
+- Source: https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9
+- Chinese credits and license: https://github.com/Stellarium/stellarium-skycultures/blob/014fbb5e59233d133c22f9811af96b67d05a95c9/chinese/description.md
+- Western credits and license: https://github.com/Stellarium/stellarium-skycultures/blob/014fbb5e59233d133c22f9811af96b67d05a95c9/western/description.md
+- License information: https://creativecommons.org/share-your-work/cclicenses/
+
+## IAU Working Group on Star Names
+
+Official Western star names are taken from the International Astronomical Union Working
+Group on Star Names catalogue snapshot retrieved on 2026-07-24. Names were matched to
+the physical Hipparcos catalogue by the official ICRS coordinates; unmatched entries
+are not published in the initial culture pack.
+
+- Catalogue: https://iauarchive.eso.org/public/themes/naming_stars/
+- Snapshot SHA-256: `67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d`
+
+## D3-Celestial constellation boundaries
+
+IAU constellation boundary geometry is derived from D3-Celestial at commit
 `7e720a3de062059d4c5400a379146a601d9010e0`, Copyright (c) 2015 Olaf Frohn and
 contributors, licensed under the BSD 3-Clause License.
 
@@ -61,6 +95,14 @@ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRU
 HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## Featured star-pattern references
+
+The Summer Triangle and Winter Triangle membership records contain factual HIP
+identifiers cross-checked against EarthSky. No article text or images are redistributed.
+
+- Summer Triangle: https://earthsky.org/favorite-star-patterns/summer-triangle-asterism-vega-deneb-altair/
+- Winter Triangle: https://earthsky.org/favorite-star-patterns/winter-triangle/
 
 ## Astronomy Engine
 

@@ -12,11 +12,10 @@ const OUTPUT_DIR = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye",
 );
 
-const CATALOG_VERSION = "2026.07.1";
-const PUBLISHED_AT = "2026-07-23T00:00:00Z";
+const CATALOG_VERSION = "2026.07.2";
+const PUBLISHED_AT = "2026-07-24T00:00:00Z";
 const VISUAL_MAGNITUDE_LIMIT = 6.5;
 const GAIA_MAGNITUDE_LIMIT = 7.5;
-const D3_CELESTIAL_COMMIT = "7e720a3de062059d4c5400a379146a601d9010e0";
 
 const HIPPARCOS_QUERY = `
 SELECT
@@ -90,8 +89,6 @@ const GAIA_TYCHO_TAP_URL = createTapUrl(
   "https://gea.esac.esa.int/tap-server/tap/sync",
   TYCHO_QUERY,
 );
-const D3_BASE_URL = `https://raw.githubusercontent.com/ofrohn/d3-celestial/${D3_CELESTIAL_COMMIT}/data`;
-
 const inputs = {
   hipparcos: {
     cacheName: "hipparcos-bright.csv",
@@ -113,23 +110,13 @@ const inputs = {
     url: GAIA_TYCHO_TAP_URL,
     validate: (text) => validateCsv(text, ["hip_id", "gaia_dr3_id", "tycho2_id", "tycho_angular_distance"]),
   },
-  constellationLines: {
-    cacheName: "constellations.lines.json",
-    url: `${D3_BASE_URL}/constellations.lines.json`,
-    validate: validateGeoJson,
-  },
-  constellationLabels: {
-    cacheName: "constellations.json",
-    url: `${D3_BASE_URL}/constellations.json`,
-    validate: validateGeoJson,
-  },
 };
 
 async function main() {
   const refresh = process.argv.includes("--refresh");
   await Promise.all([mkdir(CACHE_DIR, { recursive: true }), mkdir(OUTPUT_DIR, { recursive: true })]);
 
-  const [hipparcosText, hipparcos2Text, gaiaText, tychoText, lineText, labelText] = await Promise.all(
+  const [hipparcosText, hipparcos2Text, gaiaText, tychoText] = await Promise.all(
     Object.values(inputs).map((input) => loadInput(input, refresh)),
   );
 
@@ -137,19 +124,16 @@ async function main() {
   const hipparcos2Rows = parseCsv(hipparcos2Text);
   const gaiaRows = parseCsv(gaiaText);
   const tychoRows = parseCsv(tychoText);
-  const constellations = buildConstellations(JSON.parse(lineText), JSON.parse(labelText));
   const stars = buildStars(hipparcosRows, hipparcos2Rows, gaiaRows, tychoRows);
 
   assert(stars.length > 8_000 && stars.length < 10_000, `Unexpected star count: ${stars.length}`);
-  assert(constellations.length === 88, `Expected 88 constellations, got ${constellations.length}`);
 
   const catalog = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogId: "naked-eye",
     referenceFrame: "ICRS",
     visualMagnitudeLimit: VISUAL_MAGNITUDE_LIMIT,
     stars,
-    constellations,
   };
   const catalogBytes = Buffer.from(`${JSON.stringify(catalog)}\n`, "utf8");
   const decodedSha256 = createHash("sha256").update(catalogBytes).digest("hex");
@@ -177,15 +161,9 @@ async function main() {
       url: "https://www.cosmos.esa.int/web/gaia/dr3",
       credit: "ESA/Gaia/DPAC",
     },
-    {
-      catalog: "D3-Celestial constellation geometry",
-      release: D3_CELESTIAL_COMMIT,
-      url: `https://github.com/ofrohn/d3-celestial/tree/${D3_CELESTIAL_COMMIT}`,
-      credit: "Olaf Frohn and D3-Celestial contributors (BSD-3-Clause)",
-    },
   ];
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogId: "naked-eye",
     version: CATALOG_VERSION,
     downloadUrl: `/api/astronomy/catalogs/naked-eye/${CATALOG_VERSION}`,
@@ -196,7 +174,6 @@ async function main() {
     decodedSha256,
     decodedContentLength: catalogBytes.length,
     starCount: stars.length,
-    constellationCount: constellations.length,
     sources: sourceCredits,
     publishedAt: PUBLISHED_AT,
   };
@@ -212,7 +189,6 @@ async function main() {
       {
         version: CATALOG_VERSION,
         stars: stars.length,
-        constellations: constellations.length,
         astrometry: Object.fromEntries(
           Object.entries(sourceCounts).map(([source, records]) => [source, records.length]),
         ),
@@ -288,12 +264,6 @@ function validateCsv(text, requiredColumns) {
   for (const required of requiredColumns) {
     assert(columns.has(required), `CSV is missing required column ${required}`);
   }
-}
-
-function validateGeoJson(text) {
-  const value = JSON.parse(text);
-  assert(value.type === "FeatureCollection", "Expected a GeoJSON FeatureCollection");
-  assert(Array.isArray(value.features) && value.features.length >= 88, "GeoJSON has too few features");
 }
 
 function parseCsv(text) {
@@ -510,46 +480,6 @@ function buildStars(hipparcosRows, hipparcos2Rows, gaiaRows, tychoRows) {
   });
 
   return stars.sort((left, right) => left.hipId - right.hipId);
-}
-
-function buildConstellations(lineCollection, labelCollection) {
-  const records = new Map();
-  for (const feature of lineCollection.features) {
-    assert(feature.geometry?.type === "MultiLineString", `Unexpected line geometry for ${feature.id}`);
-    const existing = records.get(feature.id) ?? {
-      id: feature.id,
-      rank: Number(feature.properties?.rank),
-      labelPositions: [],
-      lines: [],
-    };
-    existing.lines.push(
-      ...feature.geometry.coordinates.map((line) => line.map(normalizeCoordinate)),
-    );
-    records.set(feature.id, existing);
-  }
-
-  for (const feature of labelCollection.features) {
-    const record = records.get(feature.id);
-    if (record && feature.geometry?.type === "Point") {
-      record.labelPositions.push(normalizeCoordinate(feature.geometry.coordinates));
-    }
-  }
-
-  const constellations = [...records.values()].sort((left, right) => left.id.localeCompare(right.id));
-  for (const constellation of constellations) {
-    assert(/^[A-Z][A-Za-z]{2}$/.test(constellation.id), `Invalid IAU ID ${constellation.id}`);
-    assert([1, 2, 3].includes(constellation.rank), `Invalid rank for ${constellation.id}`);
-    assert(constellation.lines.length > 0, `No lines for ${constellation.id}`);
-    assert(constellation.labelPositions.length > 0, `No label position for ${constellation.id}`);
-  }
-  return constellations;
-}
-
-function normalizeCoordinate([longitude, latitude]) {
-  const raDeg = ((Number(longitude) % 360) + 360) % 360;
-  const decDeg = Number(latitude);
-  assert(Number.isFinite(raDeg) && Number.isFinite(decDeg), "Invalid constellation coordinate");
-  return [round(raDeg, 4), round(decDeg, 4)];
 }
 
 function hasGaiaFiveParameterAstrometry(row) {

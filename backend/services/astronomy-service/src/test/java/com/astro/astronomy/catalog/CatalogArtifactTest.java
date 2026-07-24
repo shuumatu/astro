@@ -44,11 +44,11 @@ class CatalogArtifactTest {
         assertThat(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(decoded)))
                 .isEqualTo(manifest.decodedSha256());
         JsonNode catalog = objectMapper.readTree(decoded);
-        assertThat(catalog.path("schemaVersion").asInt()).isEqualTo(1);
+        assertThat(catalog.path("schemaVersion").asInt()).isEqualTo(2);
         assertThat(catalog.path("catalogId").asText()).isEqualTo("naked-eye");
         assertThat(catalog.path("referenceFrame").asText()).isEqualTo("ICRS");
         assertThat(catalog.path("stars")).hasSize(manifest.starCount());
-        assertThat(catalog.path("constellations")).hasSize(manifest.constellationCount());
+        assertThat(catalog.has("constellations")).isFalse();
 
         Set<String> starIds = new HashSet<>();
         int gaiaCount = 0;
@@ -66,13 +66,5 @@ class CatalogArtifactTest {
             }
         }
         assertThat(gaiaCount).isGreaterThan(6000);
-
-        Set<String> constellationIds = new HashSet<>();
-        for (JsonNode constellation : catalog.path("constellations")) {
-            assertThat(constellationIds.add(constellation.path("id").asText())).isTrue();
-            assertThat(constellation.path("lines").isEmpty()).isFalse();
-            assertThat(constellation.path("labelPositions").isEmpty()).isFalse();
-        }
-        assertThat(constellationIds).hasSize(88);
     }
 }

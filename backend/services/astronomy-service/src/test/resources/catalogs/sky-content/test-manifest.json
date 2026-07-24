@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "sky-content",
+  "version": "test-1",
+  "defaultCultureId": "test-culture",
+  "cultureIds": ["test-culture"],
+  "searchIndexAssetId": "search-index",
+  "featuredPatternsAssetId": "featured-patterns",
+  "nameFallbackOrder": ["exact-interface-language", "en", "first-name"],
+  "assets": [
+    {
+      "assetId": "culture-test-culture",
+      "assetType": "culture",
+      "cultureId": "test-culture",
+      "version": "test-1",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/culture-test-culture/test-1",
+      "mediaType": "application/json",
+      "contentEncoding": "gzip",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "contentLength": 4,
+      "decodedSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "decodedContentLength": 16,
+      "recordCounts": { "figures": 1 }
+    },
+    {
+      "assetId": "search-index",
+      "assetType": "search-index",
+      "version": "test-1",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/search-index/test-1",
+      "mediaType": "application/json",
+      "contentEncoding": "gzip",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "contentLength": 4,
+      "decodedSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "decodedContentLength": 16,
+      "recordCounts": { "entries": 1 }
+    },
+    {
+      "assetId": "featured-patterns",
+      "assetType": "featured-patterns",
+      "version": "test-1",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/featured-patterns/test-1",
+      "mediaType": "application/json",
+      "contentEncoding": "gzip",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "contentLength": 4,
+      "decodedSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "decodedContentLength": 16,
+      "recordCounts": { "patterns": 1 }
+    }
+  ],
+  "publishedAt": "2026-07-24T00:00:00Z"
+}

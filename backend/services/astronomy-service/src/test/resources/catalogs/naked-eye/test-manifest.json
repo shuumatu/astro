@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "catalogId": "naked-eye",
   "version": "test-catalog-1",
   "downloadUrl": "/api/astronomy/catalogs/naked-eye/test-catalog-1",
@@ -10,7 +10,6 @@
   "decodedSha256": "1111111111111111111111111111111111111111111111111111111111111111",
   "decodedContentLength": 4096,
   "starCount": 9000,
-  "constellationCount": 88,
   "sources": [
     {
       "catalog": "Gaia",

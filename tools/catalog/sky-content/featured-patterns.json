@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "id": "featured-patterns",
+  "version": "2026.07.1",
+  "sources": [
+    {
+      "id": "earthsky-summer-triangle",
+      "title": "Summer Triangle: All you need to know",
+      "authors": ["EarthSky Communications"],
+      "url": "https://earthsky.org/favorite-star-patterns/summer-triangle-asterism-vega-deneb-altair/",
+      "version": "retrieved-2026-07-24",
+      "license": "LicenseRef-Citation-Only",
+      "attribution": "Membership cross-checked against EarthSky; only factual star identifiers are recorded."
+    },
+    {
+      "id": "earthsky-winter-triangle",
+      "title": "Winter Triangle: Bright stars in the winter sky",
+      "authors": ["EarthSky Communications"],
+      "url": "https://earthsky.org/favorite-star-patterns/winter-triangle/",
+      "version": "retrieved-2026-07-24",
+      "license": "LicenseRef-Citation-Only",
+      "attribution": "Membership cross-checked against EarthSky; only factual star identifiers are recorded."
+    }
+  ],
+  "patterns": [
+    {
+      "id": "summer-triangle",
+      "names": [
+        {
+          "language": "zh-CN",
+          "value": "夏季大三角",
+          "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-summer-triangle"
+        },
+        {
+          "language": "zh-TW",
+          "value": "夏季大三角",
+          "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-summer-triangle"
+        },
+        {
+          "language": "en",
+          "value": "Summer Triangle",
+          "type": "official",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-summer-triangle"
+        }
+      ],
+      "memberObjectIds": ["HIP:91262", "HIP:102098", "HIP:97649"],
+      "paths": [["HIP:91262", "HIP:102098", "HIP:97649", "HIP:91262"]],
+      "labelAnchor": { "objectId": "HIP:97649" },
+      "cultureIds": ["chinese-traditional", "western-iau"],
+      "sourceIds": ["earthsky-summer-triangle"]
+    },
+    {
+      "id": "winter-triangle",
+      "names": [
+        {
+          "language": "zh-CN",
+          "value": "冬季大三角",
+          "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-winter-triangle"
+        },
+        {
+          "language": "zh-TW",
+          "value": "冬季大三角",
+          "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-winter-triangle"
+        },
+        {
+          "language": "en",
+          "value": "Winter Triangle",
+          "type": "official",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "earthsky-winter-triangle"
+        }
+      ],
+      "memberObjectIds": ["HIP:27989", "HIP:37279", "HIP:32349"],
+      "paths": [["HIP:27989", "HIP:37279", "HIP:32349", "HIP:27989"]],
+      "labelAnchor": { "objectId": "HIP:37279" },
+      "cultureIds": ["chinese-traditional", "western-iau"],
+      "sourceIds": ["earthsky-winter-triangle"]
+    }
+  ]
+}

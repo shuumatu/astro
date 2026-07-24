@@ -8,6 +8,9 @@ astro:
     naked-eye:
       manifest-location: classpath:catalogs/naked-eye/manifest.json
       asset-location: classpath:catalogs/naked-eye/catalog.json.gz
+    sky-content:
+      manifest-location: classpath:catalogs/sky-content/manifest.json
+      asset-location: classpath:catalogs/sky-content/
 management:
   endpoints:
     web:

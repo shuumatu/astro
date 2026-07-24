@@ -76,7 +76,7 @@ class CatalogControllerTest {
 
     private CatalogManifest manifest() {
         return new CatalogManifest(
-                1,
+                2,
                 "naked-eye",
                 "test-catalog-1",
                 URI.create("/api/astronomy/catalogs/naked-eye/test-catalog-1"),
@@ -87,7 +87,6 @@ class CatalogControllerTest {
                 "1".repeat(64),
                 4096,
                 9000,
-                88,
                 List.of(new CatalogSource(
                         "Gaia",
                         "DR3",
