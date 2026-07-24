@@ -437,6 +437,17 @@ function formatSelectedData(): string {
 <style scoped>
 .sky-map-page { padding: 1.5rem 0 2.5rem; }
 
+@media (min-width: 901px) {
+  .sky-map-page {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: calc(100vh - 68px);
+    height: calc(100dvh - 68px);
+    min-height: 480px;
+    padding: 1rem 0;
+  }
+}
+
 .sky-map-header {
   display: flex;
   align-items: end;
@@ -487,6 +498,7 @@ function formatSelectedData(): string {
 }
 
 .sky-controls {
+  min-height: 0;
   border-right: 1px solid #26333a;
   background: #10161b;
 }
@@ -634,7 +646,29 @@ button:disabled { cursor: wait; opacity: .55; }
   display: grid;
   place-items: center;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   background: #030609;
+}
+
+@media (min-width: 901px) {
+  .sky-map-workspace { min-height: 0; overflow: hidden; }
+
+  .sky-controls {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-color: #455860 #10161b;
+    scrollbar-width: thin;
+  }
+
+  .sky-map-stage { container-type: size; }
+
+  .sky-map-stage :deep(.sky-canvas) {
+    width: min(100cqw, 100cqh);
+    height: auto;
+  }
+
+  .sky-readout dl > div { padding: .65rem .75rem; }
 }
 
 .stage-state {
