@@ -1,5 +1,9 @@
 import {
+  Body,
+  Equator,
   HorizonFromVector,
+  Horizon,
+  Illumination,
   MakeTime,
   Observer,
   RotateVector,
@@ -55,6 +59,65 @@ describe('calculateSkyFrame', () => {
     })
 
     expect(frame.stars.map((star) => star.id)).toEqual(['HIP:1'])
+  })
+
+  it('calculates topocentric positions and illumination for solar system bodies', () => {
+    const observedAt = '2026-07-23T14:00:00.000Z'
+    const location = { latitudeDeg: 22.5431, longitudeDeg: 114.0579, elevationMeters: 20 }
+    const frame = calculateSkyFrame(
+      sampleCatalog([]),
+      parameters(observedAt, location),
+    )
+    const observer = new Observer(
+      location.latitudeDeg,
+      location.longitudeDeg,
+      location.elevationMeters,
+    )
+    const equatorial = Equator(Body.Mars, new Date(observedAt), observer, true, true)
+    const horizontal = Horizon(
+      new Date(observedAt),
+      observer,
+      equatorial.ra,
+      equatorial.dec,
+      '',
+    )
+    const illumination = Illumination(Body.Mars, new Date(observedAt))
+    const mars = frame.solarSystemBodies.find((body) => body.id === 'mars')
+
+    expect(frame.solarSystemBodies.map((body) => body.id)).toEqual([
+      'sun',
+      'moon',
+      'mercury',
+      'venus',
+      'mars',
+      'jupiter',
+      'saturn',
+      'uranus',
+      'neptune',
+    ])
+    expect(mars).toMatchObject({ ringTiltDeg: null })
+    expect(mars?.azimuthDeg).toBeCloseTo(horizontal.azimuth, 10)
+    expect(mars?.altitudeDeg).toBeCloseTo(horizontal.altitude, 10)
+    expect(mars?.rightAscensionHours).toBeCloseTo(equatorial.ra, 10)
+    expect(mars?.declinationDeg).toBeCloseTo(equatorial.dec, 10)
+    expect(mars?.visualMagnitude).toBeCloseTo(illumination.mag, 10)
+    expect(mars?.phaseAngleDeg).toBeCloseTo(illumination.phase_angle, 10)
+    expect(mars?.phaseFraction).toBeCloseTo(illumination.phase_fraction, 10)
+    expect(mars?.distanceAu).toBeCloseTo(equatorial.dist, 10)
+  })
+
+  it('applies the minimum altitude filter to solar system bodies', () => {
+    const visibleFrame = calculateSkyFrame(
+      sampleCatalog([]),
+      parameters('2026-07-23T14:00:00.000Z'),
+    )
+    const filteredFrame = calculateSkyFrame(sampleCatalog([]), {
+      ...parameters('2026-07-23T14:00:00.000Z'),
+      minimumAltitudeDeg: 0,
+    })
+
+    expect(filteredFrame.solarSystemBodies.length).toBeLessThan(visibleFrame.solarSystemBodies.length)
+    expect(filteredFrame.solarSystemBodies.every((body) => body.altitudeDeg >= 0)).toBe(true)
   })
 
   it('rejects an invalid observer before calculating', () => {

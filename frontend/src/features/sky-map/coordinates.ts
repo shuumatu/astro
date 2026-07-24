@@ -1,19 +1,40 @@
-import { Observer, Refraction, Rotation_EQJ_HOR } from 'astronomy-engine'
+import {
+  Body,
+  Equator,
+  Horizon,
+  Illumination,
+  Observer,
+  Refraction,
+  Rotation_EQJ_HOR,
+} from 'astronomy-engine'
 import type {
+  ComputedSolarSystemBody,
   EquatorialCoordinate,
   HorizontalCoordinate,
+  SolarSystemBodyId,
   SkyCalculationParameters,
   SkyCatalog,
   SkyFrame,
   StarRecord,
 } from './types'
-import { SkyMapError } from './types'
+import { SkyMapError, SOLAR_SYSTEM_BODY_IDS } from './types'
 
 const DEG_TO_RAD = Math.PI / 180
 const RAD_TO_DEG = 180 / Math.PI
 const MAS_TO_RAD = DEG_TO_RAD / 3_600_000
 const JULIAN_YEAR_MILLISECONDS = 365.25 * 86_400_000
 const J2000_MILLISECONDS = Date.UTC(2000, 0, 1, 12)
+const ASTRONOMY_BODY_BY_ID: Record<SolarSystemBodyId, Body> = {
+  sun: Body.Sun,
+  moon: Body.Moon,
+  mercury: Body.Mercury,
+  venus: Body.Venus,
+  mars: Body.Mars,
+  jupiter: Body.Jupiter,
+  saturn: Body.Saturn,
+  uranus: Body.Uranus,
+  neptune: Body.Neptune,
+}
 
 export interface CartesianVector {
   x: number
@@ -67,12 +88,55 @@ export function calculateSkyFrame(
     ),
   }))
 
+  const solarSystemBodies = calculateSolarSystemBodies(
+    date,
+    observer,
+    parameters.minimumAltitudeDeg,
+    parameters.applyRefraction,
+  )
+
   return {
     observedAt: date.toISOString(),
     observer: { ...parameters.observer },
     stars,
     constellations,
+    solarSystemBodies,
   }
+}
+
+function calculateSolarSystemBodies(
+  date: Date,
+  observer: Observer,
+  minimumAltitudeDeg: number,
+  applyRefraction: boolean,
+): ComputedSolarSystemBody[] {
+  return SOLAR_SYSTEM_BODY_IDS
+    .map((id): ComputedSolarSystemBody => {
+      const body = ASTRONOMY_BODY_BY_ID[id]
+      const equatorial = Equator(body, date, observer, true, true)
+      const horizontal = Horizon(
+        date,
+        observer,
+        equatorial.ra,
+        equatorial.dec,
+        applyRefraction ? 'normal' : '',
+      )
+      const illumination = Illumination(body, date)
+
+      return {
+        id,
+        azimuthDeg: horizontal.azimuth,
+        altitudeDeg: horizontal.altitude,
+        rightAscensionHours: equatorial.ra,
+        declinationDeg: equatorial.dec,
+        visualMagnitude: illumination.mag,
+        phaseAngleDeg: illumination.phase_angle,
+        phaseFraction: illumination.phase_fraction,
+        distanceAu: equatorial.dist,
+        ringTiltDeg: illumination.ring_tilt ?? null,
+      }
+    })
+    .filter((body) => body.altitudeDeg >= minimumAltitudeDeg)
 }
 
 export function propagateIcrs(star: StarRecord, targetYear: number): CartesianVector {

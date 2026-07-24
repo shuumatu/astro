@@ -24,6 +24,8 @@ describe('published naked-eye catalog', () => {
     expect(frame.stars.length).toBeGreaterThan(3000)
     expect(frame.stars.length).toBeLessThan(5000)
     expect(frame.constellations).toHaveLength(88)
+    expect(frame.solarSystemBodies.length).toBeGreaterThan(0)
+    expect(frame.solarSystemBodies.length).toBeLessThan(9)
     for (const star of frame.stars) {
       expect(Number.isFinite(star.azimuthDeg)).toBe(true)
       expect(Number.isFinite(star.altitudeDeg)).toBe(true)
@@ -34,6 +36,17 @@ describe('published naked-eye catalog', () => {
     for (const constellation of frame.constellations) {
       expect(constellation.lines.length).toBeGreaterThan(0)
       expect(constellation.labelPositions.length).toBeGreaterThan(0)
+    }
+    for (const body of frame.solarSystemBodies) {
+      expect(Number.isFinite(body.azimuthDeg)).toBe(true)
+      expect(Number.isFinite(body.altitudeDeg)).toBe(true)
+      expect(Number.isFinite(body.visualMagnitude)).toBe(true)
+      expect(Number.isFinite(body.distanceAu)).toBe(true)
+      expect(body.azimuthDeg).toBeGreaterThanOrEqual(0)
+      expect(body.azimuthDeg).toBeLessThan(360)
+      expect(body.altitudeDeg).toBeGreaterThanOrEqual(0)
+      expect(body.phaseFraction).toBeGreaterThanOrEqual(0)
+      expect(body.phaseFraction).toBeLessThanOrEqual(1)
     }
   })
 })

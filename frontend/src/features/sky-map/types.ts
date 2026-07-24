@@ -98,11 +98,37 @@ export interface ComputedConstellation {
   lines: HorizontalCoordinate[][]
 }
 
+export const SOLAR_SYSTEM_BODY_IDS = [
+  'sun',
+  'moon',
+  'mercury',
+  'venus',
+  'mars',
+  'jupiter',
+  'saturn',
+  'uranus',
+  'neptune',
+] as const
+
+export type SolarSystemBodyId = (typeof SOLAR_SYSTEM_BODY_IDS)[number]
+
+export interface ComputedSolarSystemBody extends HorizontalCoordinate {
+  id: SolarSystemBodyId
+  rightAscensionHours: number
+  declinationDeg: number
+  visualMagnitude: number
+  phaseAngleDeg: number
+  phaseFraction: number
+  distanceAu: number
+  ringTiltDeg: number | null
+}
+
 export interface SkyFrame {
   observedAt: string
   observer: ObserverLocation
   stars: ComputedStar[]
   constellations: ComputedConstellation[]
+  solarSystemBodies: ComputedSolarSystemBody[]
 }
 
 export interface CatalogSummary {
