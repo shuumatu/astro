@@ -725,6 +725,7 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
         v-for="label in starLabels"
         :key="label.key"
         class="star-label"
+        :class="`anchor-${label.anchor}`"
         :x="label.x"
         :y="label.y"
         :text-anchor="label.anchor"
@@ -844,6 +845,9 @@ text {
   fill: #d9e4dc;
   font-size: clamp(8px, 1.35cqw, 12px);
 }
+
+.star-label.anchor-start { text-anchor: start; }
+.star-label.anchor-end { text-anchor: end; }
 
 .solar-system-leader {
   stroke: #968e73;

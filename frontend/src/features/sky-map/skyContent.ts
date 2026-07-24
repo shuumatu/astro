@@ -34,7 +34,7 @@ export async function loadSkyContentAsset(
 ): Promise<SkyContentAsset> {
   const descriptor = manifest.assets.find((asset) => asset.assetId === assetId)
   if (!descriptor) invalid(`Unknown sky-content asset: ${assetId}`)
-  const downloadUrl = resolveDownloadUrl(descriptor.downloadUrl, manifestUrl)
+  const downloadUrl = resolveSkyContentDownloadUrl(descriptor.downloadUrl, manifestUrl)
   const response = await fetchResponse(fetcher, downloadUrl)
   const decodedBytes = new Uint8Array(await response.arrayBuffer())
 
@@ -240,7 +240,9 @@ function validateAssetDescriptor(value: unknown, index: number): SkyContentAsset
   if (!['culture', 'search-index', 'featured-patterns'].includes(asset.assetType as string)) {
     invalid(`${label}.assetType is invalid`)
   }
-  if (asset.cultureId !== undefined) requireString(asset.cultureId, `${label}.cultureId`, ID_PATTERN)
+  if (asset.cultureId !== undefined && asset.cultureId !== null) {
+    requireString(asset.cultureId, `${label}.cultureId`, ID_PATTERN)
+  }
   requireString(asset.version, `${label}.version`, VERSION_PATTERN)
   requireString(asset.downloadUrl, `${label}.downloadUrl`)
   requireEqual(asset.mediaType, 'application/json', `${label}.mediaType`)
@@ -388,9 +390,14 @@ async function readJson(response: Response, label: string): Promise<unknown> {
   }
 }
 
-function resolveDownloadUrl(downloadUrl: string, manifestUrl: string): string {
+export function resolveSkyContentDownloadUrl(
+  downloadUrl: string,
+  manifestUrl: string,
+  currentUrl = globalThis.location?.href,
+): string {
   try {
-    return new URL(downloadUrl, manifestUrl).toString()
+    const absoluteManifestUrl = currentUrl ? new URL(manifestUrl, currentUrl).toString() : manifestUrl
+    return new URL(downloadUrl, absoluteManifestUrl).toString()
   } catch (error) {
     invalid(`Sky-content download URL is invalid: ${errorMessage(error)}`)
   }

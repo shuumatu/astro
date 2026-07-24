@@ -77,7 +77,7 @@ export type SkyContentAssetType = 'culture' | 'search-index' | 'featured-pattern
 export interface SkyContentAssetDescriptor {
   assetId: string
   assetType: SkyContentAssetType
-  cultureId?: string
+  cultureId?: string | null
   version: string
   downloadUrl: string
   mediaType: 'application/json'

@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { describe, expect, it, vi } from 'vitest'
-import { loadSkyContentAsset, loadSkyContentManifest } from './skyContent'
+import {
+  loadSkyContentAsset,
+  loadSkyContentManifest,
+  resolveSkyContentDownloadUrl,
+  validateSkyContentManifest,
+} from './skyContent'
 import type {
   FeaturedPatternPack,
   SkyContentManifest,
@@ -18,6 +23,25 @@ const manifest = JSON.parse(
 ) as SkyContentManifest
 
 describe('sky-content resources', () => {
+  it('resolves API-relative manifest and asset URLs from the worker location', () => {
+    expect(resolveSkyContentDownloadUrl(
+      '/api/astronomy/catalogs/sky-content/search-index/test-1',
+      '/api/astronomy/catalogs/sky-content/manifest',
+      'http://127.0.0.1:5173/assets/skyMap.worker.js',
+    )).toBe('http://127.0.0.1:5173/api/astronomy/catalogs/sky-content/search-index/test-1')
+  })
+
+  it('accepts null cultureId values emitted by the Java manifest DTO', () => {
+    const apiManifest = {
+      ...manifest,
+      assets: manifest.assets.map((asset) => asset.assetType === 'culture'
+        ? asset
+        : { ...asset, cultureId: null }),
+    }
+
+    expect(validateSkyContentManifest(apiManifest).assets[2].cultureId).toBeNull()
+  })
+
   it('loads and validates the published manifest and decoded assets', async () => {
     const fetcher = publishedResourceFetch()
     const loadedManifest = await loadSkyContentManifest(
