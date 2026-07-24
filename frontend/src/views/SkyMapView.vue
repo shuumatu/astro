@@ -3,15 +3,18 @@ import { Search } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
+import { parseSkyTargetQuery } from '../features/sky-map/targetSearch'
 import type {
   CatalogSummary,
-  ComputedStar,
   SkyCalculationParameters,
   SkyFrame,
+  SkyObjectSelection,
 } from '../features/sky-map/types'
 import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
 
 type ViewStatus = 'loadingCatalog' | 'calculating' | 'ready' | 'error'
+
+const ASTRONOMICAL_UNIT_KM = 149_597_870.7
 
 const SHENZHEN = {
   latitudeDeg: 22.5431,
@@ -36,7 +39,7 @@ const errorMessage = ref('')
 const catalog = ref<CatalogSummary | null>(null)
 const frame = ref<SkyFrame | null>(null)
 const calculationDurationMs = ref<number | null>(null)
-const selectedStar = ref<ComputedStar | null>(null)
+const selectedObject = ref<SkyObjectSelection | null>(null)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const targetQuery = ref('')
 const targetMessage = ref('')
@@ -75,7 +78,7 @@ async function calculate(): Promise<void> {
   if (!workerClient || !catalog.value) return
   status.value = 'calculating'
   errorMessage.value = ''
-  selectedStar.value = null
+  selectedObject.value = null
   targetMessage.value = ''
   try {
     const parameters: SkyCalculationParameters = {
@@ -104,26 +107,46 @@ function useCurrentTime(): void {
 }
 
 function searchTarget(): void {
-  const match = targetQuery.value.trim().match(/^(?:HIP\s*:?\s*)?([0-9]+)$/i)
-  if (!match) {
-    selectedStar.value = null
-    targetMessage.value = t('skyMap.invalidHip')
+  const target = parseSkyTargetQuery(
+    targetQuery.value,
+    (id) => t(`skyMap.solarSystemBodies.${id}`),
+  )
+  if (target.kind === 'invalid') {
+    selectedObject.value = null
+    targetMessage.value = t('skyMap.invalidTarget')
     return
   }
-  const hipId = Number(match[1])
-  const star = frame.value?.stars.find((candidate) => candidate.hipId === hipId)
-  if (!star) {
-    selectedStar.value = null
-    targetMessage.value = t('skyMap.targetNotVisible', { id: `HIP ${hipId}` })
+
+  if (target.kind === 'star') {
+    const star = frame.value?.stars.find((candidate) => candidate.hipId === target.hipId)
+    if (!star) {
+      selectedObject.value = null
+      targetMessage.value = t('skyMap.targetNotVisible', { id: `HIP ${target.hipId}` })
+      return
+    }
+    locateTarget({ kind: 'star', object: star })
     return
   }
-  selectedStar.value = star
-  skyCanvas.value?.focusStar(star.id)
-  targetMessage.value = t('skyMap.targetLocated', { id: formatStarId(star) })
+
+  const bodyName = t(`skyMap.solarSystemBodies.${target.id}`)
+  const body = frame.value?.solarSystemBodies.find((candidate) => candidate.id === target.id)
+  if (!body) {
+    selectedObject.value = null
+    targetMessage.value = t('skyMap.targetNotVisible', { id: bodyName })
+    return
+  }
+  controls.showSolarSystemBodies = true
+  locateTarget({ kind: 'solarSystemBody', object: body })
 }
 
-function selectStar(star: ComputedStar | null): void {
-  selectedStar.value = star
+function locateTarget(selection: SkyObjectSelection): void {
+  selectedObject.value = selection
+  skyCanvas.value?.focusObject(selection)
+  targetMessage.value = t('skyMap.targetLocated', { id: formatSelectedObject(selection) })
+}
+
+function selectObject(selection: SkyObjectSelection | null): void {
+  selectedObject.value = selection
   targetMessage.value = ''
 }
 
@@ -142,12 +165,32 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
   return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }).format(value)}${suffix}`
 }
 
-function formatStarId(star: ComputedStar | null): string {
-  return star ? `HIP ${star.hipId}` : '—'
+function formatSelectedObject(selection = selectedObject.value): string {
+  if (!selection) return '—'
+  return selection.kind === 'star'
+    ? `HIP ${selection.object.hipId}`
+    : t(`skyMap.solarSystemBodies.${selection.object.id}`)
 }
 
-function formatAstrometrySource(star: ComputedStar | null): string {
-  return star ? t(`skyMap.sources.${star.astrometrySource}`) : '—'
+function formatSelectedDetail(): string {
+  const selection = selectedObject.value
+  if (!selection) return '—'
+  if (selection.kind === 'star') return selection.object.spectralType ?? '—'
+  return new Intl.NumberFormat(locale.value, {
+    style: 'percent',
+    maximumFractionDigits: 0,
+  }).format(selection.object.phaseFraction)
+}
+
+function formatSelectedData(): string {
+  const selection = selectedObject.value
+  if (!selection) return '—'
+  if (selection.kind === 'star') return t(`skyMap.sources.${selection.object.astrometrySource}`)
+  if (selection.object.id === 'moon') {
+    const kilometers = selection.object.distanceAu * ASTRONOMICAL_UNIT_KM
+    return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(kilometers)} km`
+  }
+  return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 3 }).format(selection.object.distanceAu)} AU`
 }
 </script>
 
@@ -205,6 +248,7 @@ function formatAstrometrySource(star: ComputedStar | null): string {
                 type="search"
                 :aria-label="t('skyMap.target')"
                 :placeholder="t('skyMap.targetPlaceholder')"
+                @keydown.enter.prevent="searchTarget"
               >
               <button
                 type="button"
@@ -263,8 +307,8 @@ function formatAstrometrySource(star: ComputedStar | null): string {
           :show-constellation-lines="controls.showConstellationLines"
           :show-constellation-labels="controls.showConstellationLabels"
           :show-solar-system-bodies="controls.showSolarSystemBodies"
-          :selected-star-id="selectedStar?.id ?? null"
-          @select="selectStar"
+          :selected-object="selectedObject"
+          @select="selectObject"
         />
         <div v-if="status === 'loadingCatalog' || (status === 'calculating' && !frame)" class="stage-state" role="status">
           <span class="loading-indicator" aria-hidden="true"></span>
@@ -293,24 +337,24 @@ function formatAstrometrySource(star: ComputedStar | null): string {
           <dd>{{ calculationDurationMs === null ? '—' : `${calculationDurationMs.toFixed(1)} ms` }}</dd>
         </div>
         <div>
-          <dt>{{ t('skyMap.selectedStar') }}</dt>
-          <dd>{{ formatStarId(selectedStar) }}</dd>
+          <dt>{{ t('skyMap.selectedObject') }}</dt>
+          <dd>{{ formatSelectedObject() }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.magnitude') }}</dt>
-          <dd>{{ selectedStar ? selectedStar.visualMagnitude.toFixed(2) : '—' }}</dd>
+          <dd>{{ selectedObject ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
         </div>
         <div>
-          <dt>{{ t('skyMap.spectralType') }}</dt>
-          <dd>{{ selectedStar?.spectralType ?? '—' }}</dd>
+          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : t('skyMap.spectralType') }}</dt>
+          <dd>{{ formatSelectedDetail() }}</dd>
         </div>
         <div>
-          <dt>{{ t('skyMap.dataSource') }}</dt>
-          <dd>{{ formatAstrometrySource(selectedStar) }}</dd>
+          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.distance') : t('skyMap.dataSource') }}</dt>
+          <dd>{{ formatSelectedData() }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.position') }}</dt>
-          <dd>{{ formatCoordinate(selectedStar?.azimuthDeg, '°') }} / {{ formatCoordinate(selectedStar?.altitudeDeg, '°') }}</dd>
+          <dd>{{ formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
         </div>
       </dl>
     </footer>
@@ -526,7 +570,13 @@ button:disabled { cursor: wait; opacity: .55; }
 .sky-readout dl > div { min-width: 0; padding: .8rem 1rem; border-right: 1px solid #26333a; }
 .sky-readout dl > div:last-child { border-right: 0; }
 .sky-readout dt { margin-bottom: .25rem; color: #71878b; font-size: .68rem; }
-.sky-readout dd { overflow: hidden; margin: 0; color: #dce6e6; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.sky-readout dd {
+  margin: 0;
+  color: #dce6e6;
+  font-size: .82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
 

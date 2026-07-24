@@ -33,8 +33,9 @@ transforms stay inside the module worker.
   preserve sharp output without excessive memory use.
 - Zooming uses a pointer-anchored view transform while panning is constrained by the
   projected horizon. Star hit testing uses the same transformed screen coordinates.
-- HIP search operates on the current calculated frame. A result is selected and focused;
-  stars outside the current horizon or magnitude limit are reported as not visible.
+- Target search accepts HIP identifiers, stable Solar System body IDs, and localized body
+  names. Results share the same selection, focus, hit-testing, and readout flow; objects
+  outside the current horizon or magnitude limit are reported as not visible.
 
 ## Integrity model
 

@@ -123,6 +123,10 @@ export interface ComputedSolarSystemBody extends HorizontalCoordinate {
   ringTiltDeg: number | null
 }
 
+export type SkyObjectSelection =
+  | { kind: 'star'; object: ComputedStar }
+  | { kind: 'solarSystemBody'; object: ComputedSolarSystemBody }
+
 export interface SkyFrame {
   observedAt: string
   observer: ObserverLocation

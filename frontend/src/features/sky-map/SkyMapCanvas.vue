@@ -5,7 +5,12 @@ import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
 import type { ProjectedPoint } from './projection'
 import { layoutSolarSystemLabels } from './solarSystemLabels'
-import type { ComputedStar, SkyFrame, SolarSystemBodyId } from './types'
+import type {
+  ComputedSolarSystemBody,
+  SkyFrame,
+  SkyObjectSelection,
+  SolarSystemBodyId,
+} from './types'
 import {
   MAX_SKY_ZOOM,
   MIN_SKY_ZOOM,
@@ -17,8 +22,8 @@ import {
 } from './viewport'
 import type { SkyViewTransform } from './viewport'
 
-interface RenderedStar {
-  star: ComputedStar
+interface RenderedSkyObject {
+  selection: SkyObjectSelection
   point: ProjectedPoint
   radius: number
 }
@@ -54,21 +59,22 @@ const props = defineProps<{
   showConstellationLines: boolean
   showConstellationLabels: boolean
   showSolarSystemBodies: boolean
-  selectedStarId: string | null
+  selectedObject: SkyObjectSelection | null
 }>()
 
 const emit = defineEmits<{
-  select: [star: ComputedStar | null]
+  select: [selection: SkyObjectSelection | null]
 }>()
 
 const { t } = useI18n()
 const container = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const viewportSize = ref(0)
-const hoveredStar = ref<RenderedStar | null>(null)
+const hoveredObject = ref<RenderedSkyObject | null>(null)
 const viewTransform = ref(defaultSkyViewTransform())
 const isDragging = ref(false)
-let renderedStars: RenderedStar[] = []
+let renderedStars: RenderedSkyObject[] = []
+let renderedSolarSystemBodies: RenderedSkyObject[] = []
 let resizeObserver: ResizeObserver | null = null
 let dragSession: DragSession | null = null
 let drawFrame = 0
@@ -143,17 +149,21 @@ const solarSystemLabels = computed(() => {
 })
 
 const selectedMarker = computed(() => {
-  if (!props.frame || !props.selectedStarId || viewportSize.value === 0) return null
-  const star = props.frame.stars.find(({ id }) => id === props.selectedStarId)
-  if (!star) return null
+  if (!props.frame || !props.selectedObject || viewportSize.value === 0) return null
+  if (props.selectedObject.kind === 'solarSystemBody' && !props.showSolarSystemBodies) return null
+  const object = resolveSelection(props.selectedObject)
+  if (!object) return null
   const { size, center, radius } = geometry.value
-  const point = transformSkyPoint(projectHorizontal(star, radius, center), viewTransform.value, center)
+  const point = transformSkyPoint(projectHorizontal(object, radius, center), viewTransform.value, center)
   if (!isPointInViewport(point, size, 0)) return null
-  return { ...point, radius: screenStarRadius(star.visualMagnitude) }
+  const markerRadius = props.selectedObject.kind === 'star'
+    ? screenStarRadius(object.visualMagnitude)
+    : screenSolarSystemBodyRadius(props.selectedObject.object.id)
+  return { ...point, radius: markerRadius }
 })
 
-const hoveredMarker = computed(() => hoveredStar.value
-  ? { ...hoveredStar.value.point, radius: hoveredStar.value.radius }
+const hoveredMarker = computed(() => hoveredObject.value
+  ? { ...hoveredObject.value.point, radius: hoveredObject.value.radius }
   : null)
 
 watch(
@@ -182,7 +192,7 @@ onBeforeUnmount(() => {
   if (pointerFrame) cancelAnimationFrame(pointerFrame)
 })
 
-defineExpose({ focusStar, resetView, zoomIn, zoomOut })
+defineExpose({ focusObject, resetView, zoomIn, zoomOut })
 
 function scheduleDraw(): void {
   if (drawFrame) cancelAnimationFrame(drawFrame)
@@ -215,10 +225,12 @@ function draw(): void {
   context.clip()
   if (props.frame && props.showConstellationLines) drawConstellations(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
-  if (props.frame && props.showSolarSystemBodies) drawSolarSystemBodies(context, center, radius)
+  renderedSolarSystemBodies = props.frame && props.showSolarSystemBodies
+    ? drawSolarSystemBodies(context, center, radius)
+    : []
   context.restore()
   context.restore()
-  hoveredStar.value = null
+  hoveredObject.value = null
 }
 
 function applyCanvasTransform(context: CanvasRenderingContext2D, center: number): void {
@@ -283,7 +295,7 @@ function drawStars(
   context: CanvasRenderingContext2D,
   center: number,
   radius: number,
-): RenderedStar[] {
+): RenderedSkyObject[] {
   if (!props.frame) return []
   const inverseScale = 1 / viewTransform.value.scale
   return props.frame.stars.map((star) => {
@@ -295,7 +307,7 @@ function drawStars(
     context.beginPath()
     context.arc(basePoint.x, basePoint.y, starRadius * inverseScale, 0, Math.PI * 2)
     context.fill()
-    return { star, point, radius: starRadius }
+    return { selection: { kind: 'star', object: star }, point, radius: starRadius }
   })
 }
 
@@ -303,15 +315,17 @@ function drawSolarSystemBodies(
   context: CanvasRenderingContext2D,
   center: number,
   radius: number,
-): void {
-  if (!props.frame) return
+): RenderedSkyObject[] {
+  if (!props.frame) return []
   const inverseScale = 1 / viewTransform.value.scale
+  const rendered: RenderedSkyObject[] = []
   context.globalAlpha = 1
 
   for (const body of props.frame.solarSystemBodies) {
     const point = projectHorizontal(body, radius, center)
     const style = SOLAR_SYSTEM_BODY_STYLES[body.id]
-    const bodyRadius = screenSolarSystemBodyRadius(body.id) * inverseScale
+    const screenRadius = screenSolarSystemBodyRadius(body.id)
+    const bodyRadius = screenRadius * inverseScale
     context.save()
     context.translate(point.x, point.y)
 
@@ -341,7 +355,14 @@ function drawSolarSystemBodies(
     context.lineWidth = 1.1 * inverseScale
     context.stroke()
     context.restore()
+    rendered.push({
+      selection: { kind: 'solarSystemBody', object: body },
+      point: transformSkyPoint(point, viewTransform.value, center),
+      radius: screenRadius,
+    })
   }
+
+  return rendered
 }
 
 function screenSolarSystemBodyRadius(id: SolarSystemBodyId): number {
@@ -393,11 +414,11 @@ function resetView(): void {
   viewTransform.value = defaultSkyViewTransform()
 }
 
-function focusStar(starId: string): boolean {
-  const star = props.frame?.stars.find(({ id }) => id === starId)
-  if (!star) return false
+function focusObject(selection: SkyObjectSelection): boolean {
+  const object = resolveSelection(selection)
+  if (!object) return false
   const { center, radius } = geometry.value
-  const point = projectHorizontal(star, radius, center)
+  const point = projectHorizontal(object, radius, center)
   viewTransform.value = centerSkyViewOn(
     point,
     Math.max(2.25, viewTransform.value.scale),
@@ -405,6 +426,13 @@ function focusStar(starId: string): boolean {
     radius,
   )
   return true
+}
+
+function resolveSelection(selection: SkyObjectSelection): SkyObjectSelection['object'] | null {
+  if (!props.frame) return null
+  return selection.kind === 'star'
+    ? props.frame.stars.find(({ id }) => id === selection.object.id) ?? null
+    : props.frame.solarSystemBodies.find(({ id }) => id === selection.object.id) ?? null
 }
 
 function onPointerDown(event: PointerEvent): void {
@@ -442,14 +470,14 @@ function onPointerMove(event: PointerEvent): void {
   if (pointerFrame) return
   pointerFrame = requestAnimationFrame(() => {
     pointerFrame = 0
-    hoveredStar.value = pendingPointer ? hitTest(pendingPointer.x, pendingPointer.y) : null
+    hoveredObject.value = pendingPointer ? hitTest(pendingPointer.x, pendingPointer.y) : null
   })
 }
 
 function onPointerUp(event: PointerEvent): void {
   if (!dragSession || dragSession.pointerId !== event.pointerId) return
   const point = eventPoint(event)
-  if (!dragSession.moved && point) emit('select', hitTest(point.x, point.y)?.star ?? null)
+  if (!dragSession.moved && point) emit('select', hitTest(point.x, point.y)?.selection ?? null)
   finishDrag(event.pointerId)
 }
 
@@ -465,7 +493,7 @@ function finishDrag(pointerId: number): void {
 
 function onPointerLeave(): void {
   pendingPointer = null
-  hoveredStar.value = null
+  hoveredObject.value = null
 }
 
 function eventPoint(event: MouseEvent): ProjectedPoint | null {
@@ -474,12 +502,22 @@ function eventPoint(event: MouseEvent): ProjectedPoint | null {
   return { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 }
 
-function hitTest(x: number, y: number): RenderedStar | null {
-  let closest: RenderedStar | null = null
+function hitTest(x: number, y: number): RenderedSkyObject | null {
+  return hitTestCollection(renderedSolarSystemBodies, x, y, 8)
+    ?? hitTestCollection(renderedStars, x, y, 6)
+}
+
+function hitTestCollection(
+  objects: RenderedSkyObject[],
+  x: number,
+  y: number,
+  minimumRadius: number,
+): RenderedSkyObject | null {
+  let closest: RenderedSkyObject | null = null
   let closestDistance = Number.POSITIVE_INFINITY
-  for (const rendered of renderedStars) {
+  for (const rendered of objects) {
     const distance = Math.hypot(rendered.point.x - x, rendered.point.y - y)
-    const targetRadius = Math.max(6, rendered.radius + 3)
+    const targetRadius = Math.max(minimumRadius, rendered.radius + 3)
     if (distance <= targetRadius && distance < closestDistance) {
       closest = rendered
       closestDistance = distance
@@ -498,7 +536,7 @@ function isPointInViewport(point: ProjectedPoint, size: number, margin: number):
     ref="container"
     class="sky-canvas"
     :class="{
-      interactive: hoveredStar,
+      interactive: hoveredObject,
       'can-pan': viewTransform.scale > MIN_SKY_ZOOM,
       dragging: isDragging,
     }"
