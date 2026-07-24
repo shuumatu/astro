@@ -11,7 +11,8 @@ import {
   Vector,
 } from 'astronomy-engine'
 import { describe, expect, it } from 'vitest'
-import { calculateSkyFrame, propagateIcrs, selectLocalizedName } from './coordinates'
+import { calculateSkyFrame, propagateIcrs } from './coordinates'
+import { selectLocalizedName } from './localizedName'
 import type {
   FeaturedPatternPack,
   SkyCalculationParameters,

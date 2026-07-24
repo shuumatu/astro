@@ -68,6 +68,7 @@
     "cultureLabels": "Culture labels",
     "cultureBoundaries": "Culture boundaries",
     "solarSystem": "Solar System bodies",
+    "featuredPatterns": "Featured patterns",
     "refraction": "Atmospheric refraction",
     "retry": "Reload",
     "loadFailed": "Sky data could not be loaded",

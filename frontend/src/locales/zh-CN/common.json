@@ -68,6 +68,7 @@
     "cultureLabels": "文化标签",
     "cultureBoundaries": "文化边界",
     "solarSystem": "太阳系天体",
+    "featuredPatterns": "常见星群",
     "refraction": "大气折射修正",
     "retry": "重新加载",
     "loadFailed": "星图数据加载失败",

@@ -46,6 +46,10 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
           skyContentVersion: initialized.skyContentManifest.version,
           defaultCultureId: initialized.skyContentManifest.defaultCultureId,
           cultureIds: [...initialized.skyContentManifest.cultureIds],
+          featuredPatterns: initialized.featuredPatterns.patterns.map((pattern) => ({
+            id: pattern.id,
+            names: pattern.names.map((name) => ({ ...name })),
+          })),
         },
       })
       return

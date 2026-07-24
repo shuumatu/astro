@@ -45,7 +45,7 @@ interface SolarSystemBodyStyle {
 interface SkyTextLabel {
   key: string
   text: string
-  kind: 'culture' | 'star'
+  kind: 'culture' | 'pattern' | 'star'
   rank?: 1 | 2 | 3
   x: number
   y: number
@@ -152,11 +152,30 @@ const skyTextLabels = computed(() => {
     }
   }
 
-  if (props.showStarNames) {
+  for (const pattern of props.frame.featuredPatterns) {
+    if (!pattern.labelPosition || pattern.labelPosition.altitudeDeg < 5) continue
+    const point = transformSkyPoint(
+      projectHorizontal(pattern.labelPosition, radius, center),
+      viewTransform.value,
+      center,
+    )
+    candidates.push({
+      key: `pattern-${pattern.id}`,
+      text: pattern.name,
+      kind: 'pattern',
+      x: point.x,
+      y: point.y - 24,
+      anchor: 'middle',
+      priority: 95_000,
+    })
+  }
+
+  if (props.showStarNames || selectedStarId || patternMembers.size > 0) {
     const magnitudeThreshold = Math.min(6.5, 2.4 + Math.log2(viewTransform.value.scale) * 1.3)
     for (const label of props.frame.starLabels) {
       const selected = label.objectId === selectedStarId
       const patternMember = patternMembers.has(label.objectId)
+      if (!props.showStarNames && !selected && !patternMember) continue
       if (!selected && !patternMember && label.visualMagnitude > magnitudeThreshold) continue
       const point = transformSkyPoint(
         projectHorizontal(label, radius, center),
@@ -197,6 +216,7 @@ const skyTextLabels = computed(() => {
 })
 
 const cultureLabels = computed(() => skyTextLabels.value.filter((label) => label.kind === 'culture'))
+const patternLabels = computed(() => skyTextLabels.value.filter((label) => label.kind === 'pattern'))
 const starLabels = computed(() => skyTextLabels.value.filter((label) => label.kind === 'star'))
 
 const solarSystemLabels = computed(() => {
@@ -655,7 +675,9 @@ function isPointInViewport(point: ProjectedPoint, size: number, margin: number):
 function labelBounds(label: SkyTextLabel, viewportSize: number): LabelBounds | null {
   const fontSize = label.kind === 'culture'
     ? Math.max(8, Math.min(12, viewportSize * 0.014))
-    : Math.max(8, Math.min(12, viewportSize * 0.0135))
+    : label.kind === 'pattern'
+      ? Math.max(9, Math.min(13, viewportSize * 0.0155))
+      : Math.max(8, Math.min(12, viewportSize * 0.0135))
   const width = [...label.text].reduce(
     (total, character) => total + (character.codePointAt(0)! > 255 ? fontSize : fontSize * 0.58),
     0,
@@ -717,6 +739,14 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
         :key="label.key"
         class="culture-label"
         :class="`rank-${label.rank}`"
+        :x="label.x"
+        :y="label.y"
+        :text-anchor="label.anchor"
+      >{{ label.text }}</text>
+      <text
+        v-for="label in patternLabels"
+        :key="label.key"
+        class="pattern-label"
         :x="label.x"
         :y="label.y"
         :text-anchor="label.anchor"
@@ -840,6 +870,12 @@ text {
 
 .culture-label.rank-2 { fill: #668f8c; }
 .culture-label.rank-3 { fill: #557576; }
+
+.pattern-label {
+  fill: #f1c969;
+  font-size: clamp(9px, 1.55cqw, 13px);
+  font-weight: 700;
+}
 
 .star-label {
   fill: #d9e4dc;

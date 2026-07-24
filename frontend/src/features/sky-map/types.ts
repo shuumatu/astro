@@ -337,6 +337,10 @@ export interface CatalogSummary {
   skyContentVersion: string
   defaultCultureId: string
   cultureIds: string[]
+  featuredPatterns: Array<{
+    id: string
+    names: SkyName[]
+  }>
 }
 
 export type SkyWorkerRequest =

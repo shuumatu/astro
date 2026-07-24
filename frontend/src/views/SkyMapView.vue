@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Search } from 'lucide-vue-next'
+import { ChevronDown, Search, Triangle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
+import { selectLocalizedName } from '../features/sky-map/localizedName'
 import {
   OBSERVATION_TIME_PRESETS,
   OBSERVATION_TIME_STEPS,
@@ -58,6 +59,7 @@ const controls = reactive({
   showCultureLabels: true,
   showCultureBoundaries: true,
   showSolarSystemBodies: true,
+  enabledFeaturedPatternIds: [] as string[],
 })
 const status = ref<ViewStatus>('loadingCatalog')
 const activeTimePreset = ref<ObservationTimePreset | 'custom'>('now')
@@ -97,12 +99,18 @@ const visibleStarCount = computed(() => frame.value
 const activeSuggestionId = computed(() => activeSuggestionIndex.value >= 0
   ? `sky-target-suggestion-${activeSuggestionIndex.value}`
   : undefined)
+const featuredPatternOptions = computed(() => (catalog.value?.featuredPatterns ?? []).map((pattern) => ({
+  id: pattern.id,
+  name: selectLocalizedName(pattern.names, locale.value, 'en'),
+})))
+const enabledFeaturedPatternCount = computed(() => controls.enabledFeaturedPatternIds.length)
 
 watch(targetQuery, () => {
   targetMessage.value = ''
   scheduleTargetSuggestions()
 })
 watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
+watch(() => [...controls.enabledFeaturedPatternIds], requestCalculation, { flush: 'sync' })
 watch(() => [controls.cultureId, locale.value] as const, () => {
   requestCalculation()
   scheduleTargetSuggestions()
@@ -196,7 +204,7 @@ function currentCalculationParameters(): SkyCalculationParameters | null {
     applyRefraction: controls.applyRefraction,
     cultureId: controls.cultureId,
     interfaceLanguage: locale.value,
-    enabledFeaturedPatternIds: [],
+    enabledFeaturedPatternIds: [...controls.enabledFeaturedPatternIds],
   }
 }
 
@@ -659,6 +667,29 @@ function formatSelectedData(): string {
               <input v-model="controls.showSolarSystemBodies" type="checkbox">
               <span>{{ t('skyMap.solarSystem') }}</span>
             </label>
+            <details class="featured-pattern-menu">
+              <summary>
+                <Triangle :size="15" aria-hidden="true" />
+                <span>{{ t('skyMap.featuredPatterns') }}</span>
+                <span v-if="enabledFeaturedPatternCount" class="pattern-count">{{ enabledFeaturedPatternCount }}</span>
+                <ChevronDown class="menu-chevron" :size="15" aria-hidden="true" />
+              </summary>
+              <div class="featured-pattern-options">
+                <label
+                  v-for="pattern in featuredPatternOptions"
+                  :key="pattern.id"
+                  class="toggle-row"
+                >
+                  <input
+                    v-model="controls.enabledFeaturedPatternIds"
+                    type="checkbox"
+                    :value="pattern.id"
+                    :disabled="status === 'loadingCatalog'"
+                  >
+                  <span>{{ pattern.name }}</span>
+                </label>
+              </div>
+            </details>
             <label class="toggle-row">
               <input v-model="controls.applyRefraction" type="checkbox">
               <span>{{ t('skyMap.refraction') }}</span>
@@ -949,6 +980,48 @@ select { color-scheme: dark; }
 }
 
 .toggle-row input { width: 15px; height: 15px; margin: 0; accent-color: #6fcbbb; }
+
+.featured-pattern-menu {
+  border: 1px solid #34444c;
+  border-radius: 4px;
+  background: #090e12;
+}
+
+.featured-pattern-menu summary {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: .4rem;
+  min-height: 36px;
+  padding: 0 .55rem;
+  color: #becacc;
+  font-size: .78rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.featured-pattern-menu summary::-webkit-details-marker { display: none; }
+.featured-pattern-menu summary:hover { color: #e1e9e9; background: #141d22; }
+.featured-pattern-menu[open] .menu-chevron { transform: rotate(180deg); }
+.menu-chevron { transition: transform .16s ease; }
+
+.pattern-count {
+  min-width: 20px;
+  border-radius: 10px;
+  padding: .08rem .35rem;
+  color: #07110f;
+  background: #d6ad52;
+  font-size: .65rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.featured-pattern-options {
+  display: grid;
+  gap: .65rem;
+  border-top: 1px solid #26333a;
+  padding: .7rem .55rem;
+}
 
 .secondary-command {
   min-height: 36px;
