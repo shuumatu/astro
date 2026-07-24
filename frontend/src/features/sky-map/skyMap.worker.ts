@@ -1,6 +1,7 @@
 import { loadSkyCatalog } from './catalog'
 import { calculateSkyFrame } from './coordinates'
 import { loadSkyContentAsset, loadSkyContentManifest } from './skyContent'
+import { searchSkyNames } from './targetSearch'
 import type {
   FeaturedPatternPack,
   SkyCulturePack,
@@ -12,6 +13,7 @@ import { SkyMapError } from './types'
 
 interface InitializedCatalogs {
   catalog: Awaited<ReturnType<typeof loadSkyCatalog>>
+  catalogObjectIds: ReadonlySet<string>
   skyContentManifest: Awaited<ReturnType<typeof loadSkyContentManifest>>
   searchIndex: SkySearchIndex
   featuredPatterns: FeaturedPatternPack
@@ -53,6 +55,14 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
       throw new SkyMapError('CATALOG_NOT_READY', 'The sky catalog has not been initialized')
     }
     const initialized = await initializationPromise
+    if (request.type === 'search') {
+      post({
+        type: 'search-results',
+        requestId: request.requestId,
+        result: searchSkyNames(initialized.searchIndex, request.parameters, initialized.catalogObjectIds),
+      })
+      return
+    }
     const culture = await loadCulture(initialized, request.parameters.cultureId)
     const startedAt = performance.now()
     const frame = calculateSkyFrame(
@@ -98,7 +108,13 @@ async function initializeCatalogs(
       skyContentManifest.featuredPatternsAssetId,
     ) as Promise<FeaturedPatternPack>,
   ])
-  return { catalog, skyContentManifest, searchIndex, featuredPatterns }
+  return {
+    catalog,
+    catalogObjectIds: new Set(catalog.catalog.stars.map((star) => star.id)),
+    skyContentManifest,
+    searchIndex,
+    featuredPatterns,
+  }
 }
 
 function loadCulture(initialized: InitializedCatalogs, cultureId: string): Promise<SkyCulturePack> {

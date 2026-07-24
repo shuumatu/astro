@@ -89,6 +89,27 @@ describe('published naked-eye catalog', () => {
     expect(frame.cultureRegions.every((region) => region.rings.length > 0)).toBe(true)
     expect(frame.starLabels.length).toBeGreaterThan(100)
   })
+
+  it('uses Chinese labels for Western IAU content when the interface is Chinese', () => {
+    const catalog = readCompressedJson<SkyCatalog>(catalogUrl)
+    const culture = readCompressedJson<SkyCulturePack>(westernCultureUrl)
+    const featuredPatterns = readCompressedJson<FeaturedPatternPack>(featuredPatternsUrl)
+    const frame = calculateSkyFrame(catalog, culture, featuredPatterns, {
+      observedAt: '2026-07-23T14:00:00.000Z',
+      observer: { latitudeDeg: 22.5431, longitudeDeg: 114.0579, elevationMeters: 20 },
+      magnitudeLimit: 5.5,
+      minimumAltitudeDeg: 0,
+      applyRefraction: true,
+      cultureId: culture.id,
+      interfaceLanguage: 'zh-CN',
+      enabledFeaturedPatternIds: [],
+    })
+
+    expect(frame.cultureFigures.find((figure) => figure.id === 'constellation-and')?.name)
+      .toBe('仙女座')
+    expect(frame.starLabels.find((label) => label.objectId === 'HIP:91262')?.name)
+      .toBe('织女一')
+  })
 })
 
 function readCompressedJson<T>(url: URL): T {

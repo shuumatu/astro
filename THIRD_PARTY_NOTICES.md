@@ -61,6 +61,20 @@ are not published in the initial culture pack.
 - Catalogue: https://iauarchive.eso.org/public/themes/naming_stars/
 - Snapshot SHA-256: `67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d`
 
+## Hong Kong Space Museum astronomy glossaries
+
+Simplified and traditional Chinese names for the 88 Western constellations and safely
+matched IAU bright stars are factual correspondences taken from Hong Kong Space Museum
+glossaries retrieved on 2026-07-24. The project republishes only the name mappings needed
+for sky-chart labels and search; page text, layout, images, and other table columns are not
+included. Exact source snapshot checksums are recorded in
+`tools/catalog/sky-content/import-report.json`.
+
+- Western constellations (simplified Chinese): https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html
+- Western constellations (traditional Chinese): https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html
+- Bright stars (simplified Chinese): https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html
+- Bright stars (traditional Chinese): https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html
+
 ## D3-Celestial constellation boundaries
 
 IAU constellation boundary geometry is derived from D3-Celestial at commit

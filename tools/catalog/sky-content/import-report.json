@@ -17,6 +17,30 @@
       "version": "retrieved-2026-07-24",
       "url": "https://iauarchive.eso.org/public/themes/naming_stars/",
       "snapshotSha256": "67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d"
+    },
+    {
+      "id": "hkspm-western-constellations-zh-cn",
+      "version": "retrieved-2026-07-24",
+      "url": "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html",
+      "snapshotSha256": "fa2679790efdeee8edbaaa803cac1301c40fc3bef3fd5b71920bae80b8b27e4b"
+    },
+    {
+      "id": "hkspm-western-constellations-zh-tw",
+      "version": "retrieved-2026-07-24",
+      "url": "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html",
+      "snapshotSha256": "a5e949789bf44b7271e6bc1a4ad00d86128eadf3bf9fed9aaa2de1c0422320ca"
+    },
+    {
+      "id": "hkspm-bright-stars-zh-cn",
+      "version": "retrieved-2026-07-24",
+      "url": "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html",
+      "snapshotSha256": "720d6e714ac21790958035ad929375ef5ede173c48ea05bc76c3d5934695ba0f"
+    },
+    {
+      "id": "hkspm-bright-stars-zh-tw",
+      "version": "retrieved-2026-07-24",
+      "url": "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html",
+      "snapshotSha256": "02b47f1727bb19b26d0e4bb33c9b6f3aed535e06d503b7f1dc87312a98091d15"
     }
   ],
   "counts": {
@@ -31,6 +55,7 @@
       "starNameRecords": 338,
       "officialIauNames": 338,
       "unmatchedIauNames": 110,
+      "localizedIauStars": 239,
       "figures": 88,
       "groups": 1,
       "regions": 88,
@@ -46,6 +71,7 @@
     "Omitted Chinese figures with no HIP path; their count is recorded above.",
     "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
     "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
+    "Added explicit simplified and traditional Chinese names for Western constellations and safely matched IAU stars from Hong Kong Space Museum glossaries.",
     "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist."
   ]
 }

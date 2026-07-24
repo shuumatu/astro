@@ -16,13 +16,21 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const PACK_VERSION = "2026.07.1";
+const PACK_VERSION = "2026.07.3";
 const IMPORTED_AT = "2026-07-24";
 const STELLARIUM_COMMIT = "014fbb5e59233d133c22f9811af96b67d05a95c9";
 const D3_CELESTIAL_COMMIT = "7e720a3de062059d4c5400a379146a601d9010e0";
 const IAU_WGSN_URL = "https://iauarchive.eso.org/public/themes/naming_stars/";
 const D3_BOUNDARIES_URL =
   `https://raw.githubusercontent.com/ofrohn/d3-celestial/${D3_CELESTIAL_COMMIT}/data/constellations.bounds.json`;
+const HKSPM_WESTERN_CONSTELLATIONS_ZH_CN_URL =
+  "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html";
+const HKSPM_WESTERN_CONSTELLATIONS_ZH_TW_URL =
+  "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html";
+const HKSPM_BRIGHT_STARS_ZH_CN_URL =
+  "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html";
+const HKSPM_BRIGHT_STARS_ZH_TW_URL =
+  "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html";
 
 const MANSION_NUMBERS = new Set([
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
@@ -42,7 +50,19 @@ async function main() {
   await Promise.all([mkdir(CULTURE_DIR, { recursive: true }), mkdir(CACHE_DIR, { recursive: true })]);
   await verifyStellariumCheckout();
 
-  const [chineseIndex, westernIndex, zhCnPo, zhTwPo, boundaries, iauHtml, nakedEye] =
+  const [
+    chineseIndex,
+    westernIndex,
+    zhCnPo,
+    zhTwPo,
+    boundaries,
+    iauHtml,
+    westernConstellationsZhCnHtml,
+    westernConstellationsZhTwHtml,
+    brightStarsZhCnHtml,
+    brightStarsZhTwHtml,
+    nakedEye,
+  ] =
     await Promise.all([
       readJson(join(STELLARIUM_DIR, "chinese/index.json")),
       readJson(join(STELLARIUM_DIR, "western/index.json")),
@@ -50,6 +70,18 @@ async function main() {
       readFile(join(STELLARIUM_DIR, "chinese/po/zh_TW.po"), "utf8"),
       loadCachedText("constellations.bounds.json", D3_BOUNDARIES_URL, refresh).then(JSON.parse),
       loadCachedText("iau-wgsn.html", IAU_WGSN_URL, refresh),
+      loadCachedText(
+        "hkspm-western-constellations-zh-cn.html",
+        HKSPM_WESTERN_CONSTELLATIONS_ZH_CN_URL,
+        refresh,
+      ),
+      loadCachedText(
+        "hkspm-western-constellations-zh-tw.html",
+        HKSPM_WESTERN_CONSTELLATIONS_ZH_TW_URL,
+        refresh,
+      ),
+      loadCachedText("hkspm-bright-stars-zh-cn.html", HKSPM_BRIGHT_STARS_ZH_CN_URL, refresh),
+      loadCachedText("hkspm-bright-stars-zh-tw.html", HKSPM_BRIGHT_STARS_ZH_TW_URL, refresh),
       readFile(NAKED_EYE_PATH).then((bytes) => JSON.parse(gunzipSync(bytes).toString("utf8"))),
     ]);
 
@@ -58,7 +90,18 @@ async function main() {
     parsePo(zhCnPo),
     parsePo(zhTwPo),
   );
-  const westernResult = buildWesternCulture(westernIndex, boundaries, iauHtml, nakedEye.stars);
+  const westernResult = buildWesternCulture(
+    westernIndex,
+    boundaries,
+    iauHtml,
+    nakedEye.stars,
+    {
+      westernConstellationsZhCnHtml,
+      westernConstellationsZhTwHtml,
+      brightStarsZhCnHtml,
+      brightStarsZhTwHtml,
+    },
+  );
   const physicalObjectIds = new Set(nakedEye.stars.map((star) => star.id));
   const referencedObjectIds = new Set([
     ...collectCultureObjectIds(chineseResult.pack),
@@ -102,6 +145,17 @@ async function main() {
           url: IAU_WGSN_URL,
           snapshotSha256: sha256(Buffer.from(iauHtml, "utf8")),
         },
+        ...[
+          ["hkspm-western-constellations-zh-cn", HKSPM_WESTERN_CONSTELLATIONS_ZH_CN_URL, westernConstellationsZhCnHtml],
+          ["hkspm-western-constellations-zh-tw", HKSPM_WESTERN_CONSTELLATIONS_ZH_TW_URL, westernConstellationsZhTwHtml],
+          ["hkspm-bright-stars-zh-cn", HKSPM_BRIGHT_STARS_ZH_CN_URL, brightStarsZhCnHtml],
+          ["hkspm-bright-stars-zh-tw", HKSPM_BRIGHT_STARS_ZH_TW_URL, brightStarsZhTwHtml],
+        ].map(([id, url, html]) => ({
+          id,
+          version: `retrieved-${IMPORTED_AT}`,
+          url,
+          snapshotSha256: sha256(Buffer.from(html, "utf8")),
+        })),
       ],
       counts: {
         chinese: chineseResult.counts,
@@ -116,6 +170,7 @@ async function main() {
         "Omitted Chinese figures with no HIP path; their count is recorded above.",
         "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
         "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
+        "Added explicit simplified and traditional Chinese names for Western constellations and safely matched IAU stars from Hong Kong Space Museum glossaries.",
         "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist.",
       ],
     }),
@@ -290,10 +345,12 @@ function buildChineseCulture(index, zhCn, zhTw) {
   };
 }
 
-function buildWesternCulture(index, boundaries, iauHtml, physicalStars) {
+function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localizedHtml) {
   const stellariumSourceId = "stellarium-western";
   const d3SourceId = "d3-celestial-boundaries";
   const iauSourceId = "iau-wgsn";
+  const hkspmConstellationSourceId = "hkspm-western-constellations";
+  const hkspmBrightStarSourceId = "hkspm-bright-stars";
   const sources = [
     {
       id: stellariumSourceId,
@@ -322,7 +379,34 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars) {
       license: "LicenseRef-Citation-Only",
       attribution: "Official star names and coordinates from the IAU WGSN catalogue.",
     },
+    {
+      id: hkspmConstellationSourceId,
+      title: "Hong Kong Space Museum glossary of Western constellations",
+      authors: ["Hong Kong Space Museum"],
+      url: HKSPM_WESTERN_CONSTELLATIONS_ZH_CN_URL,
+      version: `retrieved-${IMPORTED_AT}`,
+      license: "LicenseRef-Citation-Only",
+      attribution: "Simplified and traditional Chinese constellation names from the Hong Kong Space Museum glossary.",
+    },
+    {
+      id: hkspmBrightStarSourceId,
+      title: "Hong Kong Space Museum glossary of bright stars",
+      authors: ["Hong Kong Space Museum"],
+      url: HKSPM_BRIGHT_STARS_ZH_CN_URL,
+      version: `retrieved-${IMPORTED_AT}`,
+      license: "LicenseRef-Citation-Only",
+      attribution: "Simplified and traditional Chinese bright-star names from the Hong Kong Space Museum glossary.",
+    },
   ];
+
+  const constellationTranslations = parseHkspmConstellationTranslations(
+    localizedHtml.westernConstellationsZhCnHtml,
+    localizedHtml.westernConstellationsZhTwHtml,
+  );
+  const brightStarTranslations = parseHkspmBrightStarTranslations(
+    localizedHtml.brightStarsZhCnHtml,
+    localizedHtml.brightStarsZhTwHtml,
+  );
 
   const canonicalIauByLowercase = new Map(
     (boundaries.features ?? []).map((feature) => [feature.id.toLowerCase(), feature.id]),
@@ -336,7 +420,12 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars) {
       id: westernFigureId(iauCode),
       type: "constellation",
       iauCode,
-      names: westernNames(figure.common_name, stellariumSourceId),
+      names: westernNames(
+        figure.common_name,
+        stellariumSourceId,
+        constellationTranslations.get(normalizeGlossaryName(figure.common_name.native)),
+        hkspmConstellationSourceId,
+      ),
       paths,
       labelAnchor: { objectId: chooseAnchor(paths) },
       rank: 1,
@@ -378,6 +467,17 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars) {
     const objectId = `HIP:${match.star.hipId}`;
     const names = starNamesByObject.get(objectId) ?? [];
     names.push(name("en", row.name, "official", names.length === 0, iauSourceId));
+    const localized = brightStarTranslations.get(
+      brightStarTranslationKey(row.name, row.constellationCode),
+    );
+    if (localized) {
+      for (const [index, value] of localized.zhCn.entries()) {
+        names.push(name("zh-CN", value, "alias", index === 0, hkspmBrightStarSourceId));
+      }
+      for (const [index, value] of localized.zhTw.entries()) {
+        names.push(name("zh-TW", value, "alias", index === 0, hkspmBrightStarSourceId));
+      }
+    }
     starNamesByObject.set(objectId, names);
   }
   const starNames = [...starNamesByObject]
@@ -423,8 +523,13 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars) {
     pack,
     counts: {
       starNameRecords: starNames.length,
-      officialIauNames: starNames.reduce((count, record) => count + record.names.length, 0),
+      officialIauNames: starNames.reduce((count, record) =>
+        count + record.names.filter((recordName) => recordName.type === "official").length,
+      0),
       unmatchedIauNames,
+      localizedIauStars: starNames.filter((record) =>
+        record.names.some((recordName) => recordName.language === "zh-CN"),
+      ).length,
       figures: figures.length,
       groups: 1,
       regions: regions.length,
@@ -442,14 +547,128 @@ function cultureNames({ english, native, traditional, transliteration, sourceId 
   return deduplicateNames(names);
 }
 
-function westernNames(commonName, sourceId) {
+function westernNames(commonName, sourceId, localized, localizedSourceId) {
   const names = [name("la", commonName.native, "official", true, sourceId)];
   if (commonName.english !== commonName.native) {
     names.push(name("en", commonName.english, "translation", true, sourceId));
   } else {
     names.push(name("en", commonName.english, "official", true, sourceId));
   }
+  if (localized) {
+    names.push(name("zh-CN", localized.zhCn, "translation", true, localizedSourceId));
+    names.push(name("zh-TW", localized.zhTw, "translation", true, localizedSourceId));
+  }
   return names;
+}
+
+function parseHkspmConstellationTranslations(zhCnHtml, zhTwHtml) {
+  const zhCnRows = parseGlossaryRows(zhCnHtml, 8)
+    .filter((cells) => /^\d+$/.test(cells[0]))
+    .map((cells) => ({ english: cells[2], value: cells[1] }));
+  const zhTwRows = parseGlossaryRows(zhTwHtml, 8)
+    .filter((cells) => /^\d+$/.test(cells[0]))
+    .map((cells) => ({ english: cells[2], value: cells[1] }));
+  if (zhCnRows.length !== 88 || zhTwRows.length !== 88) {
+    throw new Error(`Expected 88 HKSPM constellation rows per language, got ${zhCnRows.length}/${zhTwRows.length}`);
+  }
+  const zhTwByEnglish = uniqueGlossaryMap(zhTwRows, "traditional constellation");
+  const result = new Map();
+  for (const row of zhCnRows) {
+    const key = normalizeGlossaryName(row.english);
+    const traditional = zhTwByEnglish.get(key);
+    if (!traditional) throw new Error(`Missing traditional HKSPM constellation name for ${row.english}`);
+    result.set(key, { zhCn: row.value, zhTw: traditional.value });
+  }
+  return result;
+}
+
+function parseHkspmBrightStarTranslations(zhCnHtml, zhTwHtml) {
+  const zhCnRows = parseBrightStarGlossary(zhCnHtml);
+  const zhTwByIdentity = new Map(parseBrightStarGlossary(zhTwHtml).map((row) => [row.identity, row]));
+  const candidates = new Map();
+  for (const row of zhCnRows) {
+    const traditional = zhTwByIdentity.get(row.identity);
+    if (!traditional) throw new Error(`Missing traditional HKSPM bright-star row for ${row.identity}`);
+    const key = brightStarTranslationKey(row.english, row.constellationCode);
+    const zhCn = splitChineseAliases(row.value);
+    const zhTw = splitChineseAliases(traditional.value);
+    if (zhCn.length === 0 || zhTw.length === 0) continue;
+    const values = candidates.get(key) ?? [];
+    values.push({ zhCn, zhTw });
+    candidates.set(key, values);
+  }
+  const result = new Map();
+  for (const [key, values] of candidates) {
+    const unique = deduplicateLocalizedAliases(values);
+    if (unique.length === 1) result.set(key, unique[0]);
+  }
+  return result;
+}
+
+function parseBrightStarGlossary(html) {
+  return parseGlossaryRows(html, 6)
+    .filter((cells) => cells[0] && cells[1] && cells[2] && cells[3] && !/英文名|英文名稱/.test(cells[0]))
+    .map((cells) => {
+      const english = cells[0].replace(/\s*\*+\s*$/, "").trim();
+      return {
+        english,
+        constellationCode: cells[2],
+        value: cells[3],
+        identity: [normalizeGlossaryName(english), cells[1], cells[2]].join("\u0000"),
+      };
+    });
+}
+
+function parseGlossaryRows(html, minimumCellCount) {
+  const rows = [];
+  for (const rowMatch of html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells = [...rowMatch[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)]
+      .map((match) => decodeHtml(stripTags(match[1])).replace(/\s+/g, " ").trim());
+    if (cells.length >= minimumCellCount) rows.push(cells);
+  }
+  return rows;
+}
+
+function uniqueGlossaryMap(rows, label) {
+  const result = new Map();
+  for (const row of rows) {
+    const key = normalizeGlossaryName(row.english);
+    if (result.has(key)) throw new Error(`Duplicate ${label} row for ${row.english}`);
+    result.set(key, row);
+  }
+  return result;
+}
+
+function normalizeGlossaryName(value) {
+  return value
+    .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("und")
+    .replace(/[\p{P}\p{S}\s]+/gu, "");
+}
+
+function brightStarTranslationKey(english, constellationCode) {
+  return `${normalizeGlossaryName(english)}\u0000${constellationCode.toLowerCase()}`;
+}
+
+function splitChineseAliases(value) {
+  return [...new Set(value
+    .split(/[，,]/)
+    .map((part) => part.trim())
+    .filter((part) => normalizeGlossaryName(part).length > 0))];
+}
+
+function deduplicateLocalizedAliases(values) {
+  const result = [];
+  const keys = new Set();
+  for (const value of values) {
+    const key = JSON.stringify(value);
+    if (keys.has(key)) continue;
+    keys.add(key);
+    result.push(value);
+  }
+  return result;
 }
 
 function enclosureGroup(id, simplified, traditional, english, figures, sourceId) {
@@ -520,7 +739,13 @@ function parseIauRows(html) {
     const decDeg = Number(cells[8]);
     const visualMagnitude = Number(cells[6]);
     if (!cells[0] || !Number.isFinite(raDeg) || !Number.isFinite(decDeg) || !Number.isFinite(visualMagnitude)) continue;
-    rows.push({ name: cells[0], raDeg, decDeg, visualMagnitude });
+    rows.push({
+      name: cells[0],
+      constellationCode: cells[3],
+      raDeg,
+      decDeg,
+      visualMagnitude,
+    });
   }
   if (rows.length < 400) throw new Error(`Expected at least 400 IAU WGSN rows, got ${rows.length}`);
   return rows;

@@ -2,6 +2,8 @@ import type {
   CatalogSummary,
   SkyCalculationParameters,
   SkyFrame,
+  SkySearchParameters,
+  SkySearchResult,
   SkyWorkerRequest,
   SkyWorkerResponse,
 } from './types'
@@ -15,6 +17,7 @@ type PendingRequest = {
 type SkyWorkerRequestPayload =
   | Omit<Extract<SkyWorkerRequest, { type: 'initialize' }>, 'requestId'>
   | Omit<Extract<SkyWorkerRequest, { type: 'calculate' }>, 'requestId'>
+  | Omit<Extract<SkyWorkerRequest, { type: 'search' }>, 'requestId'>
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 export const defaultCatalogManifestUrl = `${apiBaseUrl}/astronomy/catalogs/naked-eye/manifest`
@@ -47,6 +50,14 @@ export class SkyMapWorkerClient {
     const response = await this.send({ type: 'calculate', parameters })
     if (response.type !== 'frame') throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
     return { frame: response.frame, calculationDurationMs: response.calculationDurationMs }
+  }
+
+  async search(parameters: SkySearchParameters): Promise<SkySearchResult> {
+    const response = await this.send({ type: 'search', parameters })
+    if (response.type !== 'search-results') {
+      throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
+    }
+    return response.result
   }
 
   dispose(): void {

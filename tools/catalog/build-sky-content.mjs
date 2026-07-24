@@ -24,7 +24,7 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const VERSION = "2026.07.1";
+const VERSION = "2026.07.3";
 const PUBLISHED_AT = "2026-07-24T00:00:00Z";
 
 async function main() {
@@ -47,6 +47,8 @@ async function main() {
     validateCulturePack(culture, { knownObjectIds });
     assert(culture.version === VERSION, `${culture.id} version does not match build version ${VERSION}`);
   }
+  assertCultureLanguageCoverage(chinese, "en");
+  assertCultureLanguageCoverage(western, "zh-CN");
   const cultureIds = new Set(culturePacks.map((culture) => culture.id));
   validateFeaturedPatternPack(featuredPatterns, { catalogObjectIds, cultureIds });
   assert(featuredPatterns.version === VERSION, "Featured-pattern version does not match build version");
@@ -163,6 +165,20 @@ function assertSearchTarget(searchIndex, term, expectedObjectId) {
   assert(
     objectIds.has(expectedObjectId),
     `Search acceptance term ${term} did not resolve to ${expectedObjectId}`,
+  );
+}
+
+function assertCultureLanguageCoverage(culture, language) {
+  const figureCoverage = culture.figures.filter((figure) =>
+    figure.names.some((name) => name.language === language),
+  ).length;
+  assert(
+    figureCoverage === culture.figures.length,
+    `${culture.id} only has ${language} names for ${figureCoverage}/${culture.figures.length} figures`,
+  );
+  assert(
+    culture.starNames.some((record) => record.names.some((name) => name.language === language)),
+    `${culture.id} has no ${language} star names`,
   );
 }
 

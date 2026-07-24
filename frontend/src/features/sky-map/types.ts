@@ -177,6 +177,32 @@ export interface SkySearchIndex {
   collisions: Array<{ normalizedTerm: string; objectIds: string[] }>
 }
 
+export type SkySearchMatchType = 'exact' | 'prefix' | 'contains'
+
+export interface SkySearchParameters {
+  query: string
+  cultureId: string
+  interfaceLanguage: string
+  limit: number
+}
+
+export interface SkySearchSuggestion {
+  objectId: string
+  hipId: number
+  term: string
+  cultureId: string
+  language: string
+  nameType: SkySearchIndexEntry['nameType']
+  matchType: SkySearchMatchType
+  availableInCatalog: boolean
+}
+
+export interface SkySearchResult {
+  query: string
+  normalizedQuery: string
+  suggestions: SkySearchSuggestion[]
+}
+
 export interface FeaturedPatternRecord {
   id: string
   names: SkyName[]
@@ -321,10 +347,12 @@ export type SkyWorkerRequest =
     skyContentManifestUrl: string
   }
   | { type: 'calculate'; requestId: string; parameters: SkyCalculationParameters }
+  | { type: 'search'; requestId: string; parameters: SkySearchParameters }
 
 export type SkyWorkerResponse =
   | { type: 'ready'; requestId: string; catalog: CatalogSummary }
   | { type: 'frame'; requestId: string; frame: SkyFrame; calculationDurationMs: number }
+  | { type: 'search-results'; requestId: string; result: SkySearchResult }
   | { type: 'error'; requestId: string; code: SkyMapErrorCode; message: string }
 
 export type SkyMapErrorCode =
