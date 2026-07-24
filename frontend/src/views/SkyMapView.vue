@@ -5,9 +5,14 @@ import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import {
   OBSERVATION_TIME_PRESETS,
+  OBSERVATION_TIME_STEPS,
   observationTimeForPreset,
+  shiftObservationTime,
 } from '../features/sky-map/observationTime'
-import type { ObservationTimePreset } from '../features/sky-map/observationTime'
+import type {
+  ObservationTimePreset,
+  ObservationTimeStep,
+} from '../features/sky-map/observationTime'
 import {
   OBSERVER_PRESET_IDS,
   observerLocationForPreset,
@@ -116,6 +121,14 @@ function useTimePreset(preset: ObservationTimePreset): void {
 
 function useCustomTime(): void {
   activeTimePreset.value = 'custom'
+}
+
+function adjustObservationTime(step: ObservationTimeStep): void {
+  const current = new Date(controls.observedAt)
+  if (Number.isNaN(current.getTime())) return
+  activeTimePreset.value = 'custom'
+  controls.observedAt = localDateTimeValue(shiftObservationTime(current, step))
+  void calculate()
 }
 
 function useLocationPreset(): void {
@@ -254,6 +267,16 @@ function formatSelectedData(): string {
                 :disabled="status === 'loadingCatalog' || status === 'calculating'"
                 @click="useTimePreset(preset)"
               >{{ t(`skyMap.timePresets.${preset}`) }}</button>
+            </div>
+            <div class="time-adjustments" role="group" :aria-label="t('skyMap.adjustTime')">
+              <button
+                v-for="step in OBSERVATION_TIME_STEPS"
+                :key="step"
+                type="button"
+                :title="t(`skyMap.timeSteps.${step}`)"
+                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                @click="adjustObservationTime(step)"
+              >{{ t(`skyMap.timeSteps.${step}`) }}</button>
             </div>
           </fieldset>
 
@@ -503,15 +526,19 @@ legend {
   gap: .55rem;
 }
 
-.time-presets {
+.time-presets,
+.time-adjustments {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid #3a4c54;
   border-radius: 4px;
 }
 
-.time-presets button {
+.time-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.time-adjustments { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.time-presets button,
+.time-adjustments button {
   min-width: 0;
   min-height: 42px;
   border: 0;
@@ -524,9 +551,11 @@ legend {
   cursor: pointer;
 }
 
-.time-presets button:last-child { border-right: 0; }
+.time-presets button:last-child,
+.time-adjustments button:last-child { border-right: 0; }
 .time-presets button.active { color: #07110f; background: #86cbc1; font-weight: 700; }
-.time-presets button:hover:not(:disabled, .active) { color: #dfe8e8; background: #182329; }
+.time-presets button:hover:not(:disabled, .active),
+.time-adjustments button:hover:not(:disabled) { color: #dfe8e8; background: #182329; }
 
 input[type="datetime-local"],
 input[type="number"],

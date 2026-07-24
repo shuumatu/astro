@@ -22,10 +22,17 @@
     "observation": "Observation",
     "observedAt": "Observed at",
     "quickTimes": "Quick observation time",
+    "adjustTime": "Adjust observation time",
     "timePresets": {
       "now": "Now",
       "tonight": "Tonight 20:00",
       "tomorrowEvening": "Tomorrow 20:00"
+    },
+    "timeSteps": {
+      "previousDay": "-1 day",
+      "previousHour": "-1 hour",
+      "nextHour": "+1 hour",
+      "nextDay": "+1 day"
     },
     "location": "Location",
     "locationPreset": "Location preset",

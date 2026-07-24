@@ -22,10 +22,17 @@
     "observation": "观测条件",
     "observedAt": "观测时间",
     "quickTimes": "快捷观测时间",
+    "adjustTime": "调整观测时间",
     "timePresets": {
       "now": "当前时刻",
       "tonight": "今晚 20:00",
       "tomorrowEvening": "明晚 20:00"
+    },
+    "timeSteps": {
+      "previousDay": "-1 天",
+      "previousHour": "-1 小时",
+      "nextHour": "+1 小时",
+      "nextDay": "+1 天"
     },
     "location": "观测位置",
     "locationPreset": "地点预设",
