@@ -152,6 +152,7 @@ async function main() {
     constellations,
   };
   const catalogBytes = Buffer.from(`${JSON.stringify(catalog)}\n`, "utf8");
+  const decodedSha256 = createHash("sha256").update(catalogBytes).digest("hex");
   const encodedBytes = gzipSync(catalogBytes, { level: 9, mtime: 0 });
   const sha256 = createHash("sha256").update(encodedBytes).digest("hex");
   const catalogPath = join(OUTPUT_DIR, "catalog.json.gz");
@@ -192,6 +193,8 @@ async function main() {
     contentEncoding: "gzip",
     sha256,
     contentLength: encodedBytes.length,
+    decodedSha256,
+    decodedContentLength: catalogBytes.length,
     starCount: stars.length,
     constellationCount: constellations.length,
     sources: sourceCredits,
@@ -216,6 +219,7 @@ async function main() {
         uncompressedBytes: catalogBytes.length,
         compressedBytes: encodedBytes.length,
         sha256,
+        decodedSha256,
       },
       null,
       2,

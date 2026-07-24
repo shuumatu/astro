@@ -25,9 +25,9 @@
 
 ## 开发前置条件
 
-- Java 17+（推荐生产使用 Java 21）
+- Eclipse Temurin JDK 21 LTS
 - Maven 3.9+
-- Node.js 20+ 和 npm 10+
+- Node.js 20+ 和 Corepack 管理的 Yarn 4
 - Docker Desktop
 
 ## 启动方式
@@ -42,9 +42,10 @@ mvn spring-boot:run -pl services/api-gateway
 前端（从项目根目录另开终端）：
 
 ~~~powershell
+corepack enable
 cd frontend
-npm install
-npm run dev
+yarn install --immutable
+yarn dev
 ~~~
 
 基础设施：

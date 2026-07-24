@@ -84,6 +84,8 @@ class CatalogControllerTest {
                 "gzip",
                 "0".repeat(64),
                 1024,
+                "1".repeat(64),
+                4096,
                 9000,
                 88,
                 List.of(new CatalogSource(

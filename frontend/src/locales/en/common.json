@@ -15,5 +15,44 @@
     "catalog": "The astronomy catalog is being built.",
     "missions": "Progressive learning missions are being built.",
     "skyMap": "The sky calculation service is being connected."
+  },
+  "skyMap": {
+    "kicker": "Horizon coordinates · Shenzhen default",
+    "title": "Live all-sky chart",
+    "observation": "Observation",
+    "observedAt": "Observed at",
+    "now": "Use current time",
+    "location": "Location",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "elevation": "Elevation (m)",
+    "visibility": "Display",
+    "magnitudeLimit": "Magnitude limit",
+    "constellationLines": "Constellation lines",
+    "constellationLabels": "Constellation labels",
+    "refraction": "Atmospheric refraction",
+    "update": "Update chart",
+    "retry": "Reload",
+    "loadFailed": "Sky data could not be loaded",
+    "catalogVersion": "Catalog {version}",
+    "visibleStars": "Visible stars",
+    "calculationTime": "Calculation",
+    "selectedStar": "Selected star",
+    "magnitude": "Magnitude",
+    "position": "Azimuth / altitude",
+    "chartAria": "All-sky chart centered on the zenith and bounded by the horizon",
+    "canvasFallback": "This browser does not support the Canvas sky chart.",
+    "status": {
+      "loadingCatalog": "Loading catalog",
+      "calculating": "Calculating",
+      "ready": "Chart ready",
+      "error": "Load failed"
+    },
+    "directions": {
+      "north": "N",
+      "east": "E",
+      "south": "S",
+      "west": "W"
+    }
   }
 }

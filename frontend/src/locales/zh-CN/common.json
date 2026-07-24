@@ -15,5 +15,44 @@
     "catalog": "天体图鉴正在建设中。",
     "missions": "分级学习任务正在建设中。",
     "skyMap": "星图计算服务正在接入中。"
+  },
+  "skyMap": {
+    "kicker": "地平坐标 · 深圳默认位置",
+    "title": "实时全天星图",
+    "observation": "观测条件",
+    "observedAt": "观测时间",
+    "now": "使用当前时间",
+    "location": "观测位置",
+    "latitude": "纬度",
+    "longitude": "经度",
+    "elevation": "海拔（米）",
+    "visibility": "显示设置",
+    "magnitudeLimit": "极限星等",
+    "constellationLines": "星座连线",
+    "constellationLabels": "星座标签",
+    "refraction": "大气折射修正",
+    "update": "更新星图",
+    "retry": "重新加载",
+    "loadFailed": "星图数据加载失败",
+    "catalogVersion": "星表 {version}",
+    "visibleStars": "可见恒星",
+    "calculationTime": "计算耗时",
+    "selectedStar": "选中恒星",
+    "magnitude": "视星等",
+    "position": "方位角 / 高度角",
+    "chartAria": "以天顶为中心、地平线为边界的全天星图",
+    "canvasFallback": "当前浏览器不支持 Canvas 星图。",
+    "status": {
+      "loadingCatalog": "正在加载星表",
+      "calculating": "正在计算",
+      "ready": "星图已就绪",
+      "error": "加载失败"
+    },
+    "directions": {
+      "north": "北",
+      "east": "东",
+      "south": "南",
+      "west": "西"
+    }
   }
 }

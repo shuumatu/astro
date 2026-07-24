@@ -95,6 +95,8 @@ components:
         - contentEncoding
         - sha256
         - contentLength
+        - decodedSha256
+        - decodedContentLength
         - starCount
         - constellationCount
         - sources
@@ -124,6 +126,14 @@ components:
         contentLength:
           type: integer
           minimum: 1
+        decodedSha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+          description: SHA-256 of the decoded JSON bytes exposed by the browser Fetch API.
+        decodedContentLength:
+          type: integer
+          minimum: 1
+          description: Length of the decoded JSON bytes exposed by the browser Fetch API.
         starCount:
           type: integer
           minimum: 1

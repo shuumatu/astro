@@ -7,6 +7,8 @@
   "contentEncoding": "gzip",
   "sha256": "da22697b181f4ecc9e918cb5738545f40b4dfb14283341532dc629c0c19531a0",
   "contentLength": 568846,
+  "decodedSha256": "44ba7125bbf605603ead7a65eba60aff6835e118800ef6caafd4ede17f2f0378",
+  "decodedContentLength": 2935033,
   "starCount": 8870,
   "constellationCount": 88,
   "sources": [

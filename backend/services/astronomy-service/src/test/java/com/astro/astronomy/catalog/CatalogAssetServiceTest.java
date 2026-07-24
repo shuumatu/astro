@@ -68,6 +68,8 @@ class CatalogAssetServiceTest {
                 "gzip",
                 sha256,
                 contentLength,
+                "1".repeat(64),
+                4096,
                 9000,
                 88,
                 List.of(new CatalogSource(

@@ -28,11 +28,11 @@ deploy/     本地基础设施和部署配置
 - Vue 3、TypeScript、Vite、Pinia、Vue Router
 - vue-i18n 负责界面文案和语言切换
 - 公共科普页面后续评估迁移到 Nuxt 3，以支持 SSR/SSG 和多语言 SEO
-- 首版星图使用 SVG；需要大量星体或流畅缩放时再引入 Canvas/WebGL
+- 首版星图使用 Canvas 2D 绘制恒星、星座线和网格，SVG/DOM 覆盖层承载标签、选中态和控制界面
 
 ### 后端
 
-- Java 17 兼容基线，生产环境推荐 Java 21
+- Java 21 LTS 作为开发、构建和生产环境的统一基线
 - Spring Boot 3.x、Spring Cloud Gateway
 - 前端和后端分别放在根目录的 frontend、backend 文件夹中，独立安装依赖、构建和部署
 - Nacos、消息队列和集中式配置暂不写死到业务代码，待本地基础设施确定后接入

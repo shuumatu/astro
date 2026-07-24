@@ -36,10 +36,14 @@ class CatalogArtifactTest {
         assertThat(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(encoded)))
                 .isEqualTo(manifest.sha256());
 
-        JsonNode catalog;
+        byte[] decoded;
         try (GZIPInputStream input = new GZIPInputStream(new ByteArrayInputStream(encoded))) {
-            catalog = objectMapper.readTree(input);
+            decoded = input.readAllBytes();
         }
+        assertThat(decoded).hasSize((int) manifest.decodedContentLength());
+        assertThat(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(decoded)))
+                .isEqualTo(manifest.decodedSha256());
+        JsonNode catalog = objectMapper.readTree(decoded);
         assertThat(catalog.path("schemaVersion").asInt()).isEqualTo(1);
         assertThat(catalog.path("catalogId").asText()).isEqualTo("naked-eye");
         assertThat(catalog.path("referenceFrame").asText()).isEqualTo("ICRS");

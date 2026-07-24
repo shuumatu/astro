@@ -2,23 +2,36 @@
   "name": "astro-web",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "yarn@4.17.1",
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
+    "astronomy-engine": "2.1.19",
     "pinia": "^2.3.0",
     "vue": "^3.5.13",
     "vue-i18n": "^10.0.5",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@intlify/devtools-types": "10.0.7",
+    "@types/node": "22.15.30",
     "@vitejs/plugin-vue": "^5.2.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
+    "vitest": "3.2.4",
     "vue-tsc": "^2.2.0"
+  },
+  "resolutions": {
+    "vite": "6.4.3"
   }
 }

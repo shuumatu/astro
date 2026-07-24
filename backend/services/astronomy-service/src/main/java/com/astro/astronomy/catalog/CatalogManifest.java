@@ -20,6 +20,8 @@ public record CatalogManifest(
         @NotBlank @Pattern(regexp = "identity|br|gzip") String contentEncoding,
         @NotBlank @Pattern(regexp = "[a-f0-9]{64}") String sha256,
         @Positive long contentLength,
+        @NotBlank @Pattern(regexp = "[a-f0-9]{64}") String decodedSha256,
+        @Positive long decodedContentLength,
         @Positive int starCount,
         @Positive int constellationCount,
         @NotEmpty List<@Valid CatalogSource> sources,

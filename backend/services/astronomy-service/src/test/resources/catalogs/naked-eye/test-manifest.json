@@ -7,6 +7,8 @@
   "contentEncoding": "br",
   "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
   "contentLength": 1024,
+  "decodedSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "decodedContentLength": 4096,
   "starCount": 9000,
   "constellationCount": 88,
   "sources": [
