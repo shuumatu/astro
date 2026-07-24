@@ -86,6 +86,8 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "resetView": "Reset view",
+    "enterFullscreen": "Enter fullscreen",
+    "exitFullscreen": "Exit fullscreen",
     "chartAria": "All-sky chart centered on the zenith and bounded by the horizon",
     "canvasFallback": "This browser does not support the Canvas sky chart.",
     "status": {

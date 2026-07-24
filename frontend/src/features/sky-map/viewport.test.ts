@@ -3,6 +3,8 @@ import {
   centerSkyViewOn,
   defaultSkyViewTransform,
   panSkyView,
+  resizeSkyViewTransform,
+  skyViewportRadius,
   transformSkyPoint,
   zoomSkyViewAt,
 } from './viewport'
@@ -32,5 +34,16 @@ describe('sky view transforms', () => {
 
     const horizon = centerSkyViewOn({ x: 190, y: 100 }, 2, 100, 90)
     expect(horizon.offsetX).toBe(-90)
+  })
+
+  it('preserves normalized pan offsets when the viewport changes size', () => {
+    const transform = { scale: 2.5, offsetX: 120, offsetY: -75 }
+    const resized = resizeSkyViewTransform(transform, 480, 1080)
+    const radiusRatio = skyViewportRadius(1080) / skyViewportRadius(480)
+
+    expect(resized.scale).toBe(transform.scale)
+    expect(resized.offsetX).toBeCloseTo(transform.offsetX * radiusRatio, 12)
+    expect(resized.offsetY).toBeCloseTo(transform.offsetY * radiusRatio, 12)
+    expect(resizeSkyViewTransform(transform, 0, 1080)).toBe(transform)
   })
 })

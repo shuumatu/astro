@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Maximize2, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
@@ -17,6 +17,8 @@ import {
   centerSkyViewOn,
   defaultSkyViewTransform,
   panSkyView,
+  resizeSkyViewTransform,
+  skyViewportRadius,
   transformSkyPoint,
   zoomSkyViewAt,
 } from './viewport'
@@ -80,10 +82,13 @@ const props = defineProps<{
   showStarNames: boolean
   showSolarSystemBodies: boolean
   selectedObject: SkyObjectSelection | null
+  isFullscreen: boolean
+  fullscreenSupported: boolean
 }>()
 
 const emit = defineEmits<{
   select: [selection: SkyObjectSelection | null]
+  toggleFullscreen: []
 }>()
 
 const { t } = useI18n()
@@ -104,7 +109,7 @@ let pendingPointer: ProjectedPoint | null = null
 const geometry = computed(() => {
   const size = viewportSize.value
   const center = size / 2
-  const radius = Math.max(0, center - Math.max(24, size * 0.055))
+  const radius = skyViewportRadius(size)
   return { size, center, radius }
 })
 
@@ -275,8 +280,12 @@ watch(
 onMounted(() => {
   if (!container.value) return
   resizeObserver = new ResizeObserver(([entry]) => {
-    viewportSize.value = Math.floor(entry.contentRect.width)
-    viewTransform.value = defaultSkyViewTransform()
+    const previousSize = viewportSize.value
+    const nextSize = Math.floor(entry.contentRect.width)
+    if (previousSize > 0 && nextSize !== previousSize) {
+      viewTransform.value = resizeSkyViewTransform(viewTransform.value, previousSize, nextSize)
+    }
+    viewportSize.value = nextSize
     scheduleDraw()
   })
   resizeObserver.observe(container.value)
@@ -815,7 +824,17 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
         :title="t('skyMap.resetView')"
         :disabled="viewTransform.scale <= MIN_SKY_ZOOM"
         @click="resetView"
-      ><Maximize2 :size="17" aria-hidden="true" /></button>
+      ><RotateCcw :size="17" aria-hidden="true" /></button>
+      <button
+        type="button"
+        :aria-label="t(isFullscreen ? 'skyMap.exitFullscreen' : 'skyMap.enterFullscreen')"
+        :title="t(isFullscreen ? 'skyMap.exitFullscreen' : 'skyMap.enterFullscreen')"
+        :disabled="!fullscreenSupported"
+        @click="emit('toggleFullscreen')"
+      >
+        <Minimize2 v-if="isFullscreen" :size="17" aria-hidden="true" />
+        <Maximize2 v-else :size="17" aria-hidden="true" />
+      </button>
     </div>
   </div>
 </template>
@@ -910,7 +929,7 @@ text {
   right: 12px;
   z-index: 3;
   display: grid;
-  grid-template-columns: 34px 52px 34px 34px;
+  grid-template-columns: 34px 52px repeat(3, 34px);
   align-items: center;
   overflow: hidden;
   border: 1px solid #3a4b51;

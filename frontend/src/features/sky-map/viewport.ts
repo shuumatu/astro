@@ -15,6 +15,26 @@ export const defaultSkyViewTransform = (): SkyViewTransform => ({
   offsetY: 0,
 })
 
+export function skyViewportRadius(viewportSize: number): number {
+  return Math.max(0, viewportSize / 2 - Math.max(24, viewportSize * 0.055))
+}
+
+export function resizeSkyViewTransform(
+  transform: SkyViewTransform,
+  previousViewportSize: number,
+  nextViewportSize: number,
+): SkyViewTransform {
+  const previousRadius = skyViewportRadius(previousViewportSize)
+  const nextRadius = skyViewportRadius(nextViewportSize)
+  if (previousRadius <= 0 || nextRadius <= 0 || previousRadius === nextRadius) return transform
+  const radiusRatio = nextRadius / previousRadius
+  return {
+    ...transform,
+    offsetX: transform.offsetX * radiusRatio,
+    offsetY: transform.offsetY * radiusRatio,
+  }
+}
+
 export function transformSkyPoint(
   point: ProjectedPoint,
   transform: SkyViewTransform,

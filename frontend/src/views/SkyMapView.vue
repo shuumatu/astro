@@ -70,6 +70,9 @@ const frame = shallowRef<SkyFrame | null>(null)
 const calculationDurationMs = ref<number | null>(null)
 const selectedObject = ref<SkyObjectSelection | null>(null)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
+const skyMapStage = ref<HTMLDivElement | null>(null)
+const isSkyMapFullscreen = ref(false)
+const fullscreenSupported = ref(false)
 const targetInput = ref<HTMLInputElement | null>(null)
 const targetQuery = ref('')
 const targetMessage = ref('')
@@ -128,10 +131,16 @@ watch(
 
 onMounted(() => {
   window.addEventListener('wheel', handlePageWheel, { passive: false })
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+  document.addEventListener('keydown', handleFullscreenKeydown)
+  fullscreenSupported.value = document.fullscreenEnabled
+    && typeof HTMLElement.prototype.requestFullscreen === 'function'
   void initialize()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('wheel', handlePageWheel)
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  document.removeEventListener('keydown', handleFullscreenKeydown)
   if (calculationTimer) clearTimeout(calculationTimer)
   if (targetSearchTimer) clearTimeout(targetSearchTimer)
   targetSearchSequence += 1
@@ -249,6 +258,25 @@ function handlePageWheel(event: WheelEvent): void {
     timeWheelResetTimer = null
   }, TIME_WHEEL_RESET_MS)
   if (result.step) adjustObservationTime(result.step)
+}
+
+function handleFullscreenChange(): void {
+  isSkyMapFullscreen.value = document.fullscreenElement === skyMapStage.value
+}
+
+function handleFullscreenKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape' || document.fullscreenElement !== skyMapStage.value) return
+  void document.exitFullscreen()
+}
+
+async function toggleSkyMapFullscreen(): Promise<void> {
+  const stage = skyMapStage.value
+  if (!stage || !fullscreenSupported.value) return
+  if (document.fullscreenElement === stage) {
+    await document.exitFullscreen()
+    return
+  }
+  await stage.requestFullscreen()
 }
 
 function useLocationPreset(): void {
@@ -699,7 +727,7 @@ function formatSelectedData(): string {
         </form>
       </aside>
 
-      <div class="sky-map-stage">
+      <div ref="skyMapStage" class="sky-map-stage">
         <SkyMapCanvas
           ref="skyCanvas"
           :frame="frame"
@@ -709,7 +737,10 @@ function formatSelectedData(): string {
           :show-culture-boundaries="controls.showCultureBoundaries"
           :show-solar-system-bodies="controls.showSolarSystemBodies"
           :selected-object="selectedObject"
+          :is-fullscreen="isSkyMapFullscreen"
+          :fullscreen-supported="fullscreenSupported"
           @select="selectObject"
+          @toggle-fullscreen="toggleSkyMapFullscreen"
         />
         <div v-if="status === 'loadingCatalog'" class="stage-state" role="status">
           <span class="loading-indicator" aria-hidden="true"></span>
@@ -1046,6 +1077,19 @@ button:disabled { cursor: wait; opacity: .55; }
   min-height: 0;
   overflow: hidden;
   background: #030609;
+}
+
+.sky-map-stage:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background: #030609;
+}
+
+.sky-map-stage::backdrop { background: #030609; }
+
+.sky-map-stage:fullscreen :deep(.sky-canvas) {
+  width: min(100vw, 100vh);
+  height: auto;
 }
 
 @media (min-width: 901px) {
