@@ -26,6 +26,12 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "elevation": "Elevation (m)",
+    "target": "Target star",
+    "targetPlaceholder": "HIP 97675",
+    "targetSearch": "Search and locate",
+    "invalidHip": "Enter a valid HIP number.",
+    "targetNotVisible": "{id} is not visible under the current settings.",
+    "targetLocated": "Located {id}",
     "visibility": "Display",
     "magnitudeLimit": "Magnitude limit",
     "constellationLines": "Constellation lines",
@@ -39,7 +45,13 @@
     "calculationTime": "Calculation",
     "selectedStar": "Selected star",
     "magnitude": "Magnitude",
+    "spectralType": "Spectral type",
+    "dataSource": "Astrometry",
     "position": "Azimuth / altitude",
+    "navigation": "Sky chart zoom and reset",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view",
     "chartAria": "All-sky chart centered on the zenith and bounded by the horizon",
     "canvasFallback": "This browser does not support the Canvas sky chart.",
     "status": {
@@ -53,6 +65,11 @@
       "east": "E",
       "south": "S",
       "west": "W"
+    },
+    "sources": {
+      "GAIA_DR3": "Gaia DR3",
+      "HIPPARCOS_2": "Hipparcos-2",
+      "HIPPARCOS": "Hipparcos"
     }
   }
 }

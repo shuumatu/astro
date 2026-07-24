@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { Search } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import type {
@@ -35,6 +36,9 @@ const catalog = ref<CatalogSummary | null>(null)
 const frame = ref<SkyFrame | null>(null)
 const calculationDurationMs = ref<number | null>(null)
 const selectedStar = ref<ComputedStar | null>(null)
+const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
+const targetQuery = ref('')
+const targetMessage = ref('')
 let workerClient: SkyMapWorkerClient | null = null
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
@@ -45,6 +49,10 @@ const observedAtLabel = computed(() => frame.value
 const visibleStarCount = computed(() => frame.value
   ? new Intl.NumberFormat(locale.value).format(frame.value.stars.length)
   : '—')
+
+watch(targetQuery, () => {
+  targetMessage.value = ''
+})
 
 onMounted(() => void initialize())
 onBeforeUnmount(() => workerClient?.dispose())
@@ -67,6 +75,7 @@ async function calculate(): Promise<void> {
   status.value = 'calculating'
   errorMessage.value = ''
   selectedStar.value = null
+  targetMessage.value = ''
   try {
     const parameters: SkyCalculationParameters = {
       observedAt: new Date(controls.observedAt).toISOString(),
@@ -93,6 +102,30 @@ function useCurrentTime(): void {
   void calculate()
 }
 
+function searchTarget(): void {
+  const match = targetQuery.value.trim().match(/^(?:HIP\s*:?\s*)?([0-9]+)$/i)
+  if (!match) {
+    selectedStar.value = null
+    targetMessage.value = t('skyMap.invalidHip')
+    return
+  }
+  const hipId = Number(match[1])
+  const star = frame.value?.stars.find((candidate) => candidate.hipId === hipId)
+  if (!star) {
+    selectedStar.value = null
+    targetMessage.value = t('skyMap.targetNotVisible', { id: `HIP ${hipId}` })
+    return
+  }
+  selectedStar.value = star
+  skyCanvas.value?.focusStar(star.id)
+  targetMessage.value = t('skyMap.targetLocated', { id: formatStarId(star) })
+}
+
+function selectStar(star: ComputedStar | null): void {
+  selectedStar.value = star
+  targetMessage.value = ''
+}
+
 function fail(error: unknown): void {
   errorMessage.value = error instanceof Error ? error.message : String(error)
   status.value = 'error'
@@ -106,6 +139,14 @@ function localDateTimeValue(date: Date): string {
 function formatCoordinate(value: number | undefined, suffix: string): string {
   if (value === undefined) return '—'
   return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }).format(value)}${suffix}`
+}
+
+function formatStarId(star: ComputedStar | null): string {
+  return star ? `HIP ${star.hipId}` : '—'
+}
+
+function formatAstrometrySource(star: ComputedStar | null): string {
+  return star ? t(`skyMap.sources.${star.astrometrySource}`) : '—'
 }
 </script>
 
@@ -156,6 +197,27 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
           </fieldset>
 
           <fieldset>
+            <legend>{{ t('skyMap.target') }}</legend>
+            <div class="target-search">
+              <input
+                v-model="targetQuery"
+                type="search"
+                :aria-label="t('skyMap.target')"
+                :placeholder="t('skyMap.targetPlaceholder')"
+              >
+              <button
+                type="button"
+                class="icon-command"
+                :aria-label="t('skyMap.targetSearch')"
+                :title="t('skyMap.targetSearch')"
+                :disabled="!frame"
+                @click="searchTarget"
+              ><Search :size="17" aria-hidden="true" /></button>
+            </div>
+            <p v-if="targetMessage" class="target-message" role="status">{{ targetMessage }}</p>
+          </fieldset>
+
+          <fieldset>
             <legend>{{ t('skyMap.visibility') }}</legend>
             <label class="range-field">
               <span>{{ t('skyMap.magnitudeLimit') }}</span>
@@ -191,11 +253,12 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
 
       <div class="sky-map-stage">
         <SkyMapCanvas
+          ref="skyCanvas"
           :frame="frame"
           :show-constellation-lines="controls.showConstellationLines"
           :show-constellation-labels="controls.showConstellationLabels"
           :selected-star-id="selectedStar?.id ?? null"
-          @select="selectedStar = $event"
+          @select="selectStar"
         />
         <div v-if="status === 'loadingCatalog' || (status === 'calculating' && !frame)" class="stage-state" role="status">
           <span class="loading-indicator" aria-hidden="true"></span>
@@ -225,11 +288,19 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
         </div>
         <div>
           <dt>{{ t('skyMap.selectedStar') }}</dt>
-          <dd>{{ selectedStar?.id ?? '—' }}</dd>
+          <dd>{{ formatStarId(selectedStar) }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.magnitude') }}</dt>
           <dd>{{ selectedStar ? selectedStar.visualMagnitude.toFixed(2) : '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('skyMap.spectralType') }}</dt>
+          <dd>{{ selectedStar?.spectralType ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('skyMap.dataSource') }}</dt>
+          <dd>{{ formatAstrometrySource(selectedStar) }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.position') }}</dt>
@@ -333,7 +404,8 @@ legend {
 }
 
 input[type="datetime-local"],
-input[type="number"] {
+input[type="number"],
+input[type="search"] {
   width: 100%;
   min-height: 36px;
   border: 1px solid #34444c;
@@ -342,6 +414,24 @@ input[type="number"] {
   color: #e8efef;
   background: #090e12;
 }
+
+.target-search { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: .4rem; }
+
+.icon-command {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #3a4c54;
+  border-radius: 4px;
+  padding: 0;
+  color: #c7d4d5;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-command:hover:not(:disabled) { color: #07110f; background: #6fcbbb; }
+.target-message { margin: 0; color: #d9bd75; font-size: .72rem; line-height: 1.45; }
 
 .range-field { grid-template-columns: 1fr auto; }
 .range-field input { grid-column: 1 / -1; width: 100%; accent-color: #6fcbbb; }
@@ -423,7 +513,7 @@ button:disabled { cursor: wait; opacity: .55; }
 
 .sky-readout dl {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   margin: 0;
 }
 
@@ -440,9 +530,9 @@ button:disabled { cursor: wait; opacity: .55; }
   .sky-controls form { grid-template-columns: repeat(3, 1fr); }
   fieldset { border-right: 1px solid #26333a; border-bottom: 0; }
   .primary-command { align-self: end; grid-column: 1 / -1; }
-  .sky-readout dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .sky-readout dl > div:nth-child(3) { border-right: 0; }
-  .sky-readout dl > div:nth-child(-n + 3) { border-bottom: 1px solid #26333a; }
+  .sky-readout dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sky-readout dl > div:nth-child(4) { border-right: 0; }
+  .sky-readout dl > div:nth-child(-n + 4) { border-bottom: 1px solid #26333a; }
 }
 
 @media (max-width: 620px) {

@@ -28,6 +28,10 @@ transforms stay inside the module worker.
   the horizon before projection.
 - Canvas backing dimensions follow the rendered size and cap device pixel ratio at 2 to
   preserve sharp output without excessive memory use.
+- Zooming uses a pointer-anchored view transform while panning is constrained by the
+  projected horizon. Star hit testing uses the same transformed screen coordinates.
+- HIP search operates on the current calculated frame. A result is selected and focused;
+  stars outside the current horizon or magnitude limit are reported as not visible.
 
 ## Integrity model
 

@@ -1,14 +1,33 @@
 <script setup lang="ts">
+import { Maximize2, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
 import type { ProjectedPoint } from './projection'
 import type { ComputedStar, SkyFrame } from './types'
+import {
+  MAX_SKY_ZOOM,
+  MIN_SKY_ZOOM,
+  centerSkyViewOn,
+  defaultSkyViewTransform,
+  panSkyView,
+  transformSkyPoint,
+  zoomSkyViewAt,
+} from './viewport'
+import type { SkyViewTransform } from './viewport'
 
 interface RenderedStar {
   star: ComputedStar
   point: ProjectedPoint
   radius: number
+}
+
+interface DragSession {
+  pointerId: number
+  startX: number
+  startY: number
+  startTransform: SkyViewTransform
+  moved: boolean
 }
 
 const props = defineProps<{
@@ -27,11 +46,14 @@ const container = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const viewportSize = ref(0)
 const hoveredStar = ref<RenderedStar | null>(null)
+const viewTransform = ref(defaultSkyViewTransform())
+const isDragging = ref(false)
 let renderedStars: RenderedStar[] = []
 let resizeObserver: ResizeObserver | null = null
+let dragSession: DragSession | null = null
 let drawFrame = 0
 let pointerFrame = 0
-let pendingPointer: { x: number; y: number } | null = null
+let pendingPointer: ProjectedPoint | null = null
 
 const geometry = computed(() => {
   const size = viewportSize.value
@@ -40,20 +62,24 @@ const geometry = computed(() => {
   return { size, center, radius }
 })
 
+const zoomLabel = computed(() => `${Math.round(viewTransform.value.scale * 100)}%`)
+
 const directionLabels = computed(() => {
-  const { center, radius } = geometry.value
-  const offset = Math.max(10, viewportSize.value * 0.018)
+  const { size, center, radius } = geometry.value
+  const offset = Math.max(10, size * 0.018)
   return [
     { id: 'north', text: t('skyMap.directions.north'), x: center, y: center - radius - offset },
     { id: 'east', text: t('skyMap.directions.east'), x: center + radius + offset, y: center },
     { id: 'south', text: t('skyMap.directions.south'), x: center, y: center + radius + offset },
     { id: 'west', text: t('skyMap.directions.west'), x: center - radius - offset, y: center },
   ]
+    .map((label) => ({ ...label, ...transformSkyPoint(label, viewTransform.value, center) }))
+    .filter((label) => isPointInViewport(label, size, 8))
 })
 
 const constellationLabels = computed(() => {
   if (!props.frame || !props.showConstellationLabels || viewportSize.value === 0) return []
-  const { center, radius } = geometry.value
+  const { size, center, radius } = geometry.value
   return props.frame.constellations.flatMap((constellation) => {
     if (constellation.rank > 2) return []
     return constellation.labelPositions
@@ -62,8 +88,13 @@ const constellationLabels = computed(() => {
         key: `${constellation.id}-${index}`,
         text: constellation.id,
         rank: constellation.rank,
-        ...projectHorizontal(coordinate, radius, center),
+        ...transformSkyPoint(
+          projectHorizontal(coordinate, radius, center),
+          viewTransform.value,
+          center,
+        ),
       }))
+      .filter((label) => isPointInViewport(label, size, 12))
   })
 })
 
@@ -71,19 +102,18 @@ const selectedMarker = computed(() => {
   if (!props.frame || !props.selectedStarId || viewportSize.value === 0) return null
   const star = props.frame.stars.find(({ id }) => id === props.selectedStarId)
   if (!star) return null
-  const { center, radius } = geometry.value
-  const scale = Math.max(0.72, Math.min(1.15, viewportSize.value / 820))
-  return {
-    ...projectHorizontal(star, radius, center),
-    radius: magnitudeRadius(star.visualMagnitude) * scale,
-  }
+  const { size, center, radius } = geometry.value
+  const point = transformSkyPoint(projectHorizontal(star, radius, center), viewTransform.value, center)
+  if (!isPointInViewport(point, size, 0)) return null
+  return { ...point, radius: screenStarRadius(star.visualMagnitude) }
 })
+
 const hoveredMarker = computed(() => hoveredStar.value
   ? { ...hoveredStar.value.point, radius: hoveredStar.value.radius }
   : null)
 
 watch(
-  () => [props.frame, props.showConstellationLines] as const,
+  () => [props.frame, props.showConstellationLines, viewTransform.value] as const,
   scheduleDraw,
 )
 
@@ -91,6 +121,7 @@ onMounted(() => {
   if (!container.value) return
   resizeObserver = new ResizeObserver(([entry]) => {
     viewportSize.value = Math.floor(entry.contentRect.width)
+    viewTransform.value = defaultSkyViewTransform()
     scheduleDraw()
   })
   resizeObserver.observe(container.value)
@@ -101,6 +132,8 @@ onBeforeUnmount(() => {
   if (drawFrame) cancelAnimationFrame(drawFrame)
   if (pointerFrame) cancelAnimationFrame(pointerFrame)
 })
+
+defineExpose({ focusStar, resetView, zoomIn, zoomOut })
 
 function scheduleDraw(): void {
   if (drawFrame) cancelAnimationFrame(drawFrame)
@@ -124,21 +157,32 @@ function draw(): void {
   context.clearRect(0, 0, size, size)
   context.fillStyle = '#030609'
   context.fillRect(0, 0, size, size)
-  drawGrid(context, center, radius)
 
+  applyCanvasTransform(context, center)
+  drawGrid(context, center, radius)
   context.save()
   context.beginPath()
   context.arc(center, center, radius, 0, Math.PI * 2)
   context.clip()
   if (props.frame && props.showConstellationLines) drawConstellations(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
-  hoveredStar.value = null
   context.restore()
+  context.restore()
+  hoveredStar.value = null
+}
+
+function applyCanvasTransform(context: CanvasRenderingContext2D, center: number): void {
+  const transform = viewTransform.value
+  context.save()
+  context.translate(transform.offsetX, transform.offsetY)
+  context.translate(center, center)
+  context.scale(transform.scale, transform.scale)
+  context.translate(-center, -center)
 }
 
 function drawGrid(context: CanvasRenderingContext2D, center: number, radius: number): void {
   context.strokeStyle = '#24434a'
-  context.lineWidth = 1
+  context.lineWidth = 1 / viewTransform.value.scale
   context.beginPath()
   for (const fraction of [1 / 3, 2 / 3, 1]) {
     context.moveTo(center + radius * fraction, center)
@@ -152,7 +196,7 @@ function drawGrid(context: CanvasRenderingContext2D, center: number, radius: num
   context.stroke()
 
   context.strokeStyle = '#6b9193'
-  context.lineWidth = 1.5
+  context.lineWidth = 1.5 / viewTransform.value.scale
   context.beginPath()
   context.arc(center, center, radius, 0, Math.PI * 2)
   context.stroke()
@@ -179,7 +223,7 @@ function drawConstellations(
     }
     context.strokeStyle = rank === 1 ? '#3e8f8b' : rank === 2 ? '#326d70' : '#294f55'
     context.globalAlpha = rank === 1 ? 0.8 : rank === 2 ? 0.62 : 0.46
-    context.lineWidth = rank === 1 ? 1.15 : 0.8
+    context.lineWidth = (rank === 1 ? 1.15 : 0.8) / viewTransform.value.scale
     context.stroke()
   }
   context.globalAlpha = 1
@@ -191,21 +235,23 @@ function drawStars(
   radius: number,
 ): RenderedStar[] {
   if (!props.frame) return []
-  const scale = Math.max(0.72, Math.min(1.15, viewportSize.value / 820))
+  const inverseScale = 1 / viewTransform.value.scale
   return props.frame.stars.map((star) => {
-    const point = projectHorizontal(star, radius, center)
-    const starRadius = magnitudeRadius(star.visualMagnitude) * scale
+    const basePoint = projectHorizontal(star, radius, center)
+    const point = transformSkyPoint(basePoint, viewTransform.value, center)
+    const starRadius = screenStarRadius(star.visualMagnitude)
     context.fillStyle = starColor(star.colorIndex)
     context.globalAlpha = Math.max(0.55, Math.min(1, 1.05 - star.visualMagnitude * 0.055))
     context.beginPath()
-    context.arc(point.x, point.y, starRadius, 0, Math.PI * 2)
+    context.arc(basePoint.x, basePoint.y, starRadius * inverseScale, 0, Math.PI * 2)
     context.fill()
     return { star, point, radius: starRadius }
   })
 }
 
-function magnitudeRadius(magnitude: number): number {
-  return Math.max(0.55, Math.min(5, 4.15 - magnitude * 0.55))
+function screenStarRadius(magnitude: number): number {
+  const sizeScale = Math.max(0.72, Math.min(1.15, viewportSize.value / 820))
+  return Math.max(0.55, Math.min(5, 4.15 - magnitude * 0.55)) * sizeScale
 }
 
 function starColor(colorIndex: number | null): string {
@@ -217,10 +263,82 @@ function starColor(colorIndex: number | null): string {
   return '#ffad7b'
 }
 
+function onWheel(event: WheelEvent): void {
+  const point = eventPoint(event)
+  if (!point) return
+  const factor = Math.exp(-event.deltaY * 0.0015)
+  setZoom(viewTransform.value.scale * factor, point)
+}
+
+function zoomIn(): void {
+  setZoom(viewTransform.value.scale * 1.4)
+}
+
+function zoomOut(): void {
+  setZoom(viewTransform.value.scale / 1.4)
+}
+
+function setZoom(requestedScale: number, anchor?: ProjectedPoint): void {
+  const { center, radius } = geometry.value
+  viewTransform.value = zoomSkyViewAt(
+    viewTransform.value,
+    requestedScale,
+    anchor ?? { x: center, y: center },
+    center,
+    radius,
+  )
+}
+
+function resetView(): void {
+  viewTransform.value = defaultSkyViewTransform()
+}
+
+function focusStar(starId: string): boolean {
+  const star = props.frame?.stars.find(({ id }) => id === starId)
+  if (!star) return false
+  const { center, radius } = geometry.value
+  const point = projectHorizontal(star, radius, center)
+  viewTransform.value = centerSkyViewOn(
+    point,
+    Math.max(2.25, viewTransform.value.scale),
+    center,
+    radius,
+  )
+  return true
+}
+
+function onPointerDown(event: PointerEvent): void {
+  if (event.button !== 0) return
+  const point = eventPoint(event)
+  if (!point) return
+  dragSession = {
+    pointerId: event.pointerId,
+    startX: point.x,
+    startY: point.y,
+    startTransform: { ...viewTransform.value },
+    moved: false,
+  }
+  isDragging.value = true
+  container.value?.setPointerCapture(event.pointerId)
+}
+
 function onPointerMove(event: PointerEvent): void {
-  const bounds = container.value?.getBoundingClientRect()
-  if (!bounds) return
-  pendingPointer = { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
+  const point = eventPoint(event)
+  if (!point) return
+  if (dragSession?.pointerId === event.pointerId) {
+    const deltaX = point.x - dragSession.startX
+    const deltaY = point.y - dragSession.startY
+    dragSession.moved ||= Math.hypot(deltaX, deltaY) > 4
+    viewTransform.value = panSkyView(
+      dragSession.startTransform,
+      deltaX,
+      deltaY,
+      geometry.value.radius,
+    )
+    return
+  }
+
+  pendingPointer = point
   if (pointerFrame) return
   pointerFrame = requestAnimationFrame(() => {
     pointerFrame = 0
@@ -228,16 +346,32 @@ function onPointerMove(event: PointerEvent): void {
   })
 }
 
+function onPointerUp(event: PointerEvent): void {
+  if (!dragSession || dragSession.pointerId !== event.pointerId) return
+  const point = eventPoint(event)
+  if (!dragSession.moved && point) emit('select', hitTest(point.x, point.y)?.star ?? null)
+  finishDrag(event.pointerId)
+}
+
+function onPointerCancel(event: PointerEvent): void {
+  if (dragSession?.pointerId === event.pointerId) finishDrag(event.pointerId)
+}
+
+function finishDrag(pointerId: number): void {
+  if (container.value?.hasPointerCapture(pointerId)) container.value.releasePointerCapture(pointerId)
+  dragSession = null
+  isDragging.value = false
+}
+
 function onPointerLeave(): void {
   pendingPointer = null
   hoveredStar.value = null
 }
 
-function onPointerClick(event: PointerEvent): void {
+function eventPoint(event: MouseEvent): ProjectedPoint | null {
   const bounds = container.value?.getBoundingClientRect()
-  if (!bounds) return
-  const rendered = hitTest(event.clientX - bounds.left, event.clientY - bounds.top)
-  emit('select', rendered?.star ?? null)
+  if (!bounds) return null
+  return { x: event.clientX - bounds.left, y: event.clientY - bounds.top }
 }
 
 function hitTest(x: number, y: number): RenderedStar | null {
@@ -253,16 +387,27 @@ function hitTest(x: number, y: number): RenderedStar | null {
   }
   return closest
 }
+
+function isPointInViewport(point: ProjectedPoint, size: number, margin: number): boolean {
+  return point.x >= margin && point.x <= size - margin && point.y >= margin && point.y <= size - margin
+}
 </script>
 
 <template>
   <div
     ref="container"
     class="sky-canvas"
-    :class="{ interactive: hoveredStar }"
+    :class="{
+      interactive: hoveredStar,
+      'can-pan': viewTransform.scale > MIN_SKY_ZOOM,
+      dragging: isDragging,
+    }"
+    @wheel.prevent="onWheel"
+    @pointerdown="onPointerDown"
     @pointermove="onPointerMove"
+    @pointerup="onPointerUp"
+    @pointercancel="onPointerCancel"
     @pointerleave="onPointerLeave"
-    @click="onPointerClick"
   >
     <canvas ref="canvas" role="img" :aria-label="t('skyMap.chartAria')">
       {{ t('skyMap.canvasFallback') }}
@@ -303,6 +448,31 @@ function hitTest(x: number, y: number): RenderedStar | null {
         :r="selectedMarker.radius + 6"
       />
     </svg>
+
+    <div class="navigation-tools" role="toolbar" :aria-label="t('skyMap.navigation')" @pointerdown.stop @click.stop>
+      <button
+        type="button"
+        :aria-label="t('skyMap.zoomOut')"
+        :title="t('skyMap.zoomOut')"
+        :disabled="viewTransform.scale <= MIN_SKY_ZOOM"
+        @click="zoomOut"
+      ><ZoomOut :size="17" aria-hidden="true" /></button>
+      <output aria-live="polite">{{ zoomLabel }}</output>
+      <button
+        type="button"
+        :aria-label="t('skyMap.zoomIn')"
+        :title="t('skyMap.zoomIn')"
+        :disabled="viewTransform.scale >= MAX_SKY_ZOOM"
+        @click="zoomIn"
+      ><ZoomIn :size="17" aria-hidden="true" /></button>
+      <button
+        type="button"
+        :aria-label="t('skyMap.resetView')"
+        :title="t('skyMap.resetView')"
+        :disabled="viewTransform.scale <= MIN_SKY_ZOOM"
+        @click="resetView"
+      ><Maximize2 :size="17" aria-hidden="true" /></button>
+    </div>
   </div>
 </template>
 
@@ -314,10 +484,13 @@ function hitTest(x: number, y: number): RenderedStar | null {
   aspect-ratio: 1;
   overflow: hidden;
   background: #030609;
-  touch-action: manipulation;
+  touch-action: none;
+  user-select: none;
 }
 
-.sky-canvas.interactive { cursor: pointer; }
+.sky-canvas.interactive canvas { cursor: pointer; }
+.sky-canvas.can-pan canvas { cursor: grab; }
+.sky-canvas.dragging canvas { cursor: grabbing; }
 
 canvas,
 .sky-overlay {
@@ -357,4 +530,36 @@ text {
 .selected-marker { fill: none; }
 .hover-marker { stroke: #f4d47a; stroke-width: 1px; }
 .selected-marker { stroke: #f4d47a; stroke-width: 2px; }
+
+.navigation-tools {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 34px 52px 34px 34px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid #3a4b51;
+  border-radius: 4px;
+  background: rgb(9 14 18 / 92%);
+}
+
+.navigation-tools button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-right: 1px solid #303e44;
+  padding: 0;
+  color: #d2dddd;
+  background: transparent;
+  cursor: pointer;
+}
+
+.navigation-tools button:last-child { border-right: 0; border-left: 1px solid #303e44; }
+.navigation-tools button:hover:not(:disabled) { color: #07110f; background: #6fcbbb; }
+.navigation-tools button:disabled { color: #526065; cursor: default; }
+.navigation-tools output { color: #9fb1b3; font-size: .72rem; text-align: center; }
 </style>

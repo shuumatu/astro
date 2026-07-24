@@ -43,8 +43,14 @@ export function calculateSkyFrame(
     .filter(({ coordinate }) => coordinate.altitudeDeg >= parameters.minimumAltitudeDeg)
     .map(({ star, coordinate }) => ({
       id: star.id,
+      hipId: star.hipId,
+      gaiaDr3Id: star.gaiaDr3Id,
+      tycho2Id: star.tycho2Id,
+      hdId: star.hdId,
       visualMagnitude: star.visualMagnitude,
       colorIndex: star.colorIndex,
+      spectralType: star.spectralType,
+      astrometrySource: star.astrometrySource,
       ...coordinate,
     }))
 

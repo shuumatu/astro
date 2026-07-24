@@ -33,6 +33,12 @@ describe('calculateSkyFrame', () => {
     const expected = HorizonFromVector(RotateVector(rotation, vector), '')
 
     expect(frame.stars).toHaveLength(1)
+    expect(frame.stars[0]).toMatchObject({
+      hipId: star.hipId,
+      gaiaDr3Id: star.gaiaDr3Id,
+      spectralType: star.spectralType,
+      astrometrySource: star.astrometrySource,
+    })
     expect(frame.stars[0].azimuthDeg).toBeCloseTo(expected.lon, 10)
     expect(frame.stars[0].altitudeDeg).toBeCloseTo(expected.lat, 10)
   })

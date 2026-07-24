@@ -26,6 +26,12 @@
     "latitude": "纬度",
     "longitude": "经度",
     "elevation": "海拔（米）",
+    "target": "目标恒星",
+    "targetPlaceholder": "HIP 97675",
+    "targetSearch": "搜索并定位",
+    "invalidHip": "请输入有效的 HIP 编号。",
+    "targetNotVisible": "{id} 在当前观测条件下不可见。",
+    "targetLocated": "已定位 {id}",
     "visibility": "显示设置",
     "magnitudeLimit": "极限星等",
     "constellationLines": "星座连线",
@@ -39,7 +45,13 @@
     "calculationTime": "计算耗时",
     "selectedStar": "选中恒星",
     "magnitude": "视星等",
+    "spectralType": "光谱型",
+    "dataSource": "测量来源",
     "position": "方位角 / 高度角",
+    "navigation": "星图缩放与复位",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetView": "复位视图",
     "chartAria": "以天顶为中心、地平线为边界的全天星图",
     "canvasFallback": "当前浏览器不支持 Canvas 星图。",
     "status": {
@@ -53,6 +65,11 @@
       "east": "东",
       "south": "南",
       "west": "西"
+    },
+    "sources": {
+      "GAIA_DR3": "Gaia DR3",
+      "HIPPARCOS_2": "Hipparcos-2",
+      "HIPPARCOS": "Hipparcos"
     }
   }
 }

@@ -805,6 +805,7 @@ __metadata:
     "@types/node": "npm:22.15.30"
     "@vitejs/plugin-vue": "npm:^5.2.1"
     astronomy-engine: "npm:2.1.19"
+    lucide-vue-next: "npm:1.0.0"
     pinia: "npm:^2.3.0"
     typescript: "npm:^5.7.2"
     vite: "npm:^6.0.7"
@@ -1111,6 +1112,15 @@ __metadata:
   version: 3.2.1
   resolution: "loupe@npm:3.2.1"
   checksum: 10c0/910c872cba291309664c2d094368d31a68907b6f5913e989d301b5c25f30e97d76d77f23ab3bf3b46d0f601ff0b6af8810c10c31b91d2c6b2f132809ca2cc705
+  languageName: node
+  linkType: hard
+
+"lucide-vue-next@npm:1.0.0":
+  version: 1.0.0
+  resolution: "lucide-vue-next@npm:1.0.0"
+  peerDependencies:
+    vue: ">=3.0.1"
+  checksum: 10c0/28f6a7d83e5d06db34006214f1ee3fe2c67ba0ca58f6e8af0d9032c495bb419f5c632b2db66e10ba90a6376e9f8aa913bc2e56be7c3aa06089d6ad2a472d93aa
   languageName: node
   linkType: hard
 

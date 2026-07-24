@@ -81,8 +81,14 @@ export interface HorizontalCoordinate {
 
 export interface ComputedStar extends HorizontalCoordinate {
   id: string
+  hipId: number
+  gaiaDr3Id: string | null
+  tycho2Id: string | null
+  hdId: number | null
   visualMagnitude: number
   colorIndex: number | null
+  spectralType: string | null
+  astrometrySource: AstrometrySource
 }
 
 export interface ComputedConstellation {
