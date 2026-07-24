@@ -18,6 +18,7 @@ type SkyWorkerRequestPayload =
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 export const defaultCatalogManifestUrl = `${apiBaseUrl}/astronomy/catalogs/naked-eye/manifest`
+export const defaultSkyContentManifestUrl = `${apiBaseUrl}/astronomy/catalogs/sky-content/manifest`
 
 export class SkyMapWorkerClient {
   private readonly worker: Worker
@@ -30,8 +31,11 @@ export class SkyMapWorkerClient {
     this.worker.addEventListener('error', this.handleWorkerError)
   }
 
-  async initialize(manifestUrl = defaultCatalogManifestUrl): Promise<CatalogSummary> {
-    const response = await this.send({ type: 'initialize', manifestUrl })
+  async initialize(
+    manifestUrl = defaultCatalogManifestUrl,
+    skyContentManifestUrl = defaultSkyContentManifestUrl,
+  ): Promise<CatalogSummary> {
+    const response = await this.send({ type: 'initialize', manifestUrl, skyContentManifestUrl })
     if (response.type !== 'ready') throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
     return response.catalog
   }

@@ -53,9 +53,16 @@
     "targetNotVisible": "{id} 在当前观测条件下不可见。",
     "targetLocated": "已定位 {id}",
     "visibility": "显示设置",
+    "culture": "星空文化",
+    "cultures": {
+      "chinese-traditional": "中国传统",
+      "western-iau": "西方 IAU"
+    },
     "magnitudeLimit": "极限星等",
-    "constellationLines": "星座连线",
-    "constellationLabels": "星座标签",
+    "starNames": "恒星名称",
+    "cultureLines": "文化连线",
+    "cultureLabels": "文化标签",
+    "cultureBoundaries": "文化边界",
     "solarSystem": "太阳系天体",
     "refraction": "大气折射修正",
     "retry": "重新加载",

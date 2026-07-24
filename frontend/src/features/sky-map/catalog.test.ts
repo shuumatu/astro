@@ -55,7 +55,7 @@ function mockCatalogFetch(manifest: CatalogManifest, bytes: Uint8Array): typeof 
 
 async function sampleManifest(bytes: Uint8Array): Promise<CatalogManifest> {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogId: 'naked-eye',
     version: 'test-1',
     downloadUrl: 'https://astro.test/api/astronomy/catalogs/naked-eye/test-1',
@@ -66,7 +66,6 @@ async function sampleManifest(bytes: Uint8Array): Promise<CatalogManifest> {
     decodedSha256: await sha256Hex(bytes),
     decodedContentLength: bytes.byteLength,
     starCount: 1,
-    constellationCount: 1,
     sources: [{ catalog: 'test', release: '1', url: 'https://astro.test', credit: 'test' }],
     publishedAt: '2026-07-23T00:00:00Z',
   }
@@ -74,7 +73,7 @@ async function sampleManifest(bytes: Uint8Array): Promise<CatalogManifest> {
 
 function sampleCatalog(): SkyCatalog {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogId: 'naked-eye',
     referenceFrame: 'ICRS',
     visualMagnitudeLimit: 6.5,
@@ -94,12 +93,6 @@ function sampleCatalog(): SkyCatalog {
       colorIndex: 0.5,
       spectralType: 'G2V',
       astrometrySource: 'HIPPARCOS_2',
-    }],
-    constellations: [{
-      id: 'Ori',
-      rank: 1,
-      labelPositions: [[80, 5]],
-      lines: [[[80, 5], [85, 0]]],
     }],
   }
 }

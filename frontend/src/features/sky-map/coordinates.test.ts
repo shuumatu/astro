@@ -11,15 +11,21 @@ import {
   Vector,
 } from 'astronomy-engine'
 import { describe, expect, it } from 'vitest'
-import { calculateSkyFrame, propagateIcrs } from './coordinates'
-import type { SkyCalculationParameters, SkyCatalog, StarRecord } from './types'
+import { calculateSkyFrame, propagateIcrs, selectLocalizedName } from './coordinates'
+import type {
+  FeaturedPatternPack,
+  SkyCalculationParameters,
+  SkyCatalog,
+  SkyCulturePack,
+  StarRecord,
+} from './types'
 
 describe('calculateSkyFrame', () => {
   it('matches Astronomy Engine EQJ-to-horizon rotation', () => {
     const observedAt = '2026-07-23T14:00:00.000Z'
     const observer = { latitudeDeg: 22.5431, longitudeDeg: 114.0579, elevationMeters: 20 }
     const star = sampleStar({ raDeg: 120, decDeg: 30, pmRaMasPerYear: null, pmDecMasPerYear: null })
-    const frame = calculateSkyFrame(sampleCatalog([star]), parameters(observedAt, observer))
+    const frame = calculate(sampleCatalog([star]), parameters(observedAt, observer))
 
     const date = new Date(observedAt)
     const rotation = Rotation_EQJ_HOR(
@@ -52,7 +58,7 @@ describe('calculateSkyFrame', () => {
       sampleStar({ id: 'HIP:1', hipId: 1, visualMagnitude: 1 }),
       sampleStar({ id: 'HIP:2', hipId: 2, visualMagnitude: 5 }),
     ])
-    const frame = calculateSkyFrame(catalog, {
+    const frame = calculate(catalog, {
       ...parameters('2026-07-23T14:00:00.000Z'),
       magnitudeLimit: 2,
       minimumAltitudeDeg: -90,
@@ -64,7 +70,7 @@ describe('calculateSkyFrame', () => {
   it('calculates topocentric positions and illumination for solar system bodies', () => {
     const observedAt = '2026-07-23T14:00:00.000Z'
     const location = { latitudeDeg: 22.5431, longitudeDeg: 114.0579, elevationMeters: 20 }
-    const frame = calculateSkyFrame(
+    const frame = calculate(
       sampleCatalog([]),
       parameters(observedAt, location),
     )
@@ -107,11 +113,11 @@ describe('calculateSkyFrame', () => {
   })
 
   it('applies the minimum altitude filter to solar system bodies', () => {
-    const visibleFrame = calculateSkyFrame(
+    const visibleFrame = calculate(
       sampleCatalog([]),
       parameters('2026-07-23T14:00:00.000Z'),
     )
-    const filteredFrame = calculateSkyFrame(sampleCatalog([]), {
+    const filteredFrame = calculate(sampleCatalog([]), {
       ...parameters('2026-07-23T14:00:00.000Z'),
       minimumAltitudeDeg: 0,
     })
@@ -121,10 +127,85 @@ describe('calculateSkyFrame', () => {
   })
 
   it('rejects an invalid observer before calculating', () => {
-    expect(() => calculateSkyFrame(sampleCatalog([sampleStar()]), {
+    expect(() => calculate(sampleCatalog([sampleStar()]), {
       ...parameters('2026-07-23T14:00:00.000Z'),
       observer: { latitudeDeg: 91, longitudeDeg: 114, elevationMeters: 0 },
     })).toThrow(expect.objectContaining({ code: 'INVALID_PARAMETERS' }))
+  })
+})
+
+describe('sky culture calculation', () => {
+  it('uses the documented language fallback order', () => {
+    const names = [
+      sampleName('la', 'Lyra', false),
+      sampleName('en', 'Lyre'),
+      sampleName('zh-CN', '天琴座'),
+    ]
+
+    expect(selectLocalizedName(names, 'zh-CN', 'en')).toBe('天琴座')
+    expect(selectLocalizedName(names, 'fr-FR', 'en')).toBe('Lyre')
+  })
+
+  it('resolves culture paths through physical HIP stars without bridging missing records', () => {
+    const culture = sampleCulture({
+      figures: [{
+        id: 'test-figure',
+        type: 'asterism',
+        names: [sampleName('zh-CN', '测试星官')],
+        paths: [['HIP:1', 'HIP:2', 'HIP:999', 'HIP:3', 'HIP:4']],
+        labelAnchor: { objectId: 'HIP:1' },
+        rank: 1,
+        groupIds: [],
+        sourceIds: ['test-source'],
+      }],
+    })
+    const frame = calculate(
+      sampleCatalog([1, 2, 3, 4].map((hipId) => sampleStar({ id: `HIP:${hipId}`, hipId }))),
+      parameters('2026-07-23T14:00:00.000Z'),
+      culture,
+    )
+
+    expect(frame.cultureFigures[0].name).toBe('测试星官')
+    expect(frame.cultureFigures[0].lines).toHaveLength(2)
+    expect(frame.cultureFigures[0].lines.map((line) => line.length)).toEqual([2, 2])
+  })
+
+  it('converts ICRS culture boundaries and visible star names into the frame', () => {
+    const culture = sampleCulture({
+      starNames: [{ objectId: 'HIP:1', labelPriority: 80, names: [sampleName('zh-CN', '示例星')] }],
+      regions: [{
+        id: 'test-region',
+        figureId: 'test-figure',
+        names: [sampleName('en', 'Test region')],
+        referenceFrame: 'ICRS',
+        geometry: { type: 'MultiPolygon', coordinates: [[[
+          [10, 10], [20, 10], [20, 20], [10, 10],
+        ]]] },
+        sourceIds: ['test-source'],
+      }],
+      figures: [{
+        id: 'test-figure',
+        type: 'constellation',
+        names: [sampleName('en', 'Test figure')],
+        paths: [['HIP:1']],
+        labelAnchor: { objectId: 'HIP:1' },
+        rank: 1,
+        groupIds: [],
+        sourceIds: ['test-source'],
+      }],
+    })
+    const frame = calculate(sampleCatalog([sampleStar()]), {
+      ...parameters('2026-07-23T14:00:00.000Z'),
+      minimumAltitudeDeg: -90,
+    }, culture)
+
+    expect(frame.starLabels).toHaveLength(1)
+    expect(frame.starLabels[0]).toMatchObject({ objectId: 'HIP:1', name: '示例星', labelPriority: 80 })
+    expect(frame.cultureRegions[0].rings).toHaveLength(1)
+    expect(frame.cultureRegions[0].rings[0]).toHaveLength(4)
+    expect(frame.cultureRegions[0].rings[0].every(
+      (coordinate) => Number.isFinite(coordinate.azimuthDeg) && Number.isFinite(coordinate.altitudeDeg),
+    )).toBe(true)
   })
 })
 
@@ -155,17 +236,73 @@ function parameters(
     magnitudeLimit: 6.5,
     minimumAltitudeDeg: -90,
     applyRefraction: false,
+    cultureId: 'chinese-traditional',
+    interfaceLanguage: 'zh-CN',
+    enabledFeaturedPatternIds: [],
   }
 }
 
 function sampleCatalog(stars: StarRecord[]): SkyCatalog {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     catalogId: 'naked-eye',
     referenceFrame: 'ICRS',
     visualMagnitudeLimit: 6.5,
     stars,
-    constellations: [],
+  }
+}
+
+function calculate(
+  catalog: SkyCatalog,
+  calculationParameters: SkyCalculationParameters,
+  culture = sampleCulture(),
+) {
+  return calculateSkyFrame(catalog, culture, sampleFeaturedPatterns(), calculationParameters)
+}
+
+function sampleCulture(overrides: Partial<SkyCulturePack> = {}): SkyCulturePack {
+  return {
+    schemaVersion: 1,
+    id: 'chinese-traditional',
+    version: 'test-1',
+    names: [sampleName('zh-CN', '中国传统')],
+    defaultLanguage: 'zh-CN',
+    descriptions: [{ language: 'zh-CN', value: '测试', sourceId: 'test-source' }],
+    sources: [{
+      id: 'test-source',
+      title: 'Test source',
+      authors: ['Test'],
+      url: 'https://astro.test',
+      version: '1',
+      license: 'CC0-1.0',
+      attribution: 'Test',
+    }],
+    starNames: [],
+    figures: [],
+    groups: [],
+    regions: [],
+    ...overrides,
+  }
+}
+
+function sampleFeaturedPatterns(): FeaturedPatternPack {
+  return {
+    schemaVersion: 1,
+    id: 'featured-patterns',
+    version: 'test-1',
+    sources: [],
+    patterns: [],
+  }
+}
+
+function sampleName(language: string, value: string, preferred = true) {
+  return {
+    language,
+    value,
+    type: 'translation' as const,
+    preferred,
+    searchable: true,
+    sourceId: 'test-source',
   }
 }
 

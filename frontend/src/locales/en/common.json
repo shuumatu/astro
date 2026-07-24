@@ -53,9 +53,16 @@
     "targetNotVisible": "{id} is not visible under the current settings.",
     "targetLocated": "Located {id}",
     "visibility": "Display",
+    "culture": "Sky culture",
+    "cultures": {
+      "chinese-traditional": "Chinese traditional",
+      "western-iau": "Western IAU"
+    },
     "magnitudeLimit": "Magnitude limit",
-    "constellationLines": "Constellation lines",
-    "constellationLabels": "Constellation labels",
+    "starNames": "Star names",
+    "cultureLines": "Culture lines",
+    "cultureLabels": "Culture labels",
+    "cultureBoundaries": "Culture boundaries",
     "solarSystem": "Solar System bodies",
     "refraction": "Atmospheric refraction",
     "retry": "Reload",

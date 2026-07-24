@@ -42,6 +42,24 @@ interface SolarSystemBodyStyle {
   radius: number
 }
 
+interface SkyTextLabel {
+  key: string
+  text: string
+  kind: 'culture' | 'star'
+  rank?: 1 | 2 | 3
+  x: number
+  y: number
+  anchor: 'start' | 'middle' | 'end'
+  priority: number
+}
+
+interface LabelBounds {
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
 const SOLAR_SYSTEM_BODY_STYLES: Record<SolarSystemBodyId, SolarSystemBodyStyle> = {
   sun: { fill: '#f4c95d', stroke: '#ffe5a0', radius: 6.8 },
   moon: { fill: '#dce5e5', stroke: '#ffffff', radius: 5.8 },
@@ -56,8 +74,10 @@ const SOLAR_SYSTEM_BODY_STYLES: Record<SolarSystemBodyId, SolarSystemBodyStyle> 
 
 const props = defineProps<{
   frame: SkyFrame | null
-  showConstellationLines: boolean
-  showConstellationLabels: boolean
+  showCultureLines: boolean
+  showCultureLabels: boolean
+  showCultureBoundaries: boolean
+  showStarNames: boolean
   showSolarSystemBodies: boolean
   selectedObject: SkyObjectSelection | null
 }>()
@@ -103,26 +123,81 @@ const directionLabels = computed(() => {
     .filter((label) => isPointInViewport(label, size, 8))
 })
 
-const constellationLabels = computed(() => {
-  if (!props.frame || !props.showConstellationLabels || viewportSize.value === 0) return []
+const skyTextLabels = computed(() => {
+  if (!props.frame || viewportSize.value === 0) return []
   const { size, center, radius } = geometry.value
-  return props.frame.constellations.flatMap((constellation) => {
-    if (constellation.rank > 2) return []
-    return constellation.labelPositions
-      .filter((coordinate) => coordinate.altitudeDeg >= 5)
-      .map((coordinate, index) => ({
-        key: `${constellation.id}-${index}`,
-        text: constellation.id,
-        rank: constellation.rank,
-        ...transformSkyPoint(
-          projectHorizontal(coordinate, radius, center),
-          viewTransform.value,
-          center,
-        ),
-      }))
-      .filter((label) => isPointInViewport(label, size, 12))
-  })
+  const selectedStarId = props.selectedObject?.kind === 'star' ? props.selectedObject.object.id : null
+  const patternMembers = new Set(props.frame.featuredPatterns.flatMap((pattern) => pattern.memberObjectIds))
+  const candidates: SkyTextLabel[] = []
+
+  if (props.showCultureLabels) {
+    for (const figure of props.frame.cultureFigures) {
+      if (!figure.labelPosition || figure.labelPosition.altitudeDeg < 5) continue
+      if (figure.rank === 3 && viewTransform.value.scale < 2.5) continue
+      const point = transformSkyPoint(
+        projectHorizontal(figure.labelPosition, radius, center),
+        viewTransform.value,
+        center,
+      )
+      candidates.push({
+        key: `culture-${figure.id}`,
+        text: figure.name,
+        kind: 'culture',
+        rank: figure.rank,
+        x: point.x,
+        y: point.y,
+        anchor: 'middle',
+        priority: figure.rank === 1 ? 50_000 : figure.rank === 2 ? 28_000 : 18_000,
+      })
+    }
+  }
+
+  if (props.showStarNames) {
+    const magnitudeThreshold = Math.min(6.5, 2.4 + Math.log2(viewTransform.value.scale) * 1.3)
+    for (const label of props.frame.starLabels) {
+      const selected = label.objectId === selectedStarId
+      const patternMember = patternMembers.has(label.objectId)
+      if (!selected && !patternMember && label.visualMagnitude > magnitudeThreshold) continue
+      const point = transformSkyPoint(
+        projectHorizontal(label, radius, center),
+        viewTransform.value,
+        center,
+      )
+      const anchor = point.x > size - 96 ? 'end' as const : 'start' as const
+      const offset = anchor === 'end' ? -7 : 7
+      candidates.push({
+        key: `star-${label.objectId}`,
+        text: label.name,
+        kind: 'star',
+        x: point.x + offset,
+        y: point.y,
+        anchor,
+        priority: selected
+          ? 100_000
+          : patternMember ? 90_000 : 30_000 + label.labelPriority * 100 - label.visualMagnitude,
+      })
+    }
+  }
+
+  candidates.sort((left, right) => right.priority - left.priority || left.key.localeCompare(right.key))
+  const accepted: SkyTextLabel[] = []
+  const occupied: LabelBounds[] = []
+  const ordinaryLimit = Math.min(260, Math.round(42 * viewTransform.value.scale))
+  let ordinaryCount = 0
+  for (const candidate of candidates) {
+    const alwaysVisible = candidate.priority >= 90_000
+    if (candidate.kind === 'star' && !alwaysVisible && ordinaryCount >= ordinaryLimit) continue
+    const bounds = labelBounds(candidate, size)
+    if (!bounds || occupied.some((other) => intersects(bounds, other))) continue
+    accepted.push(candidate)
+    occupied.push(bounds)
+    if (candidate.kind === 'star' && !alwaysVisible) ordinaryCount += 1
+  }
+  return accepted
 })
+
+const cultureLabels = computed(() => skyTextLabels.value.filter((label) => label.kind === 'culture'))
+const starLabels = computed(() => skyTextLabels.value.filter((label) => label.kind === 'star'))
 
 const solarSystemLabels = computed(() => {
   if (!props.frame || !props.showSolarSystemBodies || viewportSize.value === 0) return []
@@ -169,7 +244,8 @@ const hoveredMarker = computed(() => hoveredObject.value
 watch(
   () => [
     props.frame,
-    props.showConstellationLines,
+    props.showCultureLines,
+    props.showCultureBoundaries,
     props.showSolarSystemBodies,
     viewTransform.value,
   ] as const,
@@ -223,7 +299,9 @@ function draw(): void {
   context.beginPath()
   context.arc(center, center, radius, 0, Math.PI * 2)
   context.clip()
-  if (props.frame && props.showConstellationLines) drawConstellations(context, center, radius)
+  if (props.frame && props.showCultureBoundaries) drawCultureRegions(context, center, radius)
+  if (props.frame && props.showCultureLines) drawCultureFigures(context, center, radius)
+  if (props.frame) drawFeaturedPatterns(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
   renderedSolarSystemBodies = props.frame && props.showSolarSystemBodies
     ? drawSolarSystemBodies(context, center, radius)
@@ -264,7 +342,24 @@ function drawGrid(context: CanvasRenderingContext2D, center: number, radius: num
   context.stroke()
 }
 
-function drawConstellations(
+function drawCultureRegions(
+  context: CanvasRenderingContext2D,
+  center: number,
+  radius: number,
+): void {
+  if (!props.frame) return
+  context.beginPath()
+  for (const region of props.frame.cultureRegions) {
+    addHorizontalLinesToPath(context, region.rings, center, radius)
+  }
+  context.strokeStyle = '#4f5d6d'
+  context.globalAlpha = 0.52
+  context.lineWidth = 0.72 / viewTransform.value.scale
+  context.stroke()
+  context.globalAlpha = 1
+}
+
+function drawCultureFigures(
   context: CanvasRenderingContext2D,
   center: number,
   radius: number,
@@ -272,16 +367,9 @@ function drawConstellations(
   if (!props.frame) return
   for (const rank of [3, 2, 1] as const) {
     context.beginPath()
-    for (const constellation of props.frame.constellations) {
-      if (constellation.rank !== rank) continue
-      for (const line of constellation.lines) {
-        for (let index = 1; index < line.length; index += 1) {
-          const segment = clipAndProjectHorizonSegment(line[index - 1], line[index], radius, center)
-          if (!segment) continue
-          context.moveTo(segment.start.x, segment.start.y)
-          context.lineTo(segment.end.x, segment.end.y)
-        }
-      }
+    for (const figure of props.frame.cultureFigures) {
+      if (figure.rank !== rank) continue
+      addHorizontalLinesToPath(context, figure.lines, center, radius)
     }
     context.strokeStyle = rank === 1 ? '#3e8f8b' : rank === 2 ? '#326d70' : '#294f55'
     context.globalAlpha = rank === 1 ? 0.8 : rank === 2 ? 0.62 : 0.46
@@ -289,6 +377,39 @@ function drawConstellations(
     context.stroke()
   }
   context.globalAlpha = 1
+}
+
+function drawFeaturedPatterns(
+  context: CanvasRenderingContext2D,
+  center: number,
+  radius: number,
+): void {
+  if (!props.frame || props.frame.featuredPatterns.length === 0) return
+  context.beginPath()
+  for (const pattern of props.frame.featuredPatterns) {
+    addHorizontalLinesToPath(context, pattern.lines, center, radius)
+  }
+  context.strokeStyle = '#d6ad52'
+  context.globalAlpha = 0.92
+  context.lineWidth = 1.6 / viewTransform.value.scale
+  context.stroke()
+  context.globalAlpha = 1
+}
+
+function addHorizontalLinesToPath(
+  context: CanvasRenderingContext2D,
+  lines: Array<Array<{ azimuthDeg: number; altitudeDeg: number }>>,
+  center: number,
+  radius: number,
+): void {
+  for (const line of lines) {
+    for (let index = 1; index < line.length; index += 1) {
+      const segment = clipAndProjectHorizonSegment(line[index - 1], line[index], radius, center)
+      if (!segment) continue
+      context.moveTo(segment.start.x, segment.start.y)
+      context.lineTo(segment.end.x, segment.end.y)
+    }
+  }
 }
 
 function drawStars(
@@ -530,6 +651,33 @@ function hitTestCollection(
 function isPointInViewport(point: ProjectedPoint, size: number, margin: number): boolean {
   return point.x >= margin && point.x <= size - margin && point.y >= margin && point.y <= size - margin
 }
+
+function labelBounds(label: SkyTextLabel, viewportSize: number): LabelBounds | null {
+  const fontSize = label.kind === 'culture'
+    ? Math.max(8, Math.min(12, viewportSize * 0.014))
+    : Math.max(8, Math.min(12, viewportSize * 0.0135))
+  const width = [...label.text].reduce(
+    (total, character) => total + (character.codePointAt(0)! > 255 ? fontSize : fontSize * 0.58),
+    0,
+  )
+  const left = label.anchor === 'middle' ? label.x - width / 2 : label.anchor === 'end' ? label.x - width : label.x
+  const bounds = {
+    left: left - 3,
+    right: left + width + 3,
+    top: label.y - fontSize * 0.72 - 2,
+    bottom: label.y + fontSize * 0.72 + 2,
+  }
+  return bounds.left >= 2 && bounds.right <= viewportSize - 2 && bounds.top >= 2 && bounds.bottom <= viewportSize - 2
+    ? bounds
+    : null
+}
+
+function intersects(left: LabelBounds, right: LabelBounds): boolean {
+  return left.left < right.right
+    && left.right > right.left
+    && left.top < right.bottom
+    && left.bottom > right.top
+}
 </script>
 
 <template>
@@ -565,12 +713,21 @@ function isPointInViewport(point: ProjectedPoint, size: number, margin: number):
         :y="direction.y"
       >{{ direction.text }}</text>
       <text
-        v-for="label in constellationLabels"
+        v-for="label in cultureLabels"
         :key="label.key"
-        class="constellation-label"
+        class="culture-label"
         :class="`rank-${label.rank}`"
         :x="label.x"
         :y="label.y"
+        :text-anchor="label.anchor"
+      >{{ label.text }}</text>
+      <text
+        v-for="label in starLabels"
+        :key="label.key"
+        class="star-label"
+        :x="label.x"
+        :y="label.y"
+        :text-anchor="label.anchor"
       >{{ label.text }}</text>
       <line
         v-for="label in solarSystemLabels.filter(({ displaced }) => displaced)"
@@ -675,12 +832,18 @@ text {
   font-weight: 700;
 }
 
-.constellation-label {
+.culture-label {
   fill: #8ab8b3;
   font-size: clamp(8px, 1.4cqw, 12px);
 }
 
-.constellation-label.rank-2 { fill: #668f8c; }
+.culture-label.rank-2 { fill: #668f8c; }
+.culture-label.rank-3 { fill: #557576; }
+
+.star-label {
+  fill: #d9e4dc;
+  font-size: clamp(8px, 1.35cqw, 12px);
+}
 
 .solar-system-leader {
   stroke: #968e73;

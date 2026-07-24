@@ -43,10 +43,13 @@ const { t, locale } = useI18n()
 const controls = reactive({
   observedAt: localDateTimeValue(new Date()),
   ...defaultObserverLocation,
+  cultureId: 'chinese-traditional',
   magnitudeLimit: 5.5,
   applyRefraction: true,
-  showConstellationLines: true,
-  showConstellationLabels: true,
+  showStarNames: true,
+  showCultureLines: true,
+  showCultureLabels: true,
+  showCultureBoundaries: true,
   showSolarSystemBodies: true,
 })
 const status = ref<ViewStatus>('loadingCatalog')
@@ -82,6 +85,7 @@ watch(targetQuery, () => {
   targetMessage.value = ''
 })
 watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
+watch(() => [controls.cultureId, locale.value] as const, requestCalculation, { flush: 'sync' })
 watch(
   () => [
     controls.latitudeDeg,
@@ -120,6 +124,7 @@ async function initialize(): Promise<void> {
     const catalogSummary = await client.initialize()
     if (client !== workerClient) return
     catalog.value = catalogSummary
+    controls.cultureId = catalogSummary.defaultCultureId
     calculationScheduler = new LatestCalculationScheduler(
       (parameters) => client.calculate(parameters),
       applyCalculationResult,
@@ -136,13 +141,15 @@ function requestCalculation(): void {
   const parameters = currentCalculationParameters()
   if (!calculationScheduler || !catalog.value || !parameters) return
   errorMessage.value = ''
-  selectedObject.value = null
   targetMessage.value = ''
   calculationScheduler.request(parameters)
 }
 
 function applyCalculationResult(result: SkyCalculationResult): void {
   frame.value = result.frame
+  selectedObject.value = selectedObject.value
+    ? resolveSelectionInFrame(selectedObject.value, result.frame)
+    : null
   calculationDurationMs.value = result.calculationDurationMs
   status.value = 'ready'
 }
@@ -164,6 +171,9 @@ function currentCalculationParameters(): SkyCalculationParameters | null {
     magnitudeLimit: controls.magnitudeLimit,
     minimumAltitudeDeg: 0,
     applyRefraction: controls.applyRefraction,
+    cultureId: controls.cultureId,
+    interfaceLanguage: locale.value,
+    enabledFeaturedPatternIds: [],
   }
 }
 
@@ -280,9 +290,23 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
 
 function formatSelectedObject(selection = selectedObject.value): string {
   if (!selection) return '—'
-  return selection.kind === 'star'
-    ? `HIP ${selection.object.hipId}`
-    : t(`skyMap.solarSystemBodies.${selection.object.id}`)
+  if (selection.kind === 'solarSystemBody') return t(`skyMap.solarSystemBodies.${selection.object.id}`)
+  const cultureName = frame.value?.starLabels.find(
+    (label) => label.objectId === selection.object.id,
+  )?.name
+  return cultureName ? `${cultureName} · HIP ${selection.object.hipId}` : `HIP ${selection.object.hipId}`
+}
+
+function resolveSelectionInFrame(
+  selection: SkyObjectSelection,
+  nextFrame: SkyFrame,
+): SkyObjectSelection | null {
+  if (selection.kind === 'star') {
+    const star = nextFrame.stars.find((candidate) => candidate.id === selection.object.id)
+    return star ? { kind: 'star', object: star } : null
+  }
+  const body = nextFrame.solarSystemBodies.find((candidate) => candidate.id === selection.object.id)
+  return body ? { kind: 'solarSystemBody', object: body } : null
 }
 
 function formatSelectedDetail(): string {
@@ -415,6 +439,16 @@ function formatSelectedData(): string {
 
           <fieldset>
             <legend>{{ t('skyMap.visibility') }}</legend>
+            <label class="field full-field">
+              <span>{{ t('skyMap.culture') }}</span>
+              <select v-model="controls.cultureId" :disabled="status === 'loadingCatalog'">
+                <option
+                  v-for="cultureId in catalog?.cultureIds ?? []"
+                  :key="cultureId"
+                  :value="cultureId"
+                >{{ t(`skyMap.cultures.${cultureId}`) }}</option>
+              </select>
+            </label>
             <label class="range-field">
               <span>{{ t('skyMap.magnitudeLimit') }}</span>
               <output>{{ controls.magnitudeLimit.toFixed(1) }}</output>
@@ -428,12 +462,20 @@ function formatSelectedData(): string {
               >
             </label>
             <label class="toggle-row">
-              <input v-model="controls.showConstellationLines" type="checkbox">
-              <span>{{ t('skyMap.constellationLines') }}</span>
+              <input v-model="controls.showStarNames" type="checkbox">
+              <span>{{ t('skyMap.starNames') }}</span>
             </label>
             <label class="toggle-row">
-              <input v-model="controls.showConstellationLabels" type="checkbox">
-              <span>{{ t('skyMap.constellationLabels') }}</span>
+              <input v-model="controls.showCultureLines" type="checkbox">
+              <span>{{ t('skyMap.cultureLines') }}</span>
+            </label>
+            <label class="toggle-row">
+              <input v-model="controls.showCultureLabels" type="checkbox">
+              <span>{{ t('skyMap.cultureLabels') }}</span>
+            </label>
+            <label class="toggle-row">
+              <input v-model="controls.showCultureBoundaries" type="checkbox">
+              <span>{{ t('skyMap.cultureBoundaries') }}</span>
             </label>
             <label class="toggle-row">
               <input v-model="controls.showSolarSystemBodies" type="checkbox">
@@ -452,8 +494,10 @@ function formatSelectedData(): string {
         <SkyMapCanvas
           ref="skyCanvas"
           :frame="frame"
-          :show-constellation-lines="controls.showConstellationLines"
-          :show-constellation-labels="controls.showConstellationLabels"
+          :show-star-names="controls.showStarNames"
+          :show-culture-lines="controls.showCultureLines"
+          :show-culture-labels="controls.showCultureLabels"
+          :show-culture-boundaries="controls.showCultureBoundaries"
           :show-solar-system-bodies="controls.showSolarSystemBodies"
           :selected-object="selectedObject"
           @select="selectObject"

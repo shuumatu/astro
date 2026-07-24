@@ -8,9 +8,16 @@ import {
   Rotation_EQJ_HOR,
 } from 'astronomy-engine'
 import type {
+  ComputedCultureFigure,
+  ComputedCultureRegion,
+  ComputedFeaturedPattern,
   ComputedSolarSystemBody,
+  ComputedStar,
+  ComputedStarLabel,
   EquatorialCoordinate,
+  FeaturedPatternPack,
   HorizontalCoordinate,
+  SkyCulturePack,
   SolarSystemBodyId,
   SkyCalculationParameters,
   SkyCatalog,
@@ -44,6 +51,8 @@ export interface CartesianVector {
 
 export function calculateSkyFrame(
   catalog: SkyCatalog,
+  culture: SkyCulturePack,
+  featuredPatternPack: FeaturedPatternPack,
   parameters: SkyCalculationParameters,
 ): SkyFrame {
   const date = validateParameters(parameters, catalog.visualMagnitudeLimit)
@@ -54,12 +63,27 @@ export function calculateSkyFrame(
     parameters.observer.elevationMeters,
   )
   const rotation = Rotation_EQJ_HOR(date, observer).rot
+  const starsById = new Map(catalog.stars.map((star) => [star.id, star]))
+  const coordinatesById = new Map<string, HorizontalCoordinate>()
+  const coordinateForObject = (objectId: string): HorizontalCoordinate | null => {
+    const cached = coordinatesById.get(objectId)
+    if (cached) return cached
+    const star = starsById.get(objectId)
+    if (!star) return null
+    const coordinate = toHorizontal(
+      propagateIcrs(star, targetYear),
+      rotation,
+      parameters.applyRefraction,
+    )
+    coordinatesById.set(objectId, coordinate)
+    return coordinate
+  }
 
-  const stars = catalog.stars
+  const stars: ComputedStar[] = catalog.stars
     .filter((star) => star.visualMagnitude <= parameters.magnitudeLimit)
     .map((star) => ({
       star,
-      coordinate: toHorizontal(propagateIcrs(star, targetYear), rotation, parameters.applyRefraction),
+      coordinate: coordinateForObject(star.id)!,
     }))
     .filter(({ coordinate }) => coordinate.altitudeDeg >= parameters.minimumAltitudeDeg)
     .map(({ star, coordinate }) => ({
@@ -75,18 +99,19 @@ export function calculateSkyFrame(
       ...coordinate,
     }))
 
-  const constellations = catalog.constellations.map((constellation) => ({
-    id: constellation.id,
-    rank: constellation.rank,
-    labelPositions: constellation.labelPositions.map((coordinate) =>
-      toHorizontal(equatorialToVector(coordinate), rotation, parameters.applyRefraction),
-    ),
-    lines: constellation.lines.map((line) =>
-      line.map((coordinate) =>
-        toHorizontal(equatorialToVector(coordinate), rotation, parameters.applyRefraction),
-      ),
-    ),
-  }))
+  const cultureFigures = calculateCultureFigures(culture, parameters.interfaceLanguage, coordinateForObject)
+  const cultureRegions = calculateCultureRegions(
+    culture,
+    parameters.interfaceLanguage,
+    rotation,
+    parameters.applyRefraction,
+  )
+  const starLabels = calculateStarLabels(culture, parameters.interfaceLanguage, stars)
+  const featuredPatterns = calculateFeaturedPatterns(
+    featuredPatternPack,
+    parameters,
+    coordinateForObject,
+  )
 
   const solarSystemBodies = calculateSolarSystemBodies(
     date,
@@ -98,10 +123,126 @@ export function calculateSkyFrame(
   return {
     observedAt: date.toISOString(),
     observer: { ...parameters.observer },
+    cultureId: culture.id,
+    interfaceLanguage: parameters.interfaceLanguage,
     stars,
-    constellations,
+    cultureFigures,
+    cultureRegions,
+    starLabels,
+    featuredPatterns,
     solarSystemBodies,
   }
+}
+
+function calculateCultureFigures(
+  culture: SkyCulturePack,
+  interfaceLanguage: string,
+  coordinateForObject: (objectId: string) => HorizontalCoordinate | null,
+): ComputedCultureFigure[] {
+  return culture.figures.map((figure) => ({
+    id: figure.id,
+    type: figure.type,
+    name: selectLocalizedName(figure.names, interfaceLanguage, culture.defaultLanguage),
+    rank: figure.rank,
+    labelPosition: coordinateForObject(figure.labelAnchor.objectId),
+    lines: figure.paths.flatMap((path) => splitResolvedPath(path, coordinateForObject)),
+  }))
+}
+
+function calculateCultureRegions(
+  culture: SkyCulturePack,
+  interfaceLanguage: string,
+  rotation: number[][],
+  applyRefraction: boolean,
+): ComputedCultureRegion[] {
+  return culture.regions.map((region) => ({
+    id: region.id,
+    figureId: region.figureId,
+    name: selectLocalizedName(region.names, interfaceLanguage, culture.defaultLanguage),
+    rings: region.geometry.coordinates.flatMap((polygon) => polygon.map((ring) =>
+      ring.map((coordinate) => toHorizontal(
+        equatorialToVector(coordinate),
+        rotation,
+        applyRefraction,
+      )),
+    )),
+  }))
+}
+
+function calculateStarLabels(
+  culture: SkyCulturePack,
+  interfaceLanguage: string,
+  stars: ComputedStar[],
+): ComputedStarLabel[] {
+  const visibleStars = new Map(stars.map((star) => [star.id, star]))
+  return culture.starNames.flatMap((record): ComputedStarLabel[] => {
+    const star = visibleStars.get(record.objectId)
+    if (!star) return []
+    return [{
+      objectId: record.objectId,
+      name: selectLocalizedName(record.names, interfaceLanguage, culture.defaultLanguage),
+      labelPriority: record.labelPriority,
+      visualMagnitude: star.visualMagnitude,
+      azimuthDeg: star.azimuthDeg,
+      altitudeDeg: star.altitudeDeg,
+    }]
+  })
+}
+
+function calculateFeaturedPatterns(
+  pack: FeaturedPatternPack,
+  parameters: SkyCalculationParameters,
+  coordinateForObject: (objectId: string) => HorizontalCoordinate | null,
+): ComputedFeaturedPattern[] {
+  const enabledIds = new Set(parameters.enabledFeaturedPatternIds)
+  return pack.patterns
+    .filter((pattern) => enabledIds.has(pattern.id) && pattern.cultureIds.includes(parameters.cultureId))
+    .map((pattern) => ({
+      id: pattern.id,
+      name: selectLocalizedName(pattern.names, parameters.interfaceLanguage, 'en'),
+      memberObjectIds: [...pattern.memberObjectIds],
+      labelPosition: coordinateForObject(pattern.labelAnchor.objectId),
+      lines: pattern.paths.flatMap((path) => splitResolvedPath(path, coordinateForObject)),
+    }))
+}
+
+function splitResolvedPath(
+  objectIds: string[],
+  coordinateForObject: (objectId: string) => HorizontalCoordinate | null,
+): HorizontalCoordinate[][] {
+  const lines: HorizontalCoordinate[][] = []
+  let current: HorizontalCoordinate[] = []
+  const flush = () => {
+    if (current.length >= 2) lines.push(current)
+    current = []
+  }
+  for (const objectId of objectIds) {
+    const coordinate = coordinateForObject(objectId)
+    if (coordinate) current.push(coordinate)
+    else flush()
+  }
+  flush()
+  return lines
+}
+
+export function selectLocalizedName(
+  names: SkyCulturePack['names'],
+  interfaceLanguage: string,
+  cultureDefaultLanguage: string,
+): string {
+  const normalizedInterfaceLanguage = interfaceLanguage.toLowerCase()
+  const baseInterfaceLanguage = normalizedInterfaceLanguage.split('-')[0]
+  const fallbackLanguages = [
+    normalizedInterfaceLanguage,
+    baseInterfaceLanguage,
+    cultureDefaultLanguage.toLowerCase(),
+    'en',
+  ]
+  for (const language of new Set(fallbackLanguages)) {
+    const candidates = names.filter((name) => name.language.toLowerCase() === language)
+    if (candidates.length > 0) return (candidates.find((name) => name.preferred) ?? candidates[0]).value
+  }
+  return (names.find((name) => name.preferred) ?? names[0]).value
 }
 
 function calculateSolarSystemBodies(
@@ -206,6 +347,11 @@ function validateParameters(parameters: SkyCalculationParameters, catalogMagnitu
   requireRange(parameters.magnitudeLimit, 'magnitudeLimit', -10, catalogMagnitudeLimit)
   requireRange(parameters.minimumAltitudeDeg, 'minimumAltitudeDeg', -90, 90)
   if (typeof parameters.applyRefraction !== 'boolean') invalid('applyRefraction must be boolean')
+  if (!parameters.cultureId) invalid('cultureId must not be empty')
+  if (!parameters.interfaceLanguage) invalid('interfaceLanguage must not be empty')
+  if (!Array.isArray(parameters.enabledFeaturedPatternIds)) {
+    invalid('enabledFeaturedPatternIds must be an array')
+  }
   return date
 }
 

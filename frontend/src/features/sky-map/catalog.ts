@@ -1,7 +1,5 @@
 import type {
   CatalogManifest,
-  ConstellationRecord,
-  EquatorialCoordinate,
   SkyCatalog,
   StarRecord,
 } from './types'
@@ -9,7 +7,6 @@ import { SkyMapError } from './types'
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/
 const VERSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
-const IAU_ID_PATTERN = /^[A-Z][A-Za-z]{2}$/
 
 export async function loadSkyCatalog(
   manifestUrl: string,
@@ -84,7 +81,7 @@ function resolveDownloadUrl(downloadUrl: string, responseUrl: string): string {
 
 function validateManifest(value: unknown): CatalogManifest {
   const manifest = requireRecord(value, 'manifest')
-  requireEqual(manifest.schemaVersion, 1, 'manifest.schemaVersion')
+  requireEqual(manifest.schemaVersion, 2, 'manifest.schemaVersion')
   requireEqual(manifest.catalogId, 'naked-eye', 'manifest.catalogId')
   requireString(manifest.version, 'manifest.version', VERSION_PATTERN)
   requireString(manifest.downloadUrl, 'manifest.downloadUrl')
@@ -97,7 +94,6 @@ function validateManifest(value: unknown): CatalogManifest {
   requireString(manifest.decodedSha256, 'manifest.decodedSha256', SHA256_PATTERN)
   requirePositiveInteger(manifest.decodedContentLength, 'manifest.decodedContentLength')
   requirePositiveInteger(manifest.starCount, 'manifest.starCount')
-  requirePositiveInteger(manifest.constellationCount, 'manifest.constellationCount')
   if (!Array.isArray(manifest.sources) || manifest.sources.length === 0) {
     invalid('manifest.sources must be a non-empty array')
   }
@@ -110,24 +106,16 @@ function validateManifest(value: unknown): CatalogManifest {
 
 function validateCatalog(value: unknown, manifest: CatalogManifest): SkyCatalog {
   const catalog = requireRecord(value, 'catalog')
-  requireEqual(catalog.schemaVersion, 1, 'catalog.schemaVersion')
+  requireEqual(catalog.schemaVersion, 2, 'catalog.schemaVersion')
   requireEqual(catalog.catalogId, 'naked-eye', 'catalog.catalogId')
   requireEqual(catalog.referenceFrame, 'ICRS', 'catalog.referenceFrame')
   requireFiniteNumber(catalog.visualMagnitudeLimit, 'catalog.visualMagnitudeLimit')
   if (!Array.isArray(catalog.stars) || catalog.stars.length !== manifest.starCount) {
     invalid(`catalog.stars must contain ${manifest.starCount} records`)
   }
-  if (!Array.isArray(catalog.constellations) || catalog.constellations.length !== manifest.constellationCount) {
-    invalid(`catalog.constellations must contain ${manifest.constellationCount} records`)
-  }
-
   const starIds = new Set<string>()
   for (const [index, starValue] of catalog.stars.entries()) {
     validateStar(starValue, index, catalog.visualMagnitudeLimit as number, starIds)
-  }
-  const constellationIds = new Set<string>()
-  for (const [index, constellationValue] of catalog.constellations.entries()) {
-    validateConstellation(constellationValue, index, constellationIds)
   }
   return catalog as unknown as SkyCatalog
 }
@@ -155,38 +143,6 @@ function validateStar(value: unknown, index: number, magnitudeLimit: number, ids
     invalid(`${label}.astrometrySource is invalid`)
   }
   return star as unknown as StarRecord
-}
-
-function validateConstellation(
-  value: unknown,
-  index: number,
-  ids: Set<string>,
-): ConstellationRecord {
-  const label = `catalog.constellations[${index}]`
-  const constellation = requireRecord(value, label)
-  const id = requireString(constellation.id, `${label}.id`, IAU_ID_PATTERN)
-  if (ids.has(id)) invalid(`${label}.id is duplicated`)
-  ids.add(id)
-  if (![1, 2, 3].includes(constellation.rank as number)) invalid(`${label}.rank is invalid`)
-  validateCoordinateList(constellation.labelPositions, `${label}.labelPositions`, 1)
-  if (!Array.isArray(constellation.lines) || constellation.lines.length === 0) {
-    invalid(`${label}.lines must be a non-empty array`)
-  }
-  for (const [lineIndex, line] of (constellation.lines as unknown[]).entries()) {
-    validateCoordinateList(line, `${label}.lines[${lineIndex}]`, 2)
-  }
-  return constellation as unknown as ConstellationRecord
-}
-
-function validateCoordinateList(value: unknown, label: string, minimumLength: number): void {
-  if (!Array.isArray(value) || value.length < minimumLength) {
-    invalid(`${label} must contain at least ${minimumLength} coordinates`)
-  }
-  for (const [index, coordinate] of value.entries()) {
-    if (!Array.isArray(coordinate) || coordinate.length !== 2) invalid(`${label}[${index}] is invalid`)
-    requireRange(coordinate[0], `${label}[${index}][0]`, 0, 360, false)
-    requireRange(coordinate[1], `${label}[${index}][1]`, -90, 90)
-  }
 }
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {
