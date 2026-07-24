@@ -21,7 +21,12 @@
     "title": "实时全天星图",
     "observation": "观测条件",
     "observedAt": "观测时间",
-    "now": "使用当前时间",
+    "quickTimes": "快捷观测时间",
+    "timePresets": {
+      "now": "当前时刻",
+      "tonight": "今晚 20:00",
+      "tomorrowEvening": "明晚 20:00"
+    },
     "location": "观测位置",
     "latitude": "纬度",
     "longitude": "经度",

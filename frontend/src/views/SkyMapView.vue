@@ -3,6 +3,11 @@ import { Search } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
+import {
+  OBSERVATION_TIME_PRESETS,
+  observationTimeForPreset,
+} from '../features/sky-map/observationTime'
+import type { ObservationTimePreset } from '../features/sky-map/observationTime'
 import { parseSkyTargetQuery } from '../features/sky-map/targetSearch'
 import type {
   CatalogSummary,
@@ -35,6 +40,7 @@ const controls = reactive({
   showSolarSystemBodies: true,
 })
 const status = ref<ViewStatus>('loadingCatalog')
+const activeTimePreset = ref<ObservationTimePreset | 'custom'>('now')
 const errorMessage = ref('')
 const catalog = ref<CatalogSummary | null>(null)
 const frame = ref<SkyFrame | null>(null)
@@ -101,9 +107,14 @@ async function calculate(): Promise<void> {
   }
 }
 
-function useCurrentTime(): void {
-  controls.observedAt = localDateTimeValue(new Date())
+function useTimePreset(preset: ObservationTimePreset): void {
+  activeTimePreset.value = preset
+  controls.observedAt = localDateTimeValue(observationTimeForPreset(preset))
   void calculate()
+}
+
+function useCustomTime(): void {
+  activeTimePreset.value = 'custom'
 }
 
 function searchTarget(): void {
@@ -215,11 +226,24 @@ function formatSelectedData(): string {
             <legend>{{ t('skyMap.observation') }}</legend>
             <label class="field full-field">
               <span>{{ t('skyMap.observedAt') }}</span>
-              <input v-model="controls.observedAt" type="datetime-local" required>
+              <input
+                v-model="controls.observedAt"
+                type="datetime-local"
+                required
+                @input="useCustomTime"
+              >
             </label>
-            <button class="secondary-command" type="button" :disabled="status === 'loadingCatalog' || status === 'calculating'" @click="useCurrentTime">
-              {{ t('skyMap.now') }}
-            </button>
+            <div class="time-presets" role="group" :aria-label="t('skyMap.quickTimes')">
+              <button
+                v-for="preset in OBSERVATION_TIME_PRESETS"
+                :key="preset"
+                type="button"
+                :class="{ active: activeTimePreset === preset }"
+                :aria-pressed="activeTimePreset === preset"
+                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                @click="useTimePreset(preset)"
+              >{{ t(`skyMap.timePresets.${preset}`) }}</button>
+            </div>
           </fieldset>
 
           <fieldset>
@@ -452,6 +476,31 @@ legend {
   grid-template-columns: 1fr 1fr;
   gap: .55rem;
 }
+
+.time-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #3a4c54;
+  border-radius: 4px;
+}
+
+.time-presets button {
+  min-width: 0;
+  min-height: 42px;
+  border: 0;
+  border-right: 1px solid #3a4c54;
+  padding: .35rem .2rem;
+  color: #9eafb2;
+  background: transparent;
+  font-size: .68rem;
+  line-height: 1.25;
+  cursor: pointer;
+}
+
+.time-presets button:last-child { border-right: 0; }
+.time-presets button.active { color: #07110f; background: #86cbc1; font-weight: 700; }
+.time-presets button:hover:not(:disabled, .active) { color: #dfe8e8; background: #182329; }
 
 input[type="datetime-local"],
 input[type="number"],

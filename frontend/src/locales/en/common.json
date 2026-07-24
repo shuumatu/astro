@@ -21,7 +21,12 @@
     "title": "Live all-sky chart",
     "observation": "Observation",
     "observedAt": "Observed at",
-    "now": "Use current time",
+    "quickTimes": "Quick observation time",
+    "timePresets": {
+      "now": "Now",
+      "tonight": "Tonight 20:00",
+      "tomorrowEvening": "Tomorrow 20:00"
+    },
     "location": "Location",
     "latitude": "Latitude",
     "longitude": "Longitude",
