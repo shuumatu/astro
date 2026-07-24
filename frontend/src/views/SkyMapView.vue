@@ -29,6 +29,7 @@ const controls = reactive({
   applyRefraction: true,
   showConstellationLines: true,
   showConstellationLabels: true,
+  showSolarSystemBodies: true,
 })
 const status = ref<ViewStatus>('loadingCatalog')
 const errorMessage = ref('')
@@ -240,6 +241,10 @@ function formatAstrometrySource(star: ComputedStar | null): string {
               <span>{{ t('skyMap.constellationLabels') }}</span>
             </label>
             <label class="toggle-row">
+              <input v-model="controls.showSolarSystemBodies" type="checkbox">
+              <span>{{ t('skyMap.solarSystem') }}</span>
+            </label>
+            <label class="toggle-row">
               <input v-model="controls.applyRefraction" type="checkbox">
               <span>{{ t('skyMap.refraction') }}</span>
             </label>
@@ -257,6 +262,7 @@ function formatAstrometrySource(star: ComputedStar | null): string {
           :frame="frame"
           :show-constellation-lines="controls.showConstellationLines"
           :show-constellation-labels="controls.showConstellationLabels"
+          :show-solar-system-bodies="controls.showSolarSystemBodies"
           :selected-star-id="selectedStar?.id ?? null"
           @select="selectStar"
         />

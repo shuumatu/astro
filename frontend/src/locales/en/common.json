@@ -36,6 +36,7 @@
     "magnitudeLimit": "Magnitude limit",
     "constellationLines": "Constellation lines",
     "constellationLabels": "Constellation labels",
+    "solarSystem": "Solar System bodies",
     "refraction": "Atmospheric refraction",
     "update": "Update chart",
     "retry": "Reload",
@@ -65,6 +66,17 @@
       "east": "E",
       "south": "S",
       "west": "W"
+    },
+    "solarSystemBodies": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mercury": "Mercury",
+      "venus": "Venus",
+      "mars": "Mars",
+      "jupiter": "Jupiter",
+      "saturn": "Saturn",
+      "uranus": "Uranus",
+      "neptune": "Neptune"
     },
     "sources": {
       "GAIA_DR3": "Gaia DR3",

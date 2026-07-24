@@ -4,7 +4,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
 import type { ProjectedPoint } from './projection'
-import type { ComputedStar, SkyFrame } from './types'
+import { layoutSolarSystemLabels } from './solarSystemLabels'
+import type { ComputedStar, SkyFrame, SolarSystemBodyId } from './types'
 import {
   MAX_SKY_ZOOM,
   MIN_SKY_ZOOM,
@@ -30,10 +31,29 @@ interface DragSession {
   moved: boolean
 }
 
+interface SolarSystemBodyStyle {
+  fill: string
+  stroke: string
+  radius: number
+}
+
+const SOLAR_SYSTEM_BODY_STYLES: Record<SolarSystemBodyId, SolarSystemBodyStyle> = {
+  sun: { fill: '#f4c95d', stroke: '#ffe5a0', radius: 6.8 },
+  moon: { fill: '#dce5e5', stroke: '#ffffff', radius: 5.8 },
+  mercury: { fill: '#aaa39a', stroke: '#ddd6cd', radius: 3.5 },
+  venus: { fill: '#e8cf91', stroke: '#fff0bd', radius: 4.5 },
+  mars: { fill: '#c86f55', stroke: '#f0aa8c', radius: 4 },
+  jupiter: { fill: '#c7a47e', stroke: '#ead5b7', radius: 5.2 },
+  saturn: { fill: '#cbbb79', stroke: '#f0dea1', radius: 4.6 },
+  uranus: { fill: '#86c5c7', stroke: '#c8f0ed', radius: 4 },
+  neptune: { fill: '#6688cd', stroke: '#a8bff1', radius: 4 },
+}
+
 const props = defineProps<{
   frame: SkyFrame | null
   showConstellationLines: boolean
   showConstellationLabels: boolean
+  showSolarSystemBodies: boolean
   selectedStarId: string | null
 }>()
 
@@ -98,6 +118,30 @@ const constellationLabels = computed(() => {
   })
 })
 
+const solarSystemLabels = computed(() => {
+  if (!props.frame || !props.showSolarSystemBodies || viewportSize.value === 0) return []
+  const { size, center, radius } = geometry.value
+  const edgeThreshold = Math.max(58, size * 0.09)
+  const labels = props.frame.solarSystemBodies
+    .map((body) => {
+      const point = transformSkyPoint(
+        projectHorizontal(body, radius, center),
+        viewTransform.value,
+        center,
+      )
+      const placeOnLeft = point.x > size - edgeThreshold
+      return {
+        id: body.id,
+        text: t(`skyMap.solarSystemBodies.${body.id}`),
+        anchor: placeOnLeft ? 'end' as const : 'start' as const,
+        radius: screenSolarSystemBodyRadius(body.id),
+        point,
+      }
+    })
+    .filter(({ point }) => isPointInViewport(point, size, 0))
+  return layoutSolarSystemLabels(labels, size)
+})
+
 const selectedMarker = computed(() => {
   if (!props.frame || !props.selectedStarId || viewportSize.value === 0) return null
   const star = props.frame.stars.find(({ id }) => id === props.selectedStarId)
@@ -113,7 +157,12 @@ const hoveredMarker = computed(() => hoveredStar.value
   : null)
 
 watch(
-  () => [props.frame, props.showConstellationLines, viewTransform.value] as const,
+  () => [
+    props.frame,
+    props.showConstellationLines,
+    props.showSolarSystemBodies,
+    viewTransform.value,
+  ] as const,
   scheduleDraw,
 )
 
@@ -166,6 +215,7 @@ function draw(): void {
   context.clip()
   if (props.frame && props.showConstellationLines) drawConstellations(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
+  if (props.frame && props.showSolarSystemBodies) drawSolarSystemBodies(context, center, radius)
   context.restore()
   context.restore()
   hoveredStar.value = null
@@ -247,6 +297,56 @@ function drawStars(
     context.fill()
     return { star, point, radius: starRadius }
   })
+}
+
+function drawSolarSystemBodies(
+  context: CanvasRenderingContext2D,
+  center: number,
+  radius: number,
+): void {
+  if (!props.frame) return
+  const inverseScale = 1 / viewTransform.value.scale
+  context.globalAlpha = 1
+
+  for (const body of props.frame.solarSystemBodies) {
+    const point = projectHorizontal(body, radius, center)
+    const style = SOLAR_SYSTEM_BODY_STYLES[body.id]
+    const bodyRadius = screenSolarSystemBodyRadius(body.id) * inverseScale
+    context.save()
+    context.translate(point.x, point.y)
+
+    if (body.id === 'sun') {
+      context.beginPath()
+      context.arc(0, 0, bodyRadius + 2.5 * inverseScale, 0, Math.PI * 2)
+      context.strokeStyle = style.stroke
+      context.globalAlpha = 0.55
+      context.lineWidth = 1.4 * inverseScale
+      context.stroke()
+      context.globalAlpha = 1
+    }
+
+    if (body.id === 'saturn') {
+      context.beginPath()
+      context.ellipse(0, 0, bodyRadius * 1.65, bodyRadius * 0.62, -0.3, 0, Math.PI * 2)
+      context.strokeStyle = style.stroke
+      context.lineWidth = 1.2 * inverseScale
+      context.stroke()
+    }
+
+    context.beginPath()
+    context.arc(0, 0, bodyRadius, 0, Math.PI * 2)
+    context.fillStyle = style.fill
+    context.fill()
+    context.strokeStyle = style.stroke
+    context.lineWidth = 1.1 * inverseScale
+    context.stroke()
+    context.restore()
+  }
+}
+
+function screenSolarSystemBodyRadius(id: SolarSystemBodyId): number {
+  const sizeScale = Math.max(0.82, Math.min(1.15, viewportSize.value / 760))
+  return SOLAR_SYSTEM_BODY_STYLES[id].radius * sizeScale
 }
 
 function screenStarRadius(magnitude: number): number {
@@ -433,6 +533,23 @@ function isPointInViewport(point: ProjectedPoint, size: number, margin: number):
         :x="label.x"
         :y="label.y"
       >{{ label.text }}</text>
+      <line
+        v-for="label in solarSystemLabels.filter(({ displaced }) => displaced)"
+        :key="`${label.id}-leader`"
+        class="solar-system-leader"
+        :x1="label.point.x"
+        :y1="label.point.y"
+        :x2="label.leaderX"
+        :y2="label.y"
+      />
+      <text
+        v-for="label in solarSystemLabels"
+        :key="label.id"
+        class="solar-system-label"
+        :class="`anchor-${label.anchor}`"
+        :x="label.x"
+        :y="label.y"
+      >{{ label.text }}</text>
       <circle
         v-if="hoveredMarker"
         class="hover-marker"
@@ -525,6 +642,20 @@ text {
 }
 
 .constellation-label.rank-2 { fill: #668f8c; }
+
+.solar-system-leader {
+  stroke: #968e73;
+  stroke-width: 1px;
+}
+
+.solar-system-label {
+  fill: #f0e6c8;
+  font-size: clamp(9px, 1.55cqw, 13px);
+  font-weight: 700;
+}
+
+.solar-system-label.anchor-start { text-anchor: start; }
+.solar-system-label.anchor-end { text-anchor: end; }
 
 .hover-marker,
 .selected-marker { fill: none; }

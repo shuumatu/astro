@@ -11,6 +11,8 @@ transforms stay inside the module worker.
   `cos(declination)` a second time.
 - `astronomy-engine` supplies the J2000-equatorial to local-horizon rotation, including
   precession, nutation, Earth rotation, and optional normal atmospheric refraction.
+- The Sun, Moon, and seven planets use Astronomy Engine topocentric equatorial positions,
+  illumination, distance, and the same optional atmospheric refraction setting.
 - Constellation geometry is fixed in ICRS and does not receive proper motion.
 - The first version ignores stellar radial velocity, perspective acceleration, and annual
   parallax. These are below the visual precision needed for the naked-eye teaching chart,
@@ -20,9 +22,10 @@ transforms stay inside the module worker.
 ## Rendering model
 
 - The main renderer is a high-DPI Canvas 2D surface for the altitude grid, constellation
-  lines, and thousands of visible stars.
+  lines, thousands of visible stars, and Solar System body symbols.
 - A small SVG overlay contains cardinal directions, constellation labels, and hover or
-  selection markers. Form controls and numeric readouts remain regular DOM elements.
+  selection markers, plus localized Solar System labels. Form controls and numeric
+  readouts remain regular DOM elements.
 - Horizontal coordinates use an azimuthal-equidistant projection: zenith is at the center,
   the horizon is the rim, and north is at the top. Constellation segments are clipped at
   the horizon before projection.
