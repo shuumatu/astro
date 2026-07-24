@@ -17,7 +17,7 @@
     "skyMap": "The sky calculation service is being connected."
   },
   "skyMap": {
-    "kicker": "Horizon coordinates · Shenzhen default",
+    "kicker": "Horizon coordinates · Local sky",
     "title": "Live all-sky chart",
     "observation": "Observation",
     "observedAt": "Observed at",
@@ -28,6 +28,14 @@
       "tomorrowEvening": "Tomorrow 20:00"
     },
     "location": "Location",
+    "locationPreset": "Location preset",
+    "locationPresets": {
+      "shenzhen": "Shenzhen",
+      "beijing": "Beijing",
+      "shanghai": "Shanghai",
+      "chengdu": "Chengdu",
+      "custom": "Custom"
+    },
     "latitude": "Latitude",
     "longitude": "Longitude",
     "elevation": "Elevation (m)",

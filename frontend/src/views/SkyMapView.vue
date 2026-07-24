@@ -8,6 +8,11 @@ import {
   observationTimeForPreset,
 } from '../features/sky-map/observationTime'
 import type { ObservationTimePreset } from '../features/sky-map/observationTime'
+import {
+  OBSERVER_PRESET_IDS,
+  observerLocationForPreset,
+} from '../features/sky-map/observerPresets'
+import type { ObserverPresetId } from '../features/sky-map/observerPresets'
 import { parseSkyTargetQuery } from '../features/sky-map/targetSearch'
 import type {
   CatalogSummary,
@@ -21,18 +26,13 @@ type ViewStatus = 'loadingCatalog' | 'calculating' | 'ready' | 'error'
 
 const ASTRONOMICAL_UNIT_KM = 149_597_870.7
 
-const SHENZHEN = {
-  latitudeDeg: 22.5431,
-  longitudeDeg: 114.0579,
-  elevationMeters: 20,
-}
+const DEFAULT_OBSERVER_PRESET: ObserverPresetId = 'shenzhen'
+const defaultObserverLocation = observerLocationForPreset(DEFAULT_OBSERVER_PRESET)
 
 const { t, locale } = useI18n()
 const controls = reactive({
   observedAt: localDateTimeValue(new Date()),
-  latitudeDeg: SHENZHEN.latitudeDeg,
-  longitudeDeg: SHENZHEN.longitudeDeg,
-  elevationMeters: SHENZHEN.elevationMeters,
+  ...defaultObserverLocation,
   magnitudeLimit: 5.5,
   applyRefraction: true,
   showConstellationLines: true,
@@ -41,6 +41,7 @@ const controls = reactive({
 })
 const status = ref<ViewStatus>('loadingCatalog')
 const activeTimePreset = ref<ObservationTimePreset | 'custom'>('now')
+const activeLocationPreset = ref<ObserverPresetId | 'custom'>(DEFAULT_OBSERVER_PRESET)
 const errorMessage = ref('')
 const catalog = ref<CatalogSummary | null>(null)
 const frame = ref<SkyFrame | null>(null)
@@ -115,6 +116,16 @@ function useTimePreset(preset: ObservationTimePreset): void {
 
 function useCustomTime(): void {
   activeTimePreset.value = 'custom'
+}
+
+function useLocationPreset(): void {
+  if (activeLocationPreset.value === 'custom') return
+  Object.assign(controls, observerLocationForPreset(activeLocationPreset.value))
+  void calculate()
+}
+
+function useCustomLocation(): void {
+  activeLocationPreset.value = 'custom'
 }
 
 function searchTarget(): void {
@@ -248,19 +259,34 @@ function formatSelectedData(): string {
 
           <fieldset>
             <legend>{{ t('skyMap.location') }}</legend>
+            <label class="field full-field">
+              <span>{{ t('skyMap.locationPreset') }}</span>
+              <select
+                v-model="activeLocationPreset"
+                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                @change="useLocationPreset"
+              >
+                <option
+                  v-for="preset in OBSERVER_PRESET_IDS"
+                  :key="preset"
+                  :value="preset"
+                >{{ t(`skyMap.locationPresets.${preset}`) }}</option>
+                <option value="custom">{{ t('skyMap.locationPresets.custom') }}</option>
+              </select>
+            </label>
             <div class="coordinate-grid">
               <label class="field">
                 <span>{{ t('skyMap.latitude') }}</span>
-                <input v-model.number="controls.latitudeDeg" type="number" min="-90" max="90" step="0.0001" required>
+                <input v-model.number="controls.latitudeDeg" type="number" min="-90" max="90" step="0.0001" required @input="useCustomLocation">
               </label>
               <label class="field">
                 <span>{{ t('skyMap.longitude') }}</span>
-                <input v-model.number="controls.longitudeDeg" type="number" min="-180" max="180" step="0.0001" required>
+                <input v-model.number="controls.longitudeDeg" type="number" min="-180" max="180" step="0.0001" required @input="useCustomLocation">
               </label>
             </div>
             <label class="field full-field">
               <span>{{ t('skyMap.elevation') }}</span>
-              <input v-model.number="controls.elevationMeters" type="number" min="-500" max="10000" step="1" required>
+              <input v-model.number="controls.elevationMeters" type="number" min="-500" max="10000" step="1" required @input="useCustomLocation">
             </label>
           </fieldset>
 
@@ -504,7 +530,8 @@ legend {
 
 input[type="datetime-local"],
 input[type="number"],
-input[type="search"] {
+input[type="search"],
+select {
   width: 100%;
   min-height: 36px;
   border: 1px solid #34444c;
@@ -513,6 +540,8 @@ input[type="search"] {
   color: #e8efef;
   background: #090e12;
 }
+
+select { color-scheme: dark; }
 
 .target-search { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: .4rem; }
 

@@ -17,7 +17,7 @@
     "skyMap": "星图计算服务正在接入中。"
   },
   "skyMap": {
-    "kicker": "地平坐标 · 深圳默认位置",
+    "kicker": "地平坐标 · 本地星空",
     "title": "实时全天星图",
     "observation": "观测条件",
     "observedAt": "观测时间",
@@ -28,6 +28,14 @@
       "tomorrowEvening": "明晚 20:00"
     },
     "location": "观测位置",
+    "locationPreset": "地点预设",
+    "locationPresets": {
+      "shenzhen": "深圳",
+      "beijing": "北京",
+      "shanghai": "上海",
+      "chengdu": "成都",
+      "custom": "自定义"
+    },
     "latitude": "纬度",
     "longitude": "经度",
     "elevation": "海拔（米）",
