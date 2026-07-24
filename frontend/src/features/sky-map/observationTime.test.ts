@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { observationTimeForPreset, shiftObservationTime } from './observationTime'
+import {
+  accumulateObservationTimeWheel,
+  observationTimeForPreset,
+  shiftObservationTime,
+} from './observationTime'
 
 describe('observationTimeForPreset', () => {
   it('keeps the supplied instant for the current-time preset', () => {
@@ -29,6 +33,8 @@ describe('shiftObservationTime', () => {
     ['previousDay', new Date(2026, 0, 1, 0, 30), [2025, 12, 31, 0, 30]],
     ['previousHour', new Date(2026, 6, 24, 0, 30), [2026, 7, 23, 23, 30]],
     ['nextHour', new Date(2026, 6, 24, 23, 30), [2026, 7, 25, 0, 30]],
+    ['previousMinute', new Date(2026, 6, 24, 0, 0), [2026, 7, 23, 23, 59]],
+    ['nextMinute', new Date(2026, 6, 24, 23, 59), [2026, 7, 25, 0, 0]],
     ['nextDay', new Date(2026, 11, 31, 23, 30), [2027, 1, 1, 23, 30]],
   ] as const)('applies the %s step across calendar boundaries', (step, date, expected) => {
     expect(localParts(shiftObservationTime(date, step)).slice(0, 5)).toEqual(expected)
@@ -40,6 +46,39 @@ describe('shiftObservationTime', () => {
     shiftObservationTime(date, 'nextHour')
 
     expect(localParts(date).slice(0, 5)).toEqual([2026, 7, 24, 12, 30])
+  })
+})
+
+describe('accumulateObservationTimeWheel', () => {
+  it('maps an upward wheel step to the next minute', () => {
+    expect(accumulateObservationTimeWheel(0, -100)).toEqual({
+      accumulatedDelta: 0,
+      step: 'nextMinute',
+    })
+  })
+
+  it('maps a downward wheel step to the previous minute', () => {
+    expect(accumulateObservationTimeWheel(0, 100)).toEqual({
+      accumulatedDelta: 0,
+      step: 'previousMinute',
+    })
+  })
+
+  it('accumulates high-resolution wheel movement until a complete step', () => {
+    const partial = accumulateObservationTimeWheel(0, -30)
+
+    expect(partial).toEqual({ accumulatedDelta: -30, step: null })
+    expect(accumulateObservationTimeWheel(partial.accumulatedDelta, -55)).toEqual({
+      accumulatedDelta: 0,
+      step: 'nextMinute',
+    })
+  })
+
+  it('resets partial movement when the wheel reverses direction', () => {
+    expect(accumulateObservationTimeWheel(50, -40)).toEqual({
+      accumulatedDelta: -40,
+      step: null,
+    })
   })
 })
 

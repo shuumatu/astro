@@ -385,6 +385,7 @@ function starColor(colorIndex: number | null): string {
 }
 
 function onWheel(event: WheelEvent): void {
+  if (event.ctrlKey) return
   const point = eventPoint(event)
   if (!point) return
   const factor = Math.exp(-event.deltaY * 0.0015)

@@ -58,7 +58,6 @@
     "constellationLabels": "Constellation labels",
     "solarSystem": "Solar System bodies",
     "refraction": "Atmospheric refraction",
-    "update": "Update chart",
     "retry": "Reload",
     "loadFailed": "Sky data could not be loaded",
     "catalogVersion": "Catalog {version}",

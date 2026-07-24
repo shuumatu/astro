@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
+import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
 import {
   OBSERVATION_TIME_PRESETS,
   OBSERVATION_TIME_STEPS,
+  accumulateObservationTimeWheel,
   observationTimeForPreset,
   shiftObservationTime,
 } from '../features/sky-map/observationTime'
@@ -27,9 +29,12 @@ import type {
 } from '../features/sky-map/types'
 import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
 
-type ViewStatus = 'loadingCatalog' | 'calculating' | 'ready' | 'error'
+type ViewStatus = 'loadingCatalog' | 'ready' | 'error'
+type SkyCalculationResult = Awaited<ReturnType<SkyMapWorkerClient['calculate']>>
 
 const ASTRONOMICAL_UNIT_KM = 149_597_870.7
+const CALCULATION_DEBOUNCE_MS = 80
+const TIME_WHEEL_RESET_MS = 240
 
 const DEFAULT_OBSERVER_PRESET: ObserverPresetId = 'shenzhen'
 const defaultObserverLocation = observerLocationForPreset(DEFAULT_OBSERVER_PRESET)
@@ -49,13 +54,20 @@ const activeTimePreset = ref<ObservationTimePreset | 'custom'>('now')
 const activeLocationPreset = ref<ObserverPresetId | 'custom'>(DEFAULT_OBSERVER_PRESET)
 const errorMessage = ref('')
 const catalog = ref<CatalogSummary | null>(null)
-const frame = ref<SkyFrame | null>(null)
+const frame = shallowRef<SkyFrame | null>(null)
 const calculationDurationMs = ref<number | null>(null)
 const selectedObject = ref<SkyObjectSelection | null>(null)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const targetQuery = ref('')
 const targetMessage = ref('')
 let workerClient: SkyMapWorkerClient | null = null
+let calculationScheduler: LatestCalculationScheduler<
+  SkyCalculationParameters,
+  SkyCalculationResult
+> | null = null
+let calculationTimer: ReturnType<typeof setTimeout> | null = null
+let timeWheelResetTimer: ReturnType<typeof setTimeout> | null = null
+let accumulatedTimeWheelDelta = 0
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
@@ -69,54 +81,103 @@ const visibleStarCount = computed(() => frame.value
 watch(targetQuery, () => {
   targetMessage.value = ''
 })
+watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
+watch(
+  () => [
+    controls.latitudeDeg,
+    controls.longitudeDeg,
+    controls.elevationMeters,
+    controls.magnitudeLimit,
+    controls.applyRefraction,
+  ] as const,
+  scheduleCalculation,
+)
 
-onMounted(() => void initialize())
-onBeforeUnmount(() => workerClient?.dispose())
+onMounted(() => {
+  window.addEventListener('wheel', handlePageWheel, { passive: false })
+  void initialize()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('wheel', handlePageWheel)
+  if (calculationTimer) clearTimeout(calculationTimer)
+  if (timeWheelResetTimer) clearTimeout(timeWheelResetTimer)
+  calculationScheduler?.dispose()
+  calculationScheduler = null
+  const client = workerClient
+  workerClient = null
+  client?.dispose()
+})
 
 async function initialize(): Promise<void> {
   status.value = 'loadingCatalog'
   errorMessage.value = ''
+  calculationScheduler?.dispose()
+  calculationScheduler = null
   workerClient?.dispose()
-  workerClient = new SkyMapWorkerClient()
+  const client = new SkyMapWorkerClient()
+  workerClient = client
   try {
-    catalog.value = await workerClient.initialize()
-    await calculate()
+    const catalogSummary = await client.initialize()
+    if (client !== workerClient) return
+    catalog.value = catalogSummary
+    calculationScheduler = new LatestCalculationScheduler(
+      (parameters) => client.calculate(parameters),
+      applyCalculationResult,
+      fail,
+    )
+    requestCalculation()
   } catch (error) {
+    if (client !== workerClient) return
     fail(error)
   }
 }
 
-async function calculate(): Promise<void> {
-  if (!workerClient || !catalog.value) return
-  status.value = 'calculating'
+function requestCalculation(): void {
+  const parameters = currentCalculationParameters()
+  if (!calculationScheduler || !catalog.value || !parameters) return
   errorMessage.value = ''
   selectedObject.value = null
   targetMessage.value = ''
-  try {
-    const parameters: SkyCalculationParameters = {
-      observedAt: new Date(controls.observedAt).toISOString(),
-      observer: {
-        latitudeDeg: controls.latitudeDeg,
-        longitudeDeg: controls.longitudeDeg,
-        elevationMeters: controls.elevationMeters,
-      },
-      magnitudeLimit: controls.magnitudeLimit,
-      minimumAltitudeDeg: 0,
-      applyRefraction: controls.applyRefraction,
-    }
-    const result = await workerClient.calculate(parameters)
-    frame.value = result.frame
-    calculationDurationMs.value = result.calculationDurationMs
-    status.value = 'ready'
-  } catch (error) {
-    fail(error)
+  calculationScheduler.request(parameters)
+}
+
+function applyCalculationResult(result: SkyCalculationResult): void {
+  frame.value = result.frame
+  calculationDurationMs.value = result.calculationDurationMs
+  status.value = 'ready'
+}
+
+function currentCalculationParameters(): SkyCalculationParameters | null {
+  const observedAt = new Date(controls.observedAt)
+  const latitudeDeg = controls.latitudeDeg
+  const longitudeDeg = controls.longitudeDeg
+  const elevationMeters = controls.elevationMeters
+  if (
+    Number.isNaN(observedAt.getTime())
+    || !Number.isFinite(latitudeDeg) || latitudeDeg < -90 || latitudeDeg > 90
+    || !Number.isFinite(longitudeDeg) || longitudeDeg < -180 || longitudeDeg > 180
+    || !Number.isFinite(elevationMeters) || elevationMeters < -500 || elevationMeters > 10_000
+  ) return null
+  return {
+    observedAt: observedAt.toISOString(),
+    observer: { latitudeDeg, longitudeDeg, elevationMeters },
+    magnitudeLimit: controls.magnitudeLimit,
+    minimumAltitudeDeg: 0,
+    applyRefraction: controls.applyRefraction,
   }
+}
+
+function scheduleCalculation(): void {
+  if (calculationTimer) clearTimeout(calculationTimer)
+  calculationTimer = setTimeout(() => {
+    calculationTimer = null
+    requestCalculation()
+  }, CALCULATION_DEBOUNCE_MS)
 }
 
 function useTimePreset(preset: ObservationTimePreset): void {
   activeTimePreset.value = preset
   controls.observedAt = localDateTimeValue(observationTimeForPreset(preset))
-  void calculate()
 }
 
 function useCustomTime(): void {
@@ -128,13 +189,30 @@ function adjustObservationTime(step: ObservationTimeStep): void {
   if (Number.isNaN(current.getTime())) return
   activeTimePreset.value = 'custom'
   controls.observedAt = localDateTimeValue(shiftObservationTime(current, step))
-  void calculate()
+}
+
+function handlePageWheel(event: WheelEvent): void {
+  if (!event.ctrlKey) return
+  event.preventDefault()
+  const modeScale = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+    ? 16
+    : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? window.innerHeight : 1
+  const result = accumulateObservationTimeWheel(
+    accumulatedTimeWheelDelta,
+    event.deltaY * modeScale,
+  )
+  accumulatedTimeWheelDelta = result.accumulatedDelta
+  if (timeWheelResetTimer) clearTimeout(timeWheelResetTimer)
+  timeWheelResetTimer = setTimeout(() => {
+    accumulatedTimeWheelDelta = 0
+    timeWheelResetTimer = null
+  }, TIME_WHEEL_RESET_MS)
+  if (result.step) adjustObservationTime(result.step)
 }
 
 function useLocationPreset(): void {
   if (activeLocationPreset.value === 'custom') return
   Object.assign(controls, observerLocationForPreset(activeLocationPreset.value))
-  void calculate()
 }
 
 function useCustomLocation(): void {
@@ -245,7 +323,7 @@ function formatSelectedData(): string {
 
     <div class="sky-map-workspace">
       <aside class="sky-controls">
-        <form @submit.prevent="calculate">
+        <form @submit.prevent>
           <fieldset>
             <legend>{{ t('skyMap.observation') }}</legend>
             <label class="field full-field">
@@ -264,7 +342,7 @@ function formatSelectedData(): string {
                 type="button"
                 :class="{ active: activeTimePreset === preset }"
                 :aria-pressed="activeTimePreset === preset"
-                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                :disabled="status === 'loadingCatalog'"
                 @click="useTimePreset(preset)"
               >{{ t(`skyMap.timePresets.${preset}`) }}</button>
             </div>
@@ -274,7 +352,7 @@ function formatSelectedData(): string {
                 :key="step"
                 type="button"
                 :title="t(`skyMap.timeSteps.${step}`)"
-                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                :disabled="status === 'loadingCatalog'"
                 @click="adjustObservationTime(step)"
               >{{ t(`skyMap.timeSteps.${step}`) }}</button>
             </div>
@@ -286,7 +364,7 @@ function formatSelectedData(): string {
               <span>{{ t('skyMap.locationPreset') }}</span>
               <select
                 v-model="activeLocationPreset"
-                :disabled="status === 'loadingCatalog' || status === 'calculating'"
+                :disabled="status === 'loadingCatalog'"
                 @change="useLocationPreset"
               >
                 <option
@@ -367,9 +445,6 @@ function formatSelectedData(): string {
             </label>
           </fieldset>
 
-          <button class="primary-command" type="submit" :disabled="status === 'loadingCatalog' || status === 'calculating'">
-            {{ t('skyMap.update') }}
-          </button>
         </form>
       </aside>
 
@@ -383,7 +458,7 @@ function formatSelectedData(): string {
           :selected-object="selectedObject"
           @select="selectObject"
         />
-        <div v-if="status === 'loadingCatalog' || (status === 'calculating' && !frame)" class="stage-state" role="status">
+        <div v-if="status === 'loadingCatalog'" class="stage-state" role="status">
           <span class="loading-indicator" aria-hidden="true"></span>
           <span>{{ statusText }}</span>
         </div>
@@ -617,19 +692,10 @@ select { color-scheme: dark; }
 
 .toggle-row input { width: 15px; height: 15px; margin: 0; accent-color: #6fcbbb; }
 
-.primary-command,
 .secondary-command {
   min-height: 36px;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.primary-command {
-  margin: 1rem;
-  border: 1px solid #6fcbbb;
-  color: #07110f;
-  background: #6fcbbb;
-  font-weight: 700;
 }
 
 .secondary-command {
@@ -726,7 +792,6 @@ button:disabled { cursor: wait; opacity: .55; }
   .sky-controls { border-right: 0; border-bottom: 1px solid #26333a; }
   .sky-controls form { grid-template-columns: repeat(3, 1fr); }
   fieldset { border-right: 1px solid #26333a; border-bottom: 0; }
-  .primary-command { align-self: end; grid-column: 1 / -1; }
   .sky-readout dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .sky-readout dl > div:nth-child(4) { border-right: 0; }
   .sky-readout dl > div:nth-child(-n + 4) { border-bottom: 1px solid #26333a; }

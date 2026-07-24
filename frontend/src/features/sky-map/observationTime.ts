@@ -7,7 +7,16 @@ export const OBSERVATION_TIME_STEPS = [
 ] as const
 
 export type ObservationTimePreset = (typeof OBSERVATION_TIME_PRESETS)[number]
-export type ObservationTimeStep = (typeof OBSERVATION_TIME_STEPS)[number]
+export type ObservationControlStep = (typeof OBSERVATION_TIME_STEPS)[number]
+export type ObservationMinuteStep = 'previousMinute' | 'nextMinute'
+export type ObservationTimeStep = ObservationControlStep | ObservationMinuteStep
+
+export interface ObservationTimeWheelResult {
+  accumulatedDelta: number
+  step: ObservationMinuteStep | null
+}
+
+const OBSERVATION_TIME_WHEEL_THRESHOLD = 80
 
 export function observationTimeForPreset(
   preset: ObservationTimePreset,
@@ -24,8 +33,30 @@ export function shiftObservationTime(date: Date, step: ObservationTimeStep): Dat
   const result = new Date(date)
   if (step === 'previousDay' || step === 'nextDay') {
     result.setDate(result.getDate() + (step === 'previousDay' ? -1 : 1))
-  } else {
+  } else if (step === 'previousHour' || step === 'nextHour') {
     result.setHours(result.getHours() + (step === 'previousHour' ? -1 : 1))
+  } else {
+    result.setMinutes(result.getMinutes() + (step === 'previousMinute' ? -1 : 1))
   }
   return result
+}
+
+export function accumulateObservationTimeWheel(
+  accumulatedDelta: number,
+  deltaY: number,
+): ObservationTimeWheelResult {
+  if (!Number.isFinite(deltaY) || deltaY === 0) {
+    return { accumulatedDelta, step: null }
+  }
+
+  const continuesDirection = accumulatedDelta === 0
+    || Math.sign(accumulatedDelta) === Math.sign(deltaY)
+  const nextDelta = (continuesDirection ? accumulatedDelta : 0) + deltaY
+  if (Math.abs(nextDelta) < OBSERVATION_TIME_WHEEL_THRESHOLD) {
+    return { accumulatedDelta: nextDelta, step: null }
+  }
+  return {
+    accumulatedDelta: 0,
+    step: nextDelta < 0 ? 'nextMinute' : 'previousMinute',
+  }
 }

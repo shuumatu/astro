@@ -58,7 +58,6 @@
     "constellationLabels": "星座标签",
     "solarSystem": "太阳系天体",
     "refraction": "大气折射修正",
-    "update": "更新星图",
     "retry": "重新加载",
     "loadFailed": "星图数据加载失败",
     "catalogVersion": "星表 {version}",
