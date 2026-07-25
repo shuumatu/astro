@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "western-iau",
-  "version": "2026.07.3",
+  "version": "2026.07.4",
   "names": [
     {
       "language": "en",
@@ -97,6 +97,19 @@
       "version": "retrieved-2026-07-24",
       "license": "LicenseRef-Citation-Only",
       "attribution": "Simplified and traditional Chinese bright-star names from the Hong Kong Space Museum glossary."
+    },
+    {
+      "id": "stellarium-chinese",
+      "title": "Stellarium Chinese sky culture",
+      "authors": [
+        "Karrie Berglund",
+        "Sun Shuwei",
+        "Stellarium contributors"
+      ],
+      "url": "https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9/chinese",
+      "version": "014fbb5e59233d133c22f9811af96b67d05a95c9",
+      "license": "CC-BY-SA (version not specified upstream)",
+      "attribution": "Based on Hong Kong Space Museum star maps and Yi Shitong's Chinese and Western Contrast Star Chart and Catalogue 1950.0; text and lines adapted from Stellarium Sky Cultures."
     }
   ],
   "starNames": [
@@ -231,6 +244,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "附路",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "附路",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -365,6 +394,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "水委二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "水委二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -409,6 +454,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "外屏三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "外屏三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -453,6 +514,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "阁道三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "閣道三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -467,6 +544,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "右更二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "右更二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -481,6 +574,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天大将军六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天大將軍六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -525,6 +634,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天大将军三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天大將軍三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -539,6 +664,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "右更四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "右更四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -869,6 +1010,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天囷八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天囷八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -883,6 +1040,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "胃宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "胃宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -897,6 +1070,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "胃宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "胃宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1031,6 +1220,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天囷一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天囷一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1135,6 +1340,54 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天苑增三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天苑增四",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天苑增十七",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天苑增三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天苑增四",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天苑增十七",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1209,6 +1462,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天苑四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天苑四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1463,6 +1732,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "昴宿六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "昴宿六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1657,6 +1942,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "毕宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "畢宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1671,6 +1972,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "毕宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "畢宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1685,6 +2002,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天园十一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天園十一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1729,6 +2062,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "毕宿增十三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "畢宿增十三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1833,6 +2182,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "参旗六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "參旗六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -1847,6 +2212,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "五车一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "五車一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2295,6 +2676,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天关",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天關",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2369,6 +2766,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "参宿六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "參宿六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2473,6 +2886,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "五车四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "五車四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2487,6 +2916,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "孙二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "孫二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2501,6 +2946,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "钺",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "鉞",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -2799,6 +3260,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "弧矢增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "弧矢增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3023,6 +3500,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "北河增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "北河增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3097,6 +3590,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "弧矢增十七",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "弧矢增十七",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3141,6 +3650,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "弧矢增三十二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "弧矢增三十二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3215,6 +3740,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "爟二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "爟二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3289,6 +3830,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "内阶一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "內階一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3303,6 +3860,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "柳宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "柳宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3317,6 +3890,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "积尸增三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "積尸增三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3391,6 +3980,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天社三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天社三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3405,6 +4010,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "柳宿五",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "柳宿五",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3419,6 +4040,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "轩辕增十九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "轩辕增二十",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "軒轅增十九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "軒轅增二十",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3569,6 +4222,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "轩辕增二十四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "軒轅增二十四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3643,6 +4312,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天社五",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天社五",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3687,6 +4372,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增七",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增七",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3731,6 +4432,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "星宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "星宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -3775,6 +4492,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "张宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "張宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4045,6 +4778,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天牢三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天牢三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4379,6 +5128,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "太阳守",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "太陽守",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4559,6 +5324,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "十字架四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "十字架四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4799,6 +5580,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "常陈四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "常陳四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4903,6 +5700,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "内厨一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "內廚一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -4993,6 +5806,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "内厨二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "內廚二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -5007,6 +5836,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "太微左垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东次相",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "太微左垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東次相",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -5461,6 +6322,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "亢宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "亢宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -5535,6 +6412,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "玄戈",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "元戈",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -5549,6 +6442,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "亢宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "亢宿四",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -5563,6 +6472,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "亢宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "亢宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6151,6 +7076,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6165,6 +7106,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "房宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "房宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6179,6 +7136,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "房宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "房宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6253,6 +7226,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天市右垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "晋",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天市右垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6389,6 +7394,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "心宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "心宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6403,6 +7424,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "紫微左垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少宰",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "紫微左垣三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少宰",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6553,6 +7606,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "心宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "心宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6597,6 +7666,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "尾宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "尾宿二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6611,6 +7696,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "尾宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "尾宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6625,6 +7726,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "尾宿增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "尾宿增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6639,6 +7756,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天棓增九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天棓增九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6821,6 +7954,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天江二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天江二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6835,6 +7984,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天棓三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天棓三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6895,6 +8060,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "尾宿九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "尾宿九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7117,6 +8298,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "傅说",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "傅說",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7131,6 +8328,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天棓一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天棓一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7205,6 +8418,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "斗宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "斗宿三",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7279,6 +8508,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "扶筐增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "扶筐增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7563,6 +8808,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天市左垣六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天市左垣六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7667,6 +8944,38 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "辇道二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "辇道增二",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "輦道二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "輦道增二",
+          "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7695,6 +9004,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天渊二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天淵二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7709,6 +9034,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天渊一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天淵一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7873,6 +9214,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天津二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天津二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7947,6 +9304,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "河鼓增八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "河鼓增八",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8185,6 +9558,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "败瓜一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "敗瓜一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8289,6 +9678,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天津九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天津九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8333,6 +9738,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "司非增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非增二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8347,6 +9768,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "南方之星",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "南方之星",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8631,6 +10068,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "败臼一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "敗臼一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8885,6 +10338,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "鹤二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "鶴二",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -8989,6 +10458,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "室宿增一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "室宿增一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -9093,6 +10578,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "室宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "室宿一",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -9137,6 +10638,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮六",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -9151,6 +10668,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "iau-wgsn"
+        },
+        {
+          "language": "zh-CN",
+          "value": "螣蛇增九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "螣蛇增九",
+          "type": "alias",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },

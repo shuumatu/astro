@@ -16,7 +16,7 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const PACK_VERSION = "2026.07.3";
+const PACK_VERSION = "2026.07.4";
 const IMPORTED_AT = "2026-07-24";
 const STELLARIUM_COMMIT = "014fbb5e59233d133c22f9811af96b67d05a95c9";
 const D3_CELESTIAL_COMMIT = "7e720a3de062059d4c5400a379146a601d9010e0";
@@ -95,6 +95,7 @@ async function main() {
     boundaries,
     iauHtml,
     nakedEye.stars,
+    chineseResult.pack,
     {
       westernConstellationsZhCnHtml,
       westernConstellationsZhTwHtml,
@@ -171,6 +172,7 @@ async function main() {
         "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
         "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
         "Added explicit simplified and traditional Chinese names for Western constellations and safely matched IAU stars from Hong Kong Space Museum glossaries.",
+        "Filled missing Western IAU Chinese star labels from source-backed Chinese sky-culture names sharing the same HIP identifier.",
         "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist.",
       ],
     }),
@@ -345,12 +347,14 @@ function buildChineseCulture(index, zhCn, zhTw) {
   };
 }
 
-function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localizedHtml) {
+function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseCulture, localizedHtml) {
   const stellariumSourceId = "stellarium-western";
   const d3SourceId = "d3-celestial-boundaries";
   const iauSourceId = "iau-wgsn";
   const hkspmConstellationSourceId = "hkspm-western-constellations";
   const hkspmBrightStarSourceId = "hkspm-bright-stars";
+  const chineseSource = chineseCulture.sources.find((source) => source.id === "stellarium-chinese");
+  if (!chineseSource) throw new Error("Chinese culture pack is missing the Stellarium source");
   const sources = [
     {
       id: stellariumSourceId,
@@ -397,6 +401,7 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localize
       license: "LicenseRef-Citation-Only",
       attribution: "Simplified and traditional Chinese bright-star names from the Hong Kong Space Museum glossary.",
     },
+    chineseSource,
   ];
 
   const constellationTranslations = parseHkspmConstellationTranslations(
@@ -456,8 +461,12 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localize
   }).sort((left, right) => left.id.localeCompare(right.id));
 
   const officialRows = parseIauRows(iauHtml);
+  const chineseNamesByObject = new Map(
+    chineseCulture.starNames.map((record) => [record.objectId, record.names]),
+  );
   const starNamesByObject = new Map();
   let unmatchedIauNames = 0;
+  let chineseCultureFallbackStars = 0;
   for (const row of officialRows) {
     const match = nearestPhysicalStar(row.raDeg, row.decDeg, row.visualMagnitude, physicalStars);
     if (!match || match.distanceDeg > 0.08) {
@@ -478,6 +487,20 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localize
         names.push(name("zh-TW", value, "alias", index === 0, hkspmBrightStarSourceId));
       }
     }
+    const chineseCultureNames = chineseNamesByObject.get(objectId) ?? [];
+    let usedChineseCultureFallback = false;
+    for (const language of ["zh-CN", "zh-TW"]) {
+      if (names.some((candidate) => candidate.language === language)) continue;
+      for (const chineseName of chineseCultureNames.filter(
+        (candidate) => candidate.language === language,
+      )) {
+        names.push({ ...chineseName, type: "alias" });
+        usedChineseCultureFallback = true;
+      }
+    }
+    if (usedChineseCultureFallback) chineseCultureFallbackStars += 1;
+    deduplicateNames(names);
+    assignPreferredNamePerLanguage(names);
     starNamesByObject.set(objectId, names);
   }
   const starNames = [...starNamesByObject]
@@ -529,6 +552,10 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, localize
       unmatchedIauNames,
       localizedIauStars: starNames.filter((record) =>
         record.names.some((recordName) => recordName.language === "zh-CN"),
+      ).length,
+      chineseCultureFallbackStars,
+      unlocalizedIauStars: starNames.filter((record) =>
+        !record.names.some((recordName) => recordName.language === "zh-CN"),
       ).length,
       figures: figures.length,
       groups: 1,
@@ -691,15 +718,15 @@ function addLocalizedChineseName(names, language, value, sourceId) {
 function translateChineseStarName(english, translations, figureTranslations, script) {
   const direct = translations.get(english);
   if (direct) return direct;
-  const bases = [...figureTranslations.keys()].sort((left, right) => right.length - left.length);
-  for (const base of bases) {
-    if (!english.startsWith(`${base} `)) continue;
-    const suffix = english.slice(base.length + 1);
-    const match = /^(?:(Added) )?([IVXLCDM]+)$/.exec(suffix);
-    if (!match) continue;
-    const localizedBase = figureTranslations.get(base)?.[script];
-    if (!localizedBase) continue;
-    return `${localizedBase}${match[1] ? "增" : ""}${chineseNumber(romanToInteger(match[2]))}`;
+  const generatedName = /^(.+?)\s+(?:(Added)\s+)?([IVXLCDM]+)$/.exec(english);
+  if (!generatedName) return undefined;
+  const base = generatedName[1].trim();
+  const localizedBase =
+    translations.get(base) ??
+    translations.get(`${base} `) ??
+    figureTranslations.get(base)?.[script];
+  if (localizedBase) {
+    return `${localizedBase}${generatedName[2] ? "增" : ""}${chineseNumber(romanToInteger(generatedName[3]))}`;
   }
   return undefined;
 }

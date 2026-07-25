@@ -19,3 +19,16 @@ export function selectLocalizedName(
   }
   return (names.find((name) => name.preferred) ?? names[0]).value
 }
+
+export function selectInterfaceLanguageName(
+  names: SkyName[],
+  interfaceLanguage: string,
+): string | undefined {
+  const normalizedInterfaceLanguage = interfaceLanguage.toLowerCase()
+  const baseInterfaceLanguage = normalizedInterfaceLanguage.split('-')[0]
+  for (const language of new Set([normalizedInterfaceLanguage, baseInterfaceLanguage])) {
+    const candidates = names.filter((name) => name.language.toLowerCase() === language)
+    if (candidates.length > 0) return (candidates.find((name) => name.preferred) ?? candidates[0]).value
+  }
+  return undefined
+}

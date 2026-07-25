@@ -12,7 +12,7 @@ import {
 } from 'astronomy-engine'
 import { describe, expect, it } from 'vitest'
 import { calculateSkyFrame, propagateIcrs } from './coordinates'
-import { selectLocalizedName } from './localizedName'
+import { selectInterfaceLanguageName, selectLocalizedName } from './localizedName'
 import type {
   FeaturedPatternPack,
   SkyCalculationParameters,
@@ -145,6 +145,13 @@ describe('sky culture calculation', () => {
 
     expect(selectLocalizedName(names, 'zh-CN', 'en')).toBe('天琴座')
     expect(selectLocalizedName(names, 'fr-FR', 'en')).toBe('Lyre')
+  })
+
+  it('does not cross language boundaries for star labels', () => {
+    const names = [sampleName('en', 'Fang')]
+
+    expect(selectInterfaceLanguageName(names, 'zh-CN')).toBeUndefined()
+    expect(selectInterfaceLanguageName(names, 'en')).toBe('Fang')
   })
 
   it('resolves culture paths through physical HIP stars without bridging missing records', () => {

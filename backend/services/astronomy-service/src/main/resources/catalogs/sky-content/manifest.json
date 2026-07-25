@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "catalogId": "sky-content",
-  "version": "2026.07.3",
+  "version": "2026.07.4",
   "defaultCultureId": "chinese-traditional",
   "cultureIds": [
     "chinese-traditional",
@@ -21,14 +21,14 @@
       "assetId": "culture-chinese-traditional",
       "assetType": "culture",
       "cultureId": "chinese-traditional",
-      "version": "2026.07.3",
-      "downloadUrl": "/api/astronomy/catalogs/sky-content/culture-chinese-traditional/2026.07.3",
+      "version": "2026.07.4",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/culture-chinese-traditional/2026.07.4",
       "mediaType": "application/json",
       "contentEncoding": "gzip",
-      "sha256": "f7a9d444243129ce14cce1b1a7f8991191afcd76d90ed9e2a5001674db0d0ea2",
-      "contentLength": 74753,
-      "decodedSha256": "b3b021a300ac4110a988a06843b7c0b5689a277772dd181becb3e3d7bf604c19",
-      "decodedContentLength": 1592448,
+      "sha256": "52037cd625646d232057c1c6d2ffdd589d10e4212222c1932b76ba99b6e9926a",
+      "contentLength": 76405,
+      "decodedSha256": "92d3826dbb1f378a495ed6553f5ed6cfb65119579279b98b2cd6cf293def127d",
+      "decodedContentLength": 1645918,
       "recordCounts": {
         "starNameRecords": 3021,
         "figures": 312,
@@ -40,14 +40,14 @@
       "assetId": "culture-western-iau",
       "assetType": "culture",
       "cultureId": "western-iau",
-      "version": "2026.07.3",
-      "downloadUrl": "/api/astronomy/catalogs/sky-content/culture-western-iau/2026.07.3",
+      "version": "2026.07.4",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/culture-western-iau/2026.07.4",
       "mediaType": "application/json",
       "contentEncoding": "gzip",
-      "sha256": "88d25182eecffff77364b128c2e0ce1483cecbe404ac5b7a4a89e331fd578b16",
-      "contentLength": 30570,
-      "decodedSha256": "c5528c12875c48d65781fc08da86c1d995286d444de12c318a5e729d684085e3",
-      "decodedContentLength": 298910,
+      "sha256": "64e06ad602b006ab72d1d483e09c24ba91e0a58e49b0f8833083e4ef9631551f",
+      "contentLength": 31756,
+      "decodedSha256": "e4cea517d1e72527423325b350c4e2eb83d7db5354732f73b739e3c9b9eefb8e",
+      "decodedContentLength": 323038,
       "recordCounts": {
         "starNameRecords": 338,
         "figures": 88,
@@ -58,34 +58,34 @@
     {
       "assetId": "search-index",
       "assetType": "search-index",
-      "version": "2026.07.3",
-      "downloadUrl": "/api/astronomy/catalogs/sky-content/search-index/2026.07.3",
+      "version": "2026.07.4",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/search-index/2026.07.4",
       "mediaType": "application/json",
       "contentEncoding": "gzip",
-      "sha256": "a6e3ff813ed02833a036925fccc200fbfb0ba524c9b1256053be073d0265a0bc",
-      "contentLength": 132191,
-      "decodedSha256": "18acc15b26e4fc288c832a48934ecc439973000864bf5f75cde17fcc169a6ece",
-      "decodedContentLength": 2913835,
+      "sha256": "4555a8fa750154209a8c7a5b349399c9e3a78524c777da6c17b16f53d5318c12",
+      "contentLength": 136372,
+      "decodedSha256": "51241447ef99c4b9c3b9c583a2384e16a561b1383923d7ba05c05fec787c1311",
+      "decodedContentLength": 3046307,
       "recordCounts": {
-        "entries": 13428,
-        "collisions": 47
+        "entries": 14042,
+        "collisions": 55
       }
     },
     {
       "assetId": "featured-patterns",
       "assetType": "featured-patterns",
-      "version": "2026.07.3",
-      "downloadUrl": "/api/astronomy/catalogs/sky-content/featured-patterns/2026.07.3",
+      "version": "2026.07.4",
+      "downloadUrl": "/api/astronomy/catalogs/sky-content/featured-patterns/2026.07.4",
       "mediaType": "application/json",
       "contentEncoding": "gzip",
-      "sha256": "32edcaef177e092fddb1ec364cb715ca812c91305566e9c903d5826deeb1b14f",
-      "contentLength": 673,
-      "decodedSha256": "7923923a27ec25845a39c9108b044d906f198a37fd162aa5534a48bc9e9799cd",
+      "sha256": "d35c0cedc6cb9ecdbb8bd6fc2a3f7c1491a8b904ec702a7ecb0ec9957b182a16",
+      "contentLength": 672,
+      "decodedSha256": "7bd8a0d13653a52af2a784f01a59df1264856284e58ff26f536f8eb27fe71706",
       "decodedContentLength": 2253,
       "recordCounts": {
         "patterns": 2
       }
     }
   ],
-  "publishedAt": "2026-07-24T00:00:00Z"
+  "publishedAt": "2026-07-25T00:00:00Z"
 }

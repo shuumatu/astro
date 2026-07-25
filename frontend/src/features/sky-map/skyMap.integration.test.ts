@@ -110,6 +110,11 @@ describe('published naked-eye catalog', () => {
       .toBe('仙女座')
     expect(frame.starLabels.find((label) => label.objectId === 'HIP:91262')?.name)
       .toBe('织女一')
+    expect(frame.starLabels.find((label) => label.objectId === 'HIP:78265')?.name)
+      .toBe('房宿一')
+    expect(frame.starLabels.find((label) => label.objectId === 'HIP:78265')?.name)
+      .not.toBe('Fang')
+    expect(frame.starLabels.some((label) => label.name === 'Fang')).toBe(false)
   })
 
   it('calculates independently enabled featured triangles with localized names and closed paths', () => {

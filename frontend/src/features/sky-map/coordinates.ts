@@ -24,7 +24,7 @@ import type {
   SkyFrame,
   StarRecord,
 } from './types'
-import { selectLocalizedName } from './localizedName'
+import { selectInterfaceLanguageName, selectLocalizedName } from './localizedName'
 import { SkyMapError, SOLAR_SYSTEM_BODY_IDS } from './types'
 
 const DEG_TO_RAD = Math.PI / 180
@@ -179,9 +179,11 @@ function calculateStarLabels(
   return culture.starNames.flatMap((record): ComputedStarLabel[] => {
     const star = visibleStars.get(record.objectId)
     if (!star) return []
+    const localizedName = selectInterfaceLanguageName(record.names, interfaceLanguage)
+    if (!localizedName) return []
     return [{
       objectId: record.objectId,
-      name: selectLocalizedName(record.names, interfaceLanguage, culture.defaultLanguage),
+      name: localizedName,
       labelPriority: record.labelPriority,
       visualMagnitude: star.visualMagnitude,
       azimuthDeg: star.azimuthDeg,

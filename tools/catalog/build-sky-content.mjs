@@ -24,8 +24,22 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const VERSION = "2026.07.3";
-const PUBLISHED_AT = "2026-07-24T00:00:00Z";
+const VERSION = "2026.07.4";
+const PUBLISHED_AT = "2026-07-25T00:00:00Z";
+const WESTERN_STARS_WITHOUT_CHINESE_NAMES = new Set([
+  "HIP:24003",
+  "HIP:33719",
+  "HIP:48615",
+  "HIP:56508",
+  "HIP:58952",
+  "HIP:60260",
+  "HIP:62223",
+  "HIP:86782",
+  "HIP:86796",
+  "HIP:91852",
+  "HIP:94645",
+  "HIP:99894",
+]);
 
 async function main() {
   const [chinese, western, featuredPatterns, supplementalHipparcos, nakedEye] = await Promise.all([
@@ -49,6 +63,7 @@ async function main() {
   }
   assertCultureLanguageCoverage(chinese, "en");
   assertCultureLanguageCoverage(western, "zh-CN");
+  assertWesternStarLanguageCoverage(western);
   const cultureIds = new Set(culturePacks.map((culture) => culture.id));
   validateFeaturedPatternPack(featuredPatterns, { catalogObjectIds, cultureIds });
   assert(featuredPatterns.version === VERSION, "Featured-pattern version does not match build version");
@@ -57,6 +72,7 @@ async function main() {
   assertSearchTarget(searchIndex, "织女星", "HIP:91262");
   assertSearchTarget(searchIndex, "辇道增七", "HIP:95947");
   assertSearchTarget(searchIndex, "Vega", "HIP:91262");
+  assertStarNames(western, "HIP:78265", { "zh-CN": "房宿一", en: "Fang" });
 
   await mkdir(OUTPUT_DIR, { recursive: true });
   const assets = [];
@@ -180,6 +196,43 @@ function assertCultureLanguageCoverage(culture, language) {
     culture.starNames.some((record) => record.names.some((name) => name.language === language)),
     `${culture.id} has no ${language} star names`,
   );
+}
+
+function assertWesternStarLanguageCoverage(culture) {
+  const missingZhCn = new Set(culture.starNames
+    .filter((record) => !record.names.some((name) => name.language === "zh-CN"))
+    .map((record) => record.objectId));
+  const missingZhTw = new Set(culture.starNames
+    .filter((record) => !record.names.some((name) => name.language === "zh-TW"))
+    .map((record) => record.objectId));
+  assertSetsEqual(
+    missingZhCn,
+    WESTERN_STARS_WITHOUT_CHINESE_NAMES,
+    "Unexpected Western IAU stars without zh-CN names",
+  );
+  assertSetsEqual(
+    missingZhTw,
+    WESTERN_STARS_WITHOUT_CHINESE_NAMES,
+    "Unexpected Western IAU stars without zh-TW names",
+  );
+}
+
+function assertStarNames(culture, objectId, expectedNames) {
+  const record = culture.starNames.find((candidate) => candidate.objectId === objectId);
+  assert(record, `${culture.id} is missing ${objectId}`);
+  for (const [language, expectedValue] of Object.entries(expectedNames)) {
+    assert(
+      record.names.some((name) => name.language === language && name.value === expectedValue),
+      `${culture.id} ${objectId} is missing ${language} name ${expectedValue}`,
+    );
+  }
+}
+
+function assertSetsEqual(actual, expected, message) {
+  const extra = [...actual].filter((value) => !expected.has(value));
+  const missing = [...expected].filter((value) => !actual.has(value));
+  assert(extra.length === 0 && missing.length === 0,
+    `${message}; extra=${extra.join(",") || "none"}; missing=${missing.join(",") || "none"}`);
 }
 
 async function readJson(path) {

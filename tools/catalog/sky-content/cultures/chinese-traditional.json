@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "chinese-traditional",
-  "version": "2026.07.3",
+  "version": "2026.07.4",
   "names": [
     {
       "language": "zh-CN",
@@ -2698,6 +2698,22 @@
           "language": "en",
           "value": "The Second Imperial Minister Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少丞增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少丞增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -5757,6 +5773,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -6392,6 +6424,22 @@
           "language": "en",
           "value": "Canopy Support VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -7279,6 +7327,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7410,6 +7474,22 @@
           "language": "en",
           "value": "Canopy Support V",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠五",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -7571,6 +7651,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -7582,6 +7678,22 @@
           "language": "en",
           "value": "Canopy Support IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -7716,6 +7828,22 @@
           "language": "en",
           "value": "Canopy Support VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -9518,6 +9646,22 @@
           "language": "en",
           "value": "Canopy Support Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -11641,6 +11785,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -13755,6 +13915,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上丞增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上丞增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -14159,6 +14335,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上丞增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上丞增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -14230,6 +14422,22 @@
           "language": "en",
           "value": "Canopy Support I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "杠一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "杠一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -14481,6 +14689,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "积水(胃宿)增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "積水增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -14552,6 +14776,22 @@
           "language": "en",
           "value": "The Great Imperial Minister Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上丞增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上丞增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -15937,6 +16177,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -17183,9 +17439,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "附耳增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "附耳增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Whisper Added III",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "附耳增三",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "附耳增三",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -17263,6 +17551,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "附耳增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "附耳增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -17298,6 +17602,22 @@
           "language": "en",
           "value": "Whisper Added IV",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "附耳增四",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "附耳增四",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -21419,6 +21739,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "伐增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "伐增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -21430,6 +21766,22 @@
           "language": "en",
           "value": "Send Armed Forces To Suppress II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "伐二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "伐二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -21447,6 +21799,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "伐一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "伐一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -21458,6 +21826,22 @@
           "language": "en",
           "value": "Send Armed Forces To Suppress III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "伐三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "伐三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -21502,6 +21886,22 @@
           "language": "en",
           "value": "Send Armed Forces To Suppress Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "伐增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "伐增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -24291,6 +24691,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -24575,6 +24991,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "钺增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "鉞增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -24736,6 +25168,22 @@
           "language": "en",
           "value": "The Great Imperial Guard Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -26922,6 +27370,22 @@
           "language": "en",
           "value": "The Great Imperial Guard Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -30959,6 +31423,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -30970,6 +31450,22 @@
           "language": "en",
           "value": "Upper Steps Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -31638,6 +32134,22 @@
           "language": "en",
           "value": "Upper Steps Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -32402,6 +32914,22 @@
           "language": "en",
           "value": "Upper Steps Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -34327,6 +34855,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -34947,6 +35491,22 @@
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -35222,6 +35782,22 @@
           "language": "en",
           "value": "Upper Steps II",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台二",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台二",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -35896,6 +36472,22 @@
           "language": "en",
           "value": "Upper Steps Added VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -36690,6 +37282,22 @@
           "language": "en",
           "value": "Upper Steps Added VII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上台增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上台增七",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -37895,6 +38503,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少辅增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少輔增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -38716,6 +39340,22 @@
           "language": "en",
           "value": "Middle Steps Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中台增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中台增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -39735,6 +40375,22 @@
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中台一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中台一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -39809,6 +40465,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天枢增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天樞增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -39820,6 +40492,22 @@
           "language": "en",
           "value": "Middle Steps Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中台增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中台增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -39951,6 +40639,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中台增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中台增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -40016,6 +40720,22 @@
           "language": "en",
           "value": "Middle Steps II",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中台二",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中台二",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -40645,6 +41365,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天枢增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天樞增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -40746,6 +41482,22 @@
           "language": "en",
           "value": "The Celestial Rotating Jade Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -41177,6 +41929,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -41521,6 +42289,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天枢增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天樞增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -41685,6 +42469,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -41789,6 +42589,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -41830,6 +42646,22 @@
           "language": "en",
           "value": "The Celestial Rotating Jade Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -42261,6 +43093,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -42272,6 +43120,22 @@
           "language": "en",
           "value": "The Celestial Rotating Jade Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -42346,6 +43210,22 @@
           "language": "en",
           "value": "The Celestial Rotating Jade Added VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天璇增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天璇增八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -42918,6 +43798,22 @@
           "language": "en",
           "value": "The Great Western Premier Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "西上相增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "西上相增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -43577,6 +44473,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "西次相增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "西次相增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -43705,6 +44617,22 @@
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "下台二",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "下台二",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -43740,6 +44668,22 @@
           "language": "en",
           "value": "Lower Steps I",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "下台一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "下台一",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -44075,6 +45019,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "西次相增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "西次相增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -44350,6 +45310,22 @@
           "language": "en",
           "value": "The Great Western Premier Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "西上相增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "西上相增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -44691,6 +45667,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上辅增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上輔增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -45005,6 +45997,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "下台增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "下台增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -45016,6 +46024,22 @@
           "language": "en",
           "value": "Lower Steps Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "下台增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "下台增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -45060,6 +46084,22 @@
           "language": "en",
           "value": "The Great Advisor Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上辅增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上輔增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -46643,6 +47683,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "左执法增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "左執法增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -46948,6 +48004,22 @@
           "language": "en",
           "value": "The Celestial Balance Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天权增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天權增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -47355,6 +48427,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天权增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天權增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -47519,6 +48607,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "天权增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "天權增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -47530,6 +48634,22 @@
           "language": "en",
           "value": "The Second Commandant Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少尉增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少尉增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -47832,6 +48952,22 @@
           "language": "en",
           "value": "The Second Commandant Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少尉增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少尉增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -48899,6 +50035,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东次相增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東次相增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -49030,6 +50182,22 @@
           "language": "en",
           "value": "The Second Eastern General Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东次将增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東次將增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -50181,6 +51349,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东次将增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東次將增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -50663,6 +51847,22 @@
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "开阳增一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "開陽增一",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -50737,6 +51937,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东上将增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東上將增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -50748,6 +51964,22 @@
           "language": "en",
           "value": "The Great Eastern General Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东上将增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東上將增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -51095,6 +52327,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东上将增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東上將增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -51109,6 +52357,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "开阳增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "開陽增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -51120,6 +52384,22 @@
           "language": "en",
           "value": "The Great Eastern General Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东上将增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東上將增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -51194,6 +52474,22 @@
           "language": "en",
           "value": "Assistant Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "辅增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "輔增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -51478,6 +52774,22 @@
           "language": "en",
           "value": "Assistant Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "辅增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "輔增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -51990,6 +53302,22 @@
           "language": "en",
           "value": "Assistant Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "辅增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "輔增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -52670,6 +53998,22 @@
           "language": "en",
           "value": "Bastard Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "庶子增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "庶子增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -55891,6 +57235,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "庶子增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "庶子增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -56292,6 +57652,22 @@
           "language": "en",
           "value": "Shu Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "蜀增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "蜀增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -57017,6 +58393,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -57595,6 +58987,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -57606,6 +59014,22 @@
           "language": "en",
           "value": "Zhou Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -57623,6 +59047,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -57634,6 +59074,22 @@
           "language": "en",
           "value": "Qin Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "秦增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "秦增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -57951,6 +59407,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -57962,6 +59434,22 @@
           "language": "en",
           "value": "Zhou Added VII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增七",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -57979,6 +59467,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增十四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -57990,6 +59494,22 @@
           "language": "en",
           "value": "Zhou Added VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58127,6 +59647,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "巴增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "巴增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -58255,6 +59791,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -58266,6 +59818,22 @@
           "language": "en",
           "value": "Shu Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "蜀增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "蜀增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58367,6 +59935,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增十一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -58378,6 +59962,22 @@
           "language": "en",
           "value": "Shu Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "蜀增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "蜀增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58427,9 +60027,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "周增十二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Zhou Added XV",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增十五",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十五",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58447,6 +60079,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增十六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -58458,6 +60106,22 @@
           "language": "en",
           "value": "Zhou Added VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58586,6 +60250,22 @@
           "language": "en",
           "value": "Ba Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "巴增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "巴增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -58749,6 +60429,22 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "巴增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "巴增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Celestial Milk Added II",
           "type": "alias",
@@ -58760,7 +60456,7 @@
           "language": "zh-CN",
           "value": "天乳增二",
           "type": "native",
-          "preferred": true,
+          "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
         },
@@ -58768,7 +60464,7 @@
           "language": "zh-TW",
           "value": "天乳增二",
           "type": "native",
-          "preferred": true,
+          "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
         }
@@ -58842,6 +60538,22 @@
           "language": "en",
           "value": "Zhou Added XIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周增十三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周增十三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -59441,6 +61153,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "巴增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "巴增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -59482,6 +61210,22 @@
           "language": "en",
           "value": "Jin Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "晋增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -59643,6 +61387,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "巴增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "巴增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -59747,6 +61507,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "钩钤一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "鈎鈴一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -59788,6 +61564,22 @@
           "language": "en",
           "value": "Lock II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "钩钤二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "鈎鈴二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -59919,6 +61711,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "晋增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -60025,9 +61833,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "晋增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Jin Added IV",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "晋增四",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉增四",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -60132,6 +61972,22 @@
           "language": "en",
           "value": "Jin Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "晋增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "晉增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -60650,6 +62506,22 @@
           "language": "en",
           "value": "Hejian Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "河间增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "河間增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -63181,6 +65053,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -63405,6 +65293,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -63560,6 +65464,22 @@
           "language": "en",
           "value": "Wei Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -63784,6 +65704,22 @@
           "language": "en",
           "value": "Song Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "宋增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "宋增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -64071,6 +66007,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -64082,6 +66034,22 @@
           "language": "en",
           "value": "Wei Added V",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增五",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -64797,9 +66765,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "魏增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Wei Added VII",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增七",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增七",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -65024,6 +67024,22 @@
           "language": "en",
           "value": "Wei Added VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "魏增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "魏增八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -65602,6 +67618,22 @@
           "language": "en",
           "value": "Zhao Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "赵增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "趙增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -66189,6 +68221,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "赵增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "趙增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -66434,6 +68482,22 @@
           "language": "en",
           "value": "Zhao Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "赵增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "趙增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -66742,6 +68806,22 @@
           "language": "en",
           "value": "Jiuhe Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "九河增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "九河增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -67089,6 +69169,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -67100,6 +69196,22 @@
           "language": "en",
           "value": "Zhongshan Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -67348,6 +69460,22 @@
           "language": "en",
           "value": "Donghai Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东海增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東海增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -67725,6 +69853,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -67850,6 +69994,22 @@
           "language": "en",
           "value": "Zhongshan Added VII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增七",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -67984,6 +70144,22 @@
           "language": "en",
           "value": "Zhongshan Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -68355,6 +70531,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -68396,6 +70588,22 @@
           "language": "en",
           "value": "Zhongshan Added VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "中山增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "中山增六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -68737,6 +70945,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东海增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東海增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -68781,6 +71005,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东海增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東海增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -68822,6 +71062,22 @@
           "language": "en",
           "value": "Donghai Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "东海增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "東海增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -69326,6 +71582,22 @@
           "language": "en",
           "value": "Xu Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "徐增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "徐增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -70141,6 +72413,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -70242,6 +72530,22 @@
           "language": "en",
           "value": "Xu Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "徐增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "徐增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -70433,6 +72737,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "徐增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "徐增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -70567,6 +72887,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -70611,6 +72947,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -70622,6 +72974,22 @@
           "language": "en",
           "value": "Wuyue Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -71083,6 +73451,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -71157,6 +73541,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增九",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -71198,6 +73598,22 @@
           "language": "en",
           "value": "Xu Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "徐增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "徐增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -71449,6 +73865,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增十",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增十",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -71637,6 +74069,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -71708,6 +74156,22 @@
           "language": "en",
           "value": "Qi Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -71875,6 +74339,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -71886,6 +74366,22 @@
           "language": "en",
           "value": "Wuyue Added V",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增五",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -71930,6 +74426,22 @@
           "language": "en",
           "value": "Wuyue Added VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -72157,6 +74669,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -72321,6 +74849,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "吴越增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "吳越增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -72392,6 +74936,22 @@
           "language": "en",
           "value": "Qi Added VII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增七",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -72673,6 +75233,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -72687,6 +75263,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -72698,6 +75290,22 @@
           "language": "en",
           "value": "Qi Added XI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增十一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增十一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -72916,6 +75524,22 @@
           "language": "en",
           "value": "Qi Added XII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "齐增十二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "齊增十二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -79623,6 +82247,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "司非增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -79817,6 +82457,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周(十二国)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周(十二國)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -79981,6 +82637,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "周(十二国)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "周(十二國)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -80142,6 +82814,22 @@
           "language": "en",
           "value": "Qin State (In Twelve States) I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "秦(十二国)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "秦(十二國)一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -80339,6 +83027,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "赵(十二国)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "趙(十二國)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -80350,6 +83054,22 @@
           "language": "en",
           "value": "Zhao State (In Twelve States) II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "赵(十二国)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "趙(十二國)二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -80421,6 +83141,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "司非一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -80437,9 +83173,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "司非增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "Deified Judge of Right and Wrong  Added III",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "司非增三",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非增三",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -80514,6 +83282,22 @@
           "language": "en",
           "value": "Deified Judge of Right and Wrong  II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "司非二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "司非二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -80771,6 +83555,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "秦(十二国)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "秦(十二國)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -80986,6 +83786,22 @@
           "language": "en",
           "value": "Dai State (In Twelve States) I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "代(十二国)一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "代(十二國)一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -81417,6 +84233,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -81671,6 +84503,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "代(十二国)增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "代(十二國)增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -81682,6 +84530,22 @@
           "language": "en",
           "value": "Dai State (In Twelve States) II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "代(十二国)二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "代(十二國)二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -82287,6 +85151,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -82298,6 +85178,22 @@
           "language": "en",
           "value": "Dai State (In Twelve States) Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "代(十二国)增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "代(十二國)增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -82462,6 +85358,22 @@
           "language": "en",
           "value": "The Great Imperial Guard Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "上卫增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "上衛增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -83187,6 +86099,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -83402,6 +86330,22 @@
           "language": "en",
           "value": "The Second Imperial Guard Added II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -84451,6 +87395,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -84552,6 +87512,22 @@
           "language": "en",
           "value": "The Second Imperial Guard Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -85289,6 +88265,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -85360,6 +88352,22 @@
           "language": "en",
           "value": "Resting Palace Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -85497,6 +88505,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -85538,6 +88562,22 @@
           "language": "en",
           "value": "Tomb Added I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓增一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓增一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -85645,6 +88685,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -85686,6 +88742,22 @@
           "language": "en",
           "value": "Tomb I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -85853,6 +88925,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -85864,6 +88952,22 @@
           "language": "en",
           "value": "Tomb Added III",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓增三",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -86091,6 +89195,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -86102,6 +89222,22 @@
           "language": "en",
           "value": "Tomb Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -86149,6 +89285,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "坟墓三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "墳墓三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -86165,9 +89317,41 @@
           "sourceId": "stellarium-chinese"
         },
         {
+          "language": "zh-CN",
+          "value": "少卫增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
           "language": "en",
           "value": "The Second Imperial Guard Added VI",
           "type": "alias",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增六",
+          "type": "native",
+          "preferred": false,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增六",
+          "type": "native",
           "preferred": false,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -86359,6 +89543,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -86430,6 +89630,22 @@
           "language": "en",
           "value": "Resting Palace Added IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -86567,6 +89783,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮三",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -86638,6 +89870,22 @@
           "language": "en",
           "value": "Resting Palace IV",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫四",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮四",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -86805,6 +90053,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -86876,6 +90140,22 @@
           "language": "en",
           "value": "Resting Palace I",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫一",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮一",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -87130,6 +90410,22 @@
           "language": "en",
           "value": "Resting Palace II",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫二",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮二",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -89169,6 +92465,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮五",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -89300,6 +92612,22 @@
           "language": "en",
           "value": "Resting Palace Added VI",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增六",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -89467,6 +92795,22 @@
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮六",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
         }
       ]
     },
@@ -89628,6 +92972,22 @@
           "language": "en",
           "value": "Resting Palace Added VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -89942,6 +93302,22 @@
           "language": "en",
           "value": "Resting Palace Added VII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "离宫增七",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "離宮增七",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"
@@ -90370,6 +93746,22 @@
           "language": "en",
           "value": "The Second Imperial Guard Added VIII",
           "type": "translation",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-CN",
+          "value": "少卫增八",
+          "type": "native",
+          "preferred": true,
+          "searchable": true,
+          "sourceId": "stellarium-chinese"
+        },
+        {
+          "language": "zh-TW",
+          "value": "少衛增八",
+          "type": "native",
           "preferred": true,
           "searchable": true,
           "sourceId": "stellarium-chinese"

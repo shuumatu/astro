@@ -64,7 +64,7 @@ describe('sky-content resources', () => {
     expect(loadedManifest.defaultCultureId).toBe('chinese-traditional')
     expect(chinese.figures).toHaveLength(312)
     expect(western.regions).toHaveLength(88)
-    expect(searchIndex.entries).toHaveLength(13_428)
+    expect(searchIndex.entries).toHaveLength(14_042)
     expect(featuredPatterns.patterns.map((pattern) => pattern.id)).toEqual([
       'summer-triangle',
       'winter-triangle',
