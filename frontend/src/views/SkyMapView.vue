@@ -170,7 +170,9 @@ async function initialize(): Promise<void> {
     const catalogSummary = await client.initialize()
     if (client !== workerClient) return
     catalog.value = catalogSummary
-    controls.cultureId = catalogSummary.defaultCultureId
+    if (!catalogSummary.cultureIds.includes(controls.cultureId)) {
+      controls.cultureId = catalogSummary.defaultCultureId
+    }
     calculationScheduler = new LatestCalculationScheduler(
       (parameters) => client.calculate(parameters),
       applyCalculationResult,
