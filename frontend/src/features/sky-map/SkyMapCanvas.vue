@@ -5,6 +5,11 @@ import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
 import type { ProjectedPoint } from './projection'
 import { layoutSolarSystemLabels } from './solarSystemLabels'
+import {
+  loadWesternCultureArtwork,
+  westernCultureArtworkImage,
+} from './westernCultureArtwork'
+import type { WesternCultureArtwork } from './westernCultureArtwork'
 import type {
   ComputedSolarSystemBody,
   SkyFrame,
@@ -79,6 +84,7 @@ const props = defineProps<{
   showCultureLines: boolean
   showCultureLabels: boolean
   showCultureBoundaries: boolean
+  showCultureArtwork: boolean
   showStarNames: boolean
   showSolarSystemBodies: boolean
   selectedObject: SkyObjectSelection | null
@@ -105,6 +111,8 @@ let dragSession: DragSession | null = null
 let drawFrame = 0
 let pointerFrame = 0
 let pendingPointer: ProjectedPoint | null = null
+let westernCultureArtwork: WesternCultureArtwork[] = []
+let westernCultureArtworkLoading = false
 
 const geometry = computed(() => {
   const size = viewportSize.value
@@ -299,6 +307,7 @@ watch(
     props.frame,
     props.showCultureLines,
     props.showCultureBoundaries,
+    props.showCultureArtwork,
     props.showSolarSystemBodies,
     viewTransform.value,
   ] as const,
@@ -360,6 +369,7 @@ function draw(): void {
   context.arc(center, center, radius, 0, Math.PI * 2)
   context.clip()
   if (props.frame && props.showCultureBoundaries) drawCultureRegions(context, center, radius)
+  if (props.frame && props.showCultureArtwork) drawCultureArtwork(context, center, radius)
   if (props.frame && props.showCultureLines) drawCultureFigures(context, center, radius)
   if (props.frame) drawFeaturedPatterns(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
@@ -417,6 +427,80 @@ function drawCultureRegions(
   context.lineWidth = 0.72 / viewTransform.value.scale
   context.stroke()
   context.globalAlpha = 1
+}
+
+function drawCultureArtwork(
+  context: CanvasRenderingContext2D,
+  center: number,
+  radius: number,
+): void {
+  if (!props.frame || props.frame.cultureId !== 'western-iau') return
+  if (westernCultureArtwork.length === 0) {
+    if (!westernCultureArtworkLoading) {
+      westernCultureArtworkLoading = true
+      void loadWesternCultureArtwork()
+        .then((artwork) => {
+          westernCultureArtwork = artwork
+          scheduleDraw()
+        })
+        .catch(() => undefined)
+        .finally(() => { westernCultureArtworkLoading = false })
+    }
+    return
+  }
+
+  const starsByHip = new Map(props.frame.stars.map((star) => [star.hipId, star]))
+  context.globalAlpha = 0.48
+  for (const artwork of westernCultureArtwork) {
+    const anchors = artwork.anchors.slice(0, 3).map((anchor) => {
+      const star = starsByHip.get(anchor.hipId)
+      return star && star.altitudeDeg >= 0
+        ? { ...anchor, point: projectHorizontal(star, radius, center) }
+        : null
+    })
+    if (anchors.some((anchor) => !anchor)) continue
+    const matrix = affineMatrix(anchors[0]!, anchors[1]!, anchors[2]!)
+    if (!matrix) continue
+    const image = westernCultureArtworkImage(artwork, scheduleDraw)
+    if (!image) continue
+    context.save()
+    context.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f)
+    context.drawImage(image, 0, 0, artwork.width, artwork.height)
+    context.restore()
+  }
+  context.globalAlpha = 1
+}
+
+function affineMatrix(
+  first: { imageX: number; imageY: number; point: ProjectedPoint },
+  second: { imageX: number; imageY: number; point: ProjectedPoint },
+  third: { imageX: number; imageY: number; point: ProjectedPoint },
+): { a: number; b: number; c: number; d: number; e: number; f: number } | null {
+  const determinant = first.imageX * (second.imageY - third.imageY)
+    + second.imageX * (third.imageY - first.imageY)
+    + third.imageX * (first.imageY - second.imageY)
+  if (Math.abs(determinant) < 0.001) return null
+  const coefficient = (value: (anchor: typeof first) => number) => ({
+    x: (value(first) * (second.imageY - third.imageY)
+      + value(second) * (third.imageY - first.imageY)
+      + value(third) * (first.imageY - second.imageY)) / determinant,
+    y: (value(first) * (third.imageX - second.imageX)
+      + value(second) * (first.imageX - third.imageX)
+      + value(third) * (second.imageX - first.imageX)) / determinant,
+    constant: (value(first) * (second.imageX * third.imageY - third.imageX * second.imageY)
+      + value(second) * (third.imageX * first.imageY - first.imageX * third.imageY)
+      + value(third) * (first.imageX * second.imageY - second.imageX * first.imageY)) / determinant,
+  })
+  const horizontal = coefficient((anchor) => anchor.point.x)
+  const vertical = coefficient((anchor) => anchor.point.y)
+  return {
+    a: horizontal.x,
+    b: vertical.x,
+    c: horizontal.y,
+    d: vertical.y,
+    e: horizontal.constant,
+    f: vertical.constant,
+  }
 }
 
 function drawCultureFigures(

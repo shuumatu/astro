@@ -46,6 +46,12 @@ figures without HIP paths, and does not import illustrations or long-form mythol
 The exact import report is `tools/catalog/sky-content/import-report.json`. Redistributors
 must preserve attribution and apply the upstream CC BY-SA terms to adapted culture data.
 
+The Western IAU constellation artwork is copied without modification from the same pinned
+upstream commit. It is rendered only for the Western IAU culture using the upstream image
+anchors. The illustrations are by Johan Meuris and are licensed under the Free Art License.
+The original culture description and attribution are distributed at
+`frontend/public/sky-cultures/western/ATTRIBUTION.md`.
+
 - Source: https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9
 - Chinese credits and license: https://github.com/Stellarium/stellarium-skycultures/blob/014fbb5e59233d133c22f9811af96b67d05a95c9/chinese/description.md
 - Western credits and license: https://github.com/Stellarium/stellarium-skycultures/blob/014fbb5e59233d133c22f9811af96b67d05a95c9/western/description.md

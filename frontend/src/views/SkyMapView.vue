@@ -59,6 +59,7 @@ const controls = reactive({
   showCultureLines: true,
   showCultureLabels: true,
   showCultureBoundaries: true,
+  showCultureArtwork: true,
   showSolarSystemBodies: true,
   enabledFeaturedPatternIds: [] as string[],
 })
@@ -714,6 +715,10 @@ function formatSelectedData(): string {
               <input v-model="controls.showCultureBoundaries" type="checkbox">
               <span>{{ t('skyMap.cultureBoundaries') }}</span>
             </label>
+            <label v-if="controls.cultureId === 'western-iau'" class="toggle-row">
+              <input v-model="controls.showCultureArtwork" type="checkbox">
+              <span>{{ t('skyMap.cultureArtwork') }}</span>
+            </label>
             <label class="toggle-row">
               <input v-model="controls.showSolarSystemBodies" type="checkbox">
               <span>{{ t('skyMap.solarSystem') }}</span>
@@ -758,6 +763,7 @@ function formatSelectedData(): string {
           :show-culture-lines="controls.showCultureLines"
           :show-culture-labels="controls.showCultureLabels"
           :show-culture-boundaries="controls.showCultureBoundaries"
+          :show-culture-artwork="controls.showCultureArtwork"
           :show-solar-system-bodies="controls.showSolarSystemBodies"
           :selected-object="selectedObject"
           :is-fullscreen="isSkyMapFullscreen"
