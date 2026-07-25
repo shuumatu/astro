@@ -796,35 +796,35 @@ function formatSelectedData(): string {
       <dl>
         <div>
           <dt>{{ t('skyMap.observedAt') }}</dt>
-          <dd>{{ observedAtLabel }}</dd>
+          <dd :title="observedAtLabel">{{ observedAtLabel }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.visibleStars') }}</dt>
-          <dd>{{ visibleStarCount }}</dd>
+          <dd :title="visibleStarCount">{{ visibleStarCount }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.calculationTime') }}</dt>
-          <dd>{{ calculationDurationMs === null ? '—' : `${calculationDurationMs.toFixed(1)} ms` }}</dd>
+          <dd :title="calculationDurationMs === null ? '—' : `${calculationDurationMs.toFixed(1)} ms`">{{ calculationDurationMs === null ? '—' : `${calculationDurationMs.toFixed(1)} ms` }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.selectedObject') }}</dt>
-          <dd>{{ formatSelectedObject() }}</dd>
+          <dd :title="formatSelectedObject()">{{ formatSelectedObject() }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.magnitude') }}</dt>
-          <dd>{{ selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
+          <dd :title="selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—'">{{ selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
         </div>
         <div>
           <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : selectedObject?.kind === 'cultureFigure' ? t('skyMap.constellation') : t('skyMap.spectralType') }}</dt>
-          <dd>{{ formatSelectedDetail() }}</dd>
+          <dd :title="formatSelectedDetail()">{{ formatSelectedDetail() }}</dd>
         </div>
         <div>
           <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.distance') : t('skyMap.dataSource') }}</dt>
-          <dd>{{ formatSelectedData() }}</dd>
+          <dd :title="formatSelectedData()">{{ formatSelectedData() }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.position') }}</dt>
-          <dd>{{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
+          <dd :title="`${selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°')} / ${selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°')}`">{{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
         </div>
       </dl>
     </footer>
@@ -1147,7 +1147,20 @@ button:disabled { cursor: wait; opacity: .55; }
     height: auto;
   }
 
-  .sky-readout dl > div { padding: .65rem .75rem; }
+  .sky-readout { height: 76px; overflow: hidden; }
+  .sky-readout dl { height: 100%; }
+  .sky-readout dl > div {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    padding: .65rem .75rem;
+  }
+  .sky-readout dd {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
 }
 
 .stage-state {
