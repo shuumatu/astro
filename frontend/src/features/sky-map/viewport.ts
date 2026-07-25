@@ -1,7 +1,7 @@
 import type { ProjectedPoint } from './projection'
 
 export const MIN_SKY_ZOOM = 1
-export const MAX_SKY_ZOOM = 16
+export const MAX_SKY_ZOOM = 32
 
 export interface SkyViewTransform {
   scale: number

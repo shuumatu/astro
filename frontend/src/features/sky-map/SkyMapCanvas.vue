@@ -1147,8 +1147,13 @@ text {
 }
 
 .star-label {
-  fill: #d9e4dc;
+  fill: rgb(217 228 220 / 92%);
+  /* Keep point labels light and compact without obscuring nearby stars. */
+  font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Noto Sans CJK SC", sans-serif;
   font-size: clamp(8px, 1.35cqw, 12px);
+  font-weight: 350;
+  paint-order: normal;
+  stroke: none;
 }
 
 .star-label.anchor-start { text-anchor: start; }
