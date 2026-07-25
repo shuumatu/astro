@@ -11,7 +11,7 @@ import {
   Vector,
 } from 'astronomy-engine'
 import { describe, expect, it } from 'vitest'
-import { calculateSkyFrame, propagateIcrs } from './coordinates'
+import { calculateSkyFrame, propagateIcrs, SkyFrameCalculator } from './coordinates'
 import { selectInterfaceLanguageName, selectLocalizedName } from './localizedName'
 import type {
   FeaturedPatternPack,
@@ -132,6 +132,48 @@ describe('calculateSkyFrame', () => {
       ...parameters('2026-07-23T14:00:00.000Z'),
       observer: { latitudeDeg: 91, longitudeDeg: 114, elevationMeters: 0 },
     })).toThrow(expect.objectContaining({ code: 'INVALID_PARAMETERS' }))
+  })
+
+  it('reuses prepared data without leaking coordinates between sequential frames', () => {
+    const catalog = sampleCatalog([
+      sampleStar({ id: 'HIP:1', hipId: 1 }),
+      sampleStar({ id: 'HIP:2', hipId: 2, raDeg: 210, decDeg: -20 }),
+    ])
+    const culture = sampleCulture({
+      starNames: [{
+        objectId: 'HIP:2',
+        labelPriority: 80,
+        names: [sampleName('en', 'Test Star')],
+      }],
+    })
+    const featuredPatterns = sampleFeaturedPatterns()
+    const calculator = new SkyFrameCalculator(catalog, featuredPatterns)
+    const firstParameters = {
+      ...parameters('2026-07-23T14:00:00.000Z'),
+      interfaceLanguage: 'en',
+    }
+    const nextParameters = {
+      ...firstParameters,
+      observedAt: '2026-07-23T14:01:00.000Z',
+    }
+
+    const firstFrame = calculator.calculate(culture, firstParameters)
+    const nextFrame = calculator.calculate(culture, nextParameters)
+
+    expect(firstFrame).toEqual(calculateSkyFrame(
+      catalog,
+      culture,
+      featuredPatterns,
+      firstParameters,
+    ))
+    expect(nextFrame).toEqual(calculateSkyFrame(
+      catalog,
+      culture,
+      featuredPatterns,
+      nextParameters,
+    ))
+    expect(nextFrame.stars[0].azimuthDeg).not.toBe(firstFrame.stars[0].azimuthDeg)
+    expect(nextFrame.starLabels[0]?.name).toBe('Test Star')
   })
 })
 

@@ -1,5 +1,5 @@
 import { loadSkyCatalog } from './catalog'
-import { calculateSkyFrame } from './coordinates'
+import { SkyFrameCalculator } from './coordinates'
 import { loadSkyContentAsset, loadSkyContentManifest } from './skyContent'
 import { searchSkyNames } from './targetSearch'
 import type {
@@ -13,6 +13,7 @@ import { SkyMapError } from './types'
 
 interface InitializedCatalogs {
   catalog: Awaited<ReturnType<typeof loadSkyCatalog>>
+  frameCalculator: SkyFrameCalculator
   catalogObjectIds: ReadonlySet<string>
   skyContentManifest: Awaited<ReturnType<typeof loadSkyContentManifest>>
   searchIndex: SkySearchIndex
@@ -69,12 +70,7 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
     }
     const culture = await loadCulture(initialized, request.parameters.cultureId)
     const startedAt = performance.now()
-    const frame = calculateSkyFrame(
-      initialized.catalog.catalog,
-      culture,
-      initialized.featuredPatterns,
-      request.parameters,
-    )
+    const frame = initialized.frameCalculator.calculate(culture, request.parameters)
     post({
       type: 'frame',
       requestId: request.requestId,
@@ -114,6 +110,7 @@ async function initializeCatalogs(
   ])
   return {
     catalog,
+    frameCalculator: new SkyFrameCalculator(catalog.catalog, featuredPatterns),
     catalogObjectIds: new Set(catalog.catalog.stars.map((star) => star.id)),
     skyContentManifest,
     searchIndex,

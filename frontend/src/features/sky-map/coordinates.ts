@@ -32,6 +32,14 @@ const RAD_TO_DEG = 180 / Math.PI
 const MAS_TO_RAD = DEG_TO_RAD / 3_600_000
 const JULIAN_YEAR_MILLISECONDS = 365.25 * 86_400_000
 const J2000_MILLISECONDS = Date.UTC(2000, 0, 1, 12)
+const PREPARED_STAR_STRIDE = 7
+const POSITION_X_OFFSET = 0
+const POSITION_Y_OFFSET = 1
+const POSITION_Z_OFFSET = 2
+const MOTION_X_OFFSET = 3
+const MOTION_Y_OFFSET = 4
+const MOTION_Z_OFFSET = 5
+const EPOCH_YEAR_OFFSET = 6
 const ASTRONOMY_BODY_BY_ID: Record<SolarSystemBodyId, Body> = {
   sun: Body.Sun,
   moon: Body.Moon,
@@ -50,12 +58,139 @@ export interface CartesianVector {
   z: number
 }
 
+interface PreparedSkyCatalog {
+  catalog: SkyCatalog
+  starIndexById: ReadonlyMap<string, number>
+  astrometry: Float64Array
+}
+
+interface LocalizedSkyCulture {
+  figureNames: string[]
+  regionNames: string[]
+  starNames: Array<string | null>
+}
+
+interface PreparedSkyCulture {
+  culture: SkyCulturePack
+  regionVectors: CartesianVector[][][]
+  starIndexes: Int32Array
+  localizedByLanguage: Map<string, LocalizedSkyCulture>
+}
+
+export class SkyFrameCalculator {
+  private readonly preparedCatalog: PreparedSkyCatalog
+  private readonly preparedCultures = new WeakMap<SkyCulturePack, PreparedSkyCulture>()
+
+  constructor(
+    catalog: SkyCatalog,
+    private readonly featuredPatternPack: FeaturedPatternPack,
+  ) {
+    this.preparedCatalog = prepareSkyCatalog(catalog)
+  }
+
+  calculate(culture: SkyCulturePack, parameters: SkyCalculationParameters): SkyFrame {
+    let preparedCulture = this.preparedCultures.get(culture)
+    if (!preparedCulture) {
+      preparedCulture = prepareSkyCulture(culture, this.preparedCatalog)
+      this.preparedCultures.set(culture, preparedCulture)
+    }
+    return calculatePreparedSkyFrame(
+      this.preparedCatalog,
+      preparedCulture,
+      this.featuredPatternPack,
+      parameters,
+    )
+  }
+}
+
+function prepareSkyCatalog(catalog: SkyCatalog): PreparedSkyCatalog {
+  const starIndexById = new Map<string, number>()
+  const astrometry = new Float64Array(catalog.stars.length * PREPARED_STAR_STRIDE)
+  for (let starIndex = 0; starIndex < catalog.stars.length; starIndex += 1) {
+    const star = catalog.stars[starIndex]
+    starIndexById.set(star.id, starIndex)
+
+    const rightAscension = star.raDeg * DEG_TO_RAD
+    const declination = star.decDeg * DEG_TO_RAD
+    const cosRa = Math.cos(rightAscension)
+    const sinRa = Math.sin(rightAscension)
+    const cosDec = Math.cos(declination)
+    const sinDec = Math.sin(declination)
+    const offset = starIndex * PREPARED_STAR_STRIDE
+    astrometry[offset + POSITION_X_OFFSET] = cosDec * cosRa
+    astrometry[offset + POSITION_Y_OFFSET] = cosDec * sinRa
+    astrometry[offset + POSITION_Z_OFFSET] = sinDec
+
+    const motionRa = (star.pmRaMasPerYear ?? 0) * MAS_TO_RAD
+    const motionDec = (star.pmDecMasPerYear ?? 0) * MAS_TO_RAD
+    astrometry[offset + MOTION_X_OFFSET] = motionRa * -sinRa + motionDec * -cosRa * sinDec
+    astrometry[offset + MOTION_Y_OFFSET] = motionRa * cosRa + motionDec * -sinRa * sinDec
+    astrometry[offset + MOTION_Z_OFFSET] = motionDec * cosDec
+    astrometry[offset + EPOCH_YEAR_OFFSET] = star.epochYear
+  }
+  return { catalog, starIndexById, astrometry }
+}
+
+function prepareSkyCulture(
+  culture: SkyCulturePack,
+  preparedCatalog: PreparedSkyCatalog,
+): PreparedSkyCulture {
+  const starIndexes = new Int32Array(culture.starNames.length)
+  starIndexes.fill(-1)
+  for (let recordIndex = 0; recordIndex < culture.starNames.length; recordIndex += 1) {
+    starIndexes[recordIndex] = preparedCatalog.starIndexById.get(
+      culture.starNames[recordIndex].objectId,
+    ) ?? -1
+  }
+  return {
+    culture,
+    regionVectors: culture.regions.map((region) => region.geometry.coordinates.flatMap((polygon) =>
+      polygon.map((ring) => ring.map(equatorialToVector)),
+    )),
+    starIndexes,
+    localizedByLanguage: new Map(),
+  }
+}
+
+function localizedSkyCulture(
+  preparedCulture: PreparedSkyCulture,
+  interfaceLanguage: string,
+): LocalizedSkyCulture {
+  const cached = preparedCulture.localizedByLanguage.get(interfaceLanguage)
+  if (cached) return cached
+  const { culture } = preparedCulture
+  const localized: LocalizedSkyCulture = {
+    figureNames: culture.figures.map((figure) =>
+      selectLocalizedName(figure.names, interfaceLanguage, culture.defaultLanguage),
+    ),
+    regionNames: culture.regions.map((region) =>
+      selectLocalizedName(region.names, interfaceLanguage, culture.defaultLanguage),
+    ),
+    starNames: culture.starNames.map((record) =>
+      selectInterfaceLanguageName(record.names, interfaceLanguage) ?? null,
+    ),
+  }
+  preparedCulture.localizedByLanguage.set(interfaceLanguage, localized)
+  return localized
+}
+
 export function calculateSkyFrame(
   catalog: SkyCatalog,
   culture: SkyCulturePack,
   featuredPatternPack: FeaturedPatternPack,
   parameters: SkyCalculationParameters,
 ): SkyFrame {
+  return new SkyFrameCalculator(catalog, featuredPatternPack).calculate(culture, parameters)
+}
+
+function calculatePreparedSkyFrame(
+  preparedCatalog: PreparedSkyCatalog,
+  preparedCulture: PreparedSkyCulture,
+  featuredPatternPack: FeaturedPatternPack,
+  parameters: SkyCalculationParameters,
+): SkyFrame {
+  const { catalog } = preparedCatalog
+  const { culture } = preparedCulture
   const date = validateParameters(parameters, catalog.visualMagnitudeLimit)
   const targetYear = julianYear(date)
   const observer = new Observer(
@@ -64,30 +199,33 @@ export function calculateSkyFrame(
     parameters.observer.elevationMeters,
   )
   const rotation = Rotation_EQJ_HOR(date, observer).rot
-  const starsById = new Map(catalog.stars.map((star) => [star.id, star]))
-  const coordinatesById = new Map<string, HorizontalCoordinate>()
-  const coordinateForObject = (objectId: string): HorizontalCoordinate | null => {
-    const cached = coordinatesById.get(objectId)
+  const coordinatesByIndex = new Array<HorizontalCoordinate | undefined>(catalog.stars.length)
+  const coordinateForIndex = (starIndex: number): HorizontalCoordinate => {
+    const cached = coordinatesByIndex[starIndex]
     if (cached) return cached
-    const star = starsById.get(objectId)
-    if (!star) return null
-    const coordinate = toHorizontal(
-      propagateIcrs(star, targetYear),
+    const coordinate = preparedStarToHorizontal(
+      preparedCatalog.astrometry,
+      starIndex,
+      targetYear,
       rotation,
       parameters.applyRefraction,
     )
-    coordinatesById.set(objectId, coordinate)
+    coordinatesByIndex[starIndex] = coordinate
     return coordinate
   }
+  const coordinateForObject = (objectId: string): HorizontalCoordinate | null => {
+    const starIndex = preparedCatalog.starIndexById.get(objectId)
+    return starIndex === undefined ? null : coordinateForIndex(starIndex)
+  }
 
-  const stars: ComputedStar[] = catalog.stars
-    .filter((star) => star.visualMagnitude <= parameters.magnitudeLimit)
-    .map((star) => ({
-      star,
-      coordinate: coordinateForObject(star.id)!,
-    }))
-    .filter(({ coordinate }) => coordinate.altitudeDeg >= parameters.minimumAltitudeDeg)
-    .map(({ star, coordinate }) => ({
+  const stars: ComputedStar[] = []
+  const visibleStarsByIndex = new Array<ComputedStar | undefined>(catalog.stars.length)
+  for (let starIndex = 0; starIndex < catalog.stars.length; starIndex += 1) {
+    const star = catalog.stars[starIndex]
+    if (star.visualMagnitude > parameters.magnitudeLimit) continue
+    const coordinate = coordinateForIndex(starIndex)
+    if (coordinate.altitudeDeg < parameters.minimumAltitudeDeg) continue
+    const computedStar: ComputedStar = {
       id: star.id,
       hipId: star.hipId,
       gaiaDr3Id: star.gaiaDr3Id,
@@ -98,16 +236,27 @@ export function calculateSkyFrame(
       spectralType: star.spectralType,
       astrometrySource: star.astrometrySource,
       ...coordinate,
-    }))
+    }
+    stars.push(computedStar)
+    visibleStarsByIndex[starIndex] = computedStar
+  }
 
-  const cultureFigures = calculateCultureFigures(culture, parameters.interfaceLanguage, coordinateForObject)
+  const cultureFigures = calculateCultureFigures(
+    preparedCulture,
+    parameters.interfaceLanguage,
+    coordinateForObject,
+  )
   const cultureRegions = calculateCultureRegions(
-    culture,
+    preparedCulture,
     parameters.interfaceLanguage,
     rotation,
     parameters.applyRefraction,
   )
-  const starLabels = calculateStarLabels(culture, parameters.interfaceLanguage, stars)
+  const starLabels = calculateStarLabels(
+    preparedCulture,
+    parameters.interfaceLanguage,
+    visibleStarsByIndex,
+  )
   const featuredPatterns = calculateFeaturedPatterns(
     featuredPatternPack,
     parameters,
@@ -136,14 +285,16 @@ export function calculateSkyFrame(
 }
 
 function calculateCultureFigures(
-  culture: SkyCulturePack,
+  preparedCulture: PreparedSkyCulture,
   interfaceLanguage: string,
   coordinateForObject: (objectId: string) => HorizontalCoordinate | null,
 ): ComputedCultureFigure[] {
-  return culture.figures.map((figure) => ({
+  const { culture } = preparedCulture
+  const localized = localizedSkyCulture(preparedCulture, interfaceLanguage)
+  return culture.figures.map((figure, figureIndex) => ({
     id: figure.id,
     type: figure.type,
-    name: selectLocalizedName(figure.names, interfaceLanguage, culture.defaultLanguage),
+    name: localized.figureNames[figureIndex],
     rank: figure.rank,
     labelPosition: coordinateForObject(figure.labelAnchor.objectId),
     lines: figure.paths.flatMap((path) => splitResolvedPath(path, coordinateForObject)),
@@ -151,45 +302,51 @@ function calculateCultureFigures(
 }
 
 function calculateCultureRegions(
-  culture: SkyCulturePack,
+  preparedCulture: PreparedSkyCulture,
   interfaceLanguage: string,
   rotation: number[][],
   applyRefraction: boolean,
 ): ComputedCultureRegion[] {
-  return culture.regions.map((region) => ({
+  const { culture } = preparedCulture
+  const localized = localizedSkyCulture(preparedCulture, interfaceLanguage)
+  return culture.regions.map((region, regionIndex) => ({
     id: region.id,
     figureId: region.figureId,
-    name: selectLocalizedName(region.names, interfaceLanguage, culture.defaultLanguage),
-    rings: region.geometry.coordinates.flatMap((polygon) => polygon.map((ring) =>
-      ring.map((coordinate) => toHorizontal(
-        equatorialToVector(coordinate),
+    name: localized.regionNames[regionIndex],
+    rings: preparedCulture.regionVectors[regionIndex].map((ring) =>
+      ring.map((vector) => toHorizontal(
+        vector,
         rotation,
         applyRefraction,
       )),
-    )),
+    ),
   }))
 }
 
 function calculateStarLabels(
-  culture: SkyCulturePack,
+  preparedCulture: PreparedSkyCulture,
   interfaceLanguage: string,
-  stars: ComputedStar[],
+  visibleStarsByIndex: Array<ComputedStar | undefined>,
 ): ComputedStarLabel[] {
-  const visibleStars = new Map(stars.map((star) => [star.id, star]))
-  return culture.starNames.flatMap((record): ComputedStarLabel[] => {
-    const star = visibleStars.get(record.objectId)
-    if (!star) return []
-    const localizedName = selectInterfaceLanguageName(record.names, interfaceLanguage)
-    if (!localizedName) return []
-    return [{
+  const localized = localizedSkyCulture(preparedCulture, interfaceLanguage)
+  const labels: ComputedStarLabel[] = []
+  for (let recordIndex = 0; recordIndex < preparedCulture.culture.starNames.length; recordIndex += 1) {
+    const starIndex = preparedCulture.starIndexes[recordIndex]
+    if (starIndex < 0) continue
+    const star = visibleStarsByIndex[starIndex]
+    const name = localized.starNames[recordIndex]
+    if (!star || !name) continue
+    const record = preparedCulture.culture.starNames[recordIndex]
+    labels.push({
       objectId: record.objectId,
-      name: localizedName,
+      name,
       labelPriority: record.labelPriority,
       visualMagnitude: star.visualMagnitude,
       azimuthDeg: star.azimuthDeg,
       altitudeDeg: star.altitudeDeg,
-    }]
-  })
+    })
+  }
+  return labels
 }
 
 function calculateFeaturedPatterns(
@@ -290,6 +447,22 @@ export function julianYear(date: Date): number {
   return 2000 + (date.getTime() - J2000_MILLISECONDS) / JULIAN_YEAR_MILLISECONDS
 }
 
+function preparedStarToHorizontal(
+  astrometry: Float64Array,
+  starIndex: number,
+  targetYear: number,
+  rotation: number[][],
+  applyRefraction: boolean,
+): HorizontalCoordinate {
+  const offset = starIndex * PREPARED_STAR_STRIDE
+  const years = targetYear - astrometry[offset + EPOCH_YEAR_OFFSET]
+  const x = astrometry[offset + POSITION_X_OFFSET] + astrometry[offset + MOTION_X_OFFSET] * years
+  const y = astrometry[offset + POSITION_Y_OFFSET] + astrometry[offset + MOTION_Y_OFFSET] * years
+  const z = astrometry[offset + POSITION_Z_OFFSET] + astrometry[offset + MOTION_Z_OFFSET] * years
+  const length = Math.hypot(x, y, z)
+  return toHorizontalComponents(x / length, y / length, z / length, rotation, applyRefraction)
+}
+
 function equatorialToVector([raDeg, decDeg]: EquatorialCoordinate): CartesianVector {
   const rightAscension = raDeg * DEG_TO_RAD
   const declination = decDeg * DEG_TO_RAD
@@ -306,9 +479,19 @@ function toHorizontal(
   rotation: number[][],
   applyRefraction: boolean,
 ): HorizontalCoordinate {
-  const north = rotation[0][0] * vector.x + rotation[1][0] * vector.y + rotation[2][0] * vector.z
-  const west = rotation[0][1] * vector.x + rotation[1][1] * vector.y + rotation[2][1] * vector.z
-  const zenith = rotation[0][2] * vector.x + rotation[1][2] * vector.y + rotation[2][2] * vector.z
+  return toHorizontalComponents(vector.x, vector.y, vector.z, rotation, applyRefraction)
+}
+
+function toHorizontalComponents(
+  x: number,
+  y: number,
+  z: number,
+  rotation: number[][],
+  applyRefraction: boolean,
+): HorizontalCoordinate {
+  const north = rotation[0][0] * x + rotation[1][0] * y + rotation[2][0] * z
+  const west = rotation[0][1] * x + rotation[1][1] * y + rotation[2][1] * z
+  const zenith = rotation[0][2] * x + rotation[1][2] * y + rotation[2][2] * z
   const geometricAltitude = Math.asin(clamp(zenith, -1, 1)) * RAD_TO_DEG
   const altitude = applyRefraction
     ? geometricAltitude + Refraction('normal', geometricAltitude)
