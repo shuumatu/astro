@@ -12,6 +12,7 @@ import {
 import type { WesternCultureArtwork } from './westernCultureArtwork'
 import type {
   ComputedSolarSystemBody,
+  ComputedStar,
   SkyFrame,
   SkyObjectSelection,
   SolarSystemBodyId,
@@ -287,6 +288,7 @@ const solarSystemLabels = computed(() => {
 const selectedMarker = computed(() => {
   if (!props.frame || !props.selectedObject || viewportSize.value === 0) return null
   if (props.selectedObject.kind === 'solarSystemBody' && !props.showSolarSystemBodies) return null
+  if (props.selectedObject.kind === 'cultureFigure') return null
   const object = resolveSelection(props.selectedObject)
   if (!object) return null
   const { size, center, radius } = geometry.value
@@ -694,11 +696,11 @@ function focusObject(selection: SkyObjectSelection): boolean {
   return true
 }
 
-function resolveSelection(selection: SkyObjectSelection): SkyObjectSelection['object'] | null {
+function resolveSelection(selection: SkyObjectSelection): ComputedStar | ComputedSolarSystemBody | null {
   if (!props.frame) return null
-  return selection.kind === 'star'
-    ? props.frame.stars.find(({ id }) => id === selection.object.id) ?? null
-    : props.frame.solarSystemBodies.find(({ id }) => id === selection.object.id) ?? null
+  if (selection.kind === 'star') return props.frame.stars.find(({ id }) => id === selection.object.id) ?? null
+  if (selection.kind === 'cultureFigure') return null
+  return props.frame.solarSystemBodies.find(({ id }) => id === selection.object.id) ?? null
 }
 
 function onPointerDown(event: PointerEvent): void {
@@ -989,8 +991,6 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
 }
 
 .sky-canvas.interactive canvas { cursor: pointer; }
-.sky-canvas.can-pan canvas { cursor: grab; }
-.sky-canvas.dragging canvas { cursor: grabbing; }
 
 canvas,
 .sky-overlay {

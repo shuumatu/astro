@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "catalogId": "sky-content",
   "version": "2026.07.4",
-  "defaultCultureId": "chinese-traditional",
+  "defaultCultureId": "western-iau",
   "cultureIds": [
     "chinese-traditional",
     "western-iau"

@@ -316,6 +316,7 @@ export interface ComputedSolarSystemBody extends HorizontalCoordinate {
 export type SkyObjectSelection =
   | { kind: 'star'; object: ComputedStar }
   | { kind: 'solarSystemBody'; object: ComputedSolarSystemBody }
+  | { kind: 'cultureFigure'; object: ComputedCultureFigure }
 
 export interface SkyFrame {
   observedAt: string

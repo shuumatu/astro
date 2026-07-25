@@ -61,7 +61,7 @@ describe('sky-content resources', () => {
     const western = assets.find((asset) => asset.id === 'western-iau') as SkyCulturePack
     const searchIndex = assets.find((asset) => asset.id === 'sky-search-index') as SkySearchIndex
     const featuredPatterns = assets.find((asset) => asset.id === 'featured-patterns') as FeaturedPatternPack
-    expect(loadedManifest.defaultCultureId).toBe('chinese-traditional')
+    expect(loadedManifest.defaultCultureId).toBe('western-iau')
     expect(chinese.figures).toHaveLength(312)
     expect(western.regions).toHaveLength(88)
     expect(searchIndex.entries).toHaveLength(14_042)

@@ -107,7 +107,7 @@ async function main() {
     schemaVersion: 1,
     catalogId: "sky-content",
     version: VERSION,
-    defaultCultureId: "chinese-traditional",
+    defaultCultureId: "western-iau",
     cultureIds: ["chinese-traditional", "western-iau"],
     searchIndexAssetId: "search-index",
     featuredPatternsAssetId: "featured-patterns",

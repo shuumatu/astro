@@ -52,7 +52,7 @@ const { t, locale } = useI18n({ useScope: 'global' })
 const controls = reactive({
   observedAt: localDateTimeValue(new Date()),
   ...defaultObserverLocation,
-  cultureId: 'chinese-traditional',
+  cultureId: 'western-iau',
   magnitudeLimit: 5.5,
   applyRefraction: true,
   showStarNames: true,
@@ -489,6 +489,7 @@ function formatCoordinate(value: number | undefined, suffix: string): string {
 function formatSelectedObject(selection = selectedObject.value): string {
   if (!selection) return '—'
   if (selection.kind === 'solarSystemBody') return t(`skyMap.solarSystemBodies.${selection.object.id}`)
+  if (selection.kind === 'cultureFigure') return selection.object.name
   const cultureName = frame.value?.starLabels.find(
     (label) => label.objectId === selection.object.id,
   )?.name
@@ -503,6 +504,10 @@ function resolveSelectionInFrame(
     const star = nextFrame.stars.find((candidate) => candidate.id === selection.object.id)
     return star ? { kind: 'star', object: star } : null
   }
+  if (selection.kind === 'cultureFigure') {
+    const figure = nextFrame.cultureFigures.find((candidate) => candidate.id === selection.object.id)
+    return figure ? { kind: 'cultureFigure', object: figure } : null
+  }
   const body = nextFrame.solarSystemBodies.find((candidate) => candidate.id === selection.object.id)
   return body ? { kind: 'solarSystemBody', object: body } : null
 }
@@ -511,6 +516,7 @@ function formatSelectedDetail(): string {
   const selection = selectedObject.value
   if (!selection) return '—'
   if (selection.kind === 'star') return selection.object.spectralType ?? '—'
+  if (selection.kind === 'cultureFigure') return t('skyMap.constellation')
   return new Intl.NumberFormat(locale.value, {
     style: 'percent',
     maximumFractionDigits: 0,
@@ -521,6 +527,7 @@ function formatSelectedData(): string {
   const selection = selectedObject.value
   if (!selection) return '—'
   if (selection.kind === 'star') return t(`skyMap.sources.${selection.object.astrometrySource}`)
+  if (selection.kind === 'cultureFigure') return '—'
   if (selection.object.id === 'moon') {
     const kilometers = selection.object.distanceAu * ASTRONOMICAL_UNIT_KM
     return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(kilometers)} km`
@@ -803,10 +810,10 @@ function formatSelectedData(): string {
         </div>
         <div>
           <dt>{{ t('skyMap.magnitude') }}</dt>
-          <dd>{{ selectedObject ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
+          <dd>{{ selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
         </div>
         <div>
-          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : t('skyMap.spectralType') }}</dt>
+          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : selectedObject?.kind === 'cultureFigure' ? t('skyMap.constellation') : t('skyMap.spectralType') }}</dt>
           <dd>{{ formatSelectedDetail() }}</dd>
         </div>
         <div>
@@ -815,7 +822,7 @@ function formatSelectedData(): string {
         </div>
         <div>
           <dt>{{ t('skyMap.position') }}</dt>
-          <dd>{{ formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
+          <dd>{{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
         </div>
       </dl>
     </footer>
