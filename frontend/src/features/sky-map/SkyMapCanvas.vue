@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
 import type { ProjectedPoint } from './projection'
 import { layoutSolarSystemLabels } from './solarSystemLabels'
+import { starColor } from './starColor'
 import {
   loadWesternCultureArtwork,
   westernCultureArtworkImage,
@@ -633,7 +634,7 @@ function drawStars(
     const basePoint = projectHorizontal(star, radius, center)
     const point = transformSkyPoint(basePoint, viewTransform.value, center)
     const starRadius = screenStarRadius(star.visualMagnitude)
-    context.fillStyle = starColor(star.colorIndex)
+    context.fillStyle = starColor(star.colorIndex, star.visualMagnitude)
     context.globalAlpha = Math.max(0.55, Math.min(1, 1.05 - star.visualMagnitude * 0.055))
     context.beginPath()
     context.arc(basePoint.x, basePoint.y, starRadius * inverseScale, 0, Math.PI * 2)
@@ -704,15 +705,6 @@ function screenSolarSystemBodyRadius(id: SolarSystemBodyId): number {
 function screenStarRadius(magnitude: number): number {
   const sizeScale = Math.max(0.72, Math.min(1.15, viewportSize.value / 820))
   return Math.max(0.55, Math.min(5, 4.15 - magnitude * 0.55)) * sizeScale
-}
-
-function starColor(colorIndex: number | null): string {
-  if (colorIndex === null) return '#eef4f5'
-  if (colorIndex < -0.1) return '#a9c8ff'
-  if (colorIndex < 0.35) return '#d9e7ff'
-  if (colorIndex < 0.8) return '#fff4d7'
-  if (colorIndex < 1.25) return '#ffd297'
-  return '#ffad7b'
 }
 
 function onWheel(event: WheelEvent): void {
