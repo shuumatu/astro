@@ -3,6 +3,23 @@ server:
 spring:
   application:
     name: content-service
+  datasource:
+    url: ${CONTENT_DATABASE_URL:jdbc:postgresql://localhost:5432/astro}
+    username: ${POSTGRES_USER:astro}
+    password: ${POSTGRES_PASSWORD:change_me_before_start}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+astro:
+  security:
+    jwt-secret: ${ASTRO_JWT_SECRET:astro-local-development-secret-change-before-production}
 management:
   endpoints:
     web:

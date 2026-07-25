@@ -3,6 +3,18 @@ server:
 spring:
   application:
     name: media-service
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 10MB
+astro:
+  security:
+    jwt-secret: ${ASTRO_JWT_SECRET:astro-local-development-secret-change-before-production}
+  media:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ROOT_USER:astro}
+    secret-key: ${MINIO_ROOT_PASSWORD:change_me_before_start}
+    bucket: ${MINIO_BUCKET:astro-catalog-media}
 management:
   endpoints:
     web:

@@ -34,11 +34,11 @@ class CatalogApplicationTest {
     void servesThePublishedSkyContentManifestAndAssets() throws Exception {
         mockMvc.perform(get("/api/astronomy/catalogs/sky-content/manifest"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.version").value("2026.07.4"))
-                .andExpect(jsonPath("$.defaultCultureId").value("chinese-traditional"))
+                .andExpect(jsonPath("$.version").value("2026.07.5"))
+                .andExpect(jsonPath("$.defaultCultureId").value("western-iau"))
                 .andExpect(jsonPath("$.assets.length()").value(4));
 
-        mockMvc.perform(get("/api/astronomy/catalogs/sky-content/culture-chinese-traditional/2026.07.4"))
+        mockMvc.perform(get("/api/astronomy/catalogs/sky-content/culture-chinese-traditional/2026.07.5"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Encoding", "gzip"))
                 .andExpect(header().string("Cache-Control", "max-age=31536000, public, immutable"))

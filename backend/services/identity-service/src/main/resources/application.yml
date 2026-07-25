@@ -3,6 +3,12 @@ server:
 spring:
   application:
     name: identity-service
+astro:
+  identity:
+    admin-username: ${ASTRO_ADMIN_USERNAME:admin}
+    admin-password: ${ASTRO_ADMIN_PASSWORD:change-me-before-production}
+    jwt-secret: ${ASTRO_JWT_SECRET:astro-local-development-secret-change-before-production}
+    token-ttl: ${ASTRO_TOKEN_TTL:PT2H}
 management:
   endpoints:
     web:

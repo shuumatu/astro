@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  title: Astro Content Catalog API
+  version: 0.1.0
+  description: Published astronomy content and the private single-admin editing workflow.
+servers:
+  - url: /
+paths:
+  /api/content/catalog-entries:
+    get:
+      operationId: listPublishedCatalogEntries
+      parameters:
+        - { name: locale, in: query, schema: { type: string, default: zh-CN } }
+        - { name: objectType, in: query, schema: { $ref: '#/components/schemas/ObjectType' } }
+        - { name: query, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Published entries matching the filters.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogPage' }
+  /api/content/catalog-entries/{objectType}/{objectKey}:
+    get:
+      operationId: getPublishedCatalogEntry
+      parameters:
+        - { name: objectType, in: path, required: true, schema: { $ref: '#/components/schemas/ObjectType' } }
+        - { name: objectKey, in: path, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string, default: zh-CN } }
+      responses:
+        '200':
+          description: Published content in the requested or fallback locale.
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CatalogEntry' }
+        '304': { description: The current revision is already cached. }
+        '404': { description: No published translation is available. }
+  /api/content/admin/catalog-entries:
+    get:
+      operationId: listAdminCatalogEntries
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Entries including draft translation status. }
+        '401': { description: Missing or invalid token. }
+        '403': { description: CONTENT_ADMIN is required. }
+    post:
+      operationId: createCatalogEntry
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [objectType, objectKey]
+              properties:
+                objectType: { $ref: '#/components/schemas/ObjectType' }
+                objectKey: { type: string }
+      responses:
+        '200': { description: Entry created. }
+        '409': { description: The stable key already exists. }
+  /api/content/admin/catalog-entries/{entryId}/translations/{locale}:
+    put:
+      operationId: saveCatalogTranslationDraft
+      security: [{ bearerAuth: [] }]
+      parameters: &translationParameters
+        - { name: entryId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: locale, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TranslationDraft' }
+      responses:
+        '200': { description: Draft saved. }
+  /api/content/admin/catalog-entries/{entryId}/translations/{locale}/preview:
+    get:
+      operationId: previewCatalogTranslation
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParameters
+      responses:
+        '200': { description: Draft or published preview. }
+  /api/content/admin/catalog-entries/{entryId}/translations/{locale}/publish:
+    post:
+      operationId: publishCatalogTranslation
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParameters
+      responses:
+        '200': { description: Translation published. Sources are optional. }
+  /api/content/admin/catalog-entries/{entryId}/translations/{locale}/unpublish:
+    post:
+      operationId: unpublishCatalogTranslation
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParameters
+      responses:
+        '200': { description: Translation returned to draft. }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    ObjectType:
+      type: string
+      enum: [star, solar-system-body, culture-figure]
+    CatalogEntry:
+      type: object
+      required: [id, objectType, objectKey, requestedLocale, contentLocale, localeFallback, status, title, summary, bodyMarkdown, knowledgePoints, sources, media, revision, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        objectType: { $ref: '#/components/schemas/ObjectType' }
+        objectKey: { type: string }
+        requestedLocale: { type: string }
+        contentLocale: { type: string }
+        localeFallback: { type: boolean }
+        status: { type: string, enum: [DRAFT, PUBLISHED] }
+        title: { type: string }
+        summary: { type: string }
+        bodyMarkdown: { type: string, description: Restricted Markdown; raw HTML is rejected. }
+        knowledgePoints: { type: array, items: { type: string } }
+        sources: { type: array, items: { $ref: '#/components/schemas/Source' } }
+        media: { type: array, items: { $ref: '#/components/schemas/Media' } }
+        revision: { type: integer, minimum: 1 }
+        publishedAt: { type: [string, 'null'], format: date-time }
+        updatedAt: { type: string, format: date-time }
+    CatalogPage:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items: { type: array, items: { type: object } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer }
+        totalPages: { type: integer }
+    TranslationDraft:
+      type: object
+      required: [title, summary, bodyMarkdown, knowledgePoints, sources, media]
+      properties:
+        title: { type: string, maxLength: 160 }
+        summary: { type: string, maxLength: 600 }
+        bodyMarkdown: { type: string, maxLength: 50000 }
+        knowledgePoints: { type: array, maxItems: 20, items: { type: string } }
+        imageCaption: { type: [string, 'null'] }
+        sources: { type: array, items: { $ref: '#/components/schemas/Source' } }
+        media: { type: array, items: { $ref: '#/components/schemas/Media' } }
+    Source:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string, format: uri }
+        author: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }
+    Media:
+      type: object
+      required: [mediaId, altText]
+      properties:
+        mediaId: { type: string }
+        url: { type: string }
+        altText: { type: string }
+        caption: { type: [string, 'null'] }
+        author: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }

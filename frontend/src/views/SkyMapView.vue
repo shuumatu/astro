@@ -2,6 +2,10 @@
 import { ChevronDown, Search, Triangle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { loadCatalogEntry } from '../features/catalog/api'
+import CatalogInfoCard from '../features/catalog/CatalogInfoCard.vue'
+import { catalogIdentityForSelection, catalogSelectionAction } from '../features/catalog/catalogIdentity'
+import type { CatalogEntry } from '../features/catalog/types'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
 import { selectLocalizedName } from '../features/sky-map/localizedName'
@@ -71,6 +75,10 @@ const catalog = ref<CatalogSummary | null>(null)
 const frame = shallowRef<SkyFrame | null>(null)
 const calculationDurationMs = ref<number | null>(null)
 const selectedObject = ref<SkyObjectSelection | null>(null)
+const catalogCardOpen = ref(false)
+const catalogCardEntry = ref<CatalogEntry | null>(null)
+const catalogCardLoading = ref(false)
+const catalogCardError = ref(false)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const skyMapStage = ref<HTMLDivElement | null>(null)
 const isSkyMapFullscreen = ref(false)
@@ -93,6 +101,7 @@ let targetSearchSequence = 0
 let timeWheelResetTimer: ReturnType<typeof setTimeout> | null = null
 let accumulatedTimeWheelDelta = 0
 let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
+let catalogCardSequence = 0
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
@@ -110,6 +119,36 @@ const featuredPatternOptions = computed(() => (catalog.value?.featuredPatterns ?
   name: selectLocalizedName(pattern.names, locale.value, 'en'),
 })))
 const enabledFeaturedPatternCount = computed(() => controls.enabledFeaturedPatternIds.length)
+const catalogCardIdentity = computed(() => selectedObject.value
+  ? catalogIdentityForSelection(selectedObject.value, controls.cultureId)
+  : null)
+const catalogCardFacts = computed(() => {
+  const selection = selectedObject.value
+  if (!selection) return []
+  const position = selection.kind === 'cultureFigure' ? selection.object.labelPosition : selection.object
+  const facts = [
+    {
+      label: t('skyMap.position'),
+      value: position
+        ? `${formatCoordinate(position.azimuthDeg, '°')} / ${formatCoordinate(position.altitudeDeg, '°')}`
+        : '— / —',
+    },
+  ]
+  if (selection.kind === 'cultureFigure') {
+    facts.push({ label: t('skyMap.constellation'), value: selection.object.name })
+    facts.push({ label: t('skyMap.culture'), value: t(`skyMap.cultures.${controls.cultureId}`) })
+    return facts
+  }
+  facts.push({
+    label: t('skyMap.magnitude'),
+    value: new Intl.NumberFormat(locale.value, { maximumFractionDigits: 2 }).format(selection.object.visualMagnitude),
+  })
+  facts.push({
+    label: selection.kind === 'star' ? t('skyMap.spectralType') : t('skyMap.distance'),
+    value: selection.kind === 'star' ? (selection.object.spectralType ?? '—') : formatSelectedDataFor(selection),
+  })
+  return facts
+})
 
 watch(targetQuery, () => {
   targetMessage.value = ''
@@ -120,6 +159,7 @@ watch(() => [...controls.enabledFeaturedPatternIds], requestCalculation, { flush
 watch(() => [controls.cultureId, locale.value] as const, () => {
   requestCalculation()
   scheduleTargetSuggestions()
+  if (catalogCardOpen.value) void loadSelectedCatalogEntry()
 }, { flush: 'sync' })
 watch(
   () => [
@@ -291,7 +331,12 @@ function handleFullscreenChange(): void {
 }
 
 function handleFullscreenKeydown(event: KeyboardEvent): void {
-  if (event.key !== 'Escape' || document.fullscreenElement !== skyMapStage.value) return
+  if (event.key !== 'Escape') return
+  if (catalogCardOpen.value) {
+    closeCatalogCard()
+    return
+  }
+  if (document.fullscreenElement !== skyMapStage.value) return
   void document.exitFullscreen()
 }
 
@@ -463,14 +508,48 @@ function suggestionDisplayLabel(suggestion: SkySearchSuggestion): string {
 }
 
 function locateTarget(selection: SkyObjectSelection): void {
+  closeCatalogCard()
   selectedObject.value = selection
   skyCanvas.value?.focusObject(selection)
   targetMessage.value = t('skyMap.targetLocated', { id: formatSelectedObject(selection) })
 }
 
 function selectObject(selection: SkyObjectSelection | null): void {
+  const action = catalogSelectionAction(selectedObject.value, selection)
+  if (action === 'open' && selection) {
+    selectedObject.value = selection
+    catalogCardOpen.value = true
+    void loadSelectedCatalogEntry()
+    return
+  }
+  closeCatalogCard()
   selectedObject.value = selection
   targetMessage.value = ''
+}
+
+async function loadSelectedCatalogEntry(): Promise<void> {
+  const identity = catalogCardIdentity.value
+  if (!identity) return
+  const sequence = ++catalogCardSequence
+  catalogCardLoading.value = true
+  catalogCardError.value = false
+  catalogCardEntry.value = null
+  try {
+    const entry = await loadCatalogEntry(identity.objectType, identity.objectKey, locale.value)
+    if (sequence === catalogCardSequence) catalogCardEntry.value = entry
+  } catch {
+    if (sequence === catalogCardSequence) catalogCardError.value = true
+  } finally {
+    if (sequence === catalogCardSequence) catalogCardLoading.value = false
+  }
+}
+
+function closeCatalogCard(): void {
+  catalogCardSequence += 1
+  catalogCardOpen.value = false
+  catalogCardEntry.value = null
+  catalogCardLoading.value = false
+  catalogCardError.value = false
 }
 
 function fail(error: unknown): void {
@@ -530,6 +609,14 @@ function formatSelectedData(): string {
   if (!selection) return '—'
   if (selection.kind === 'star') return t(`skyMap.sources.${selection.object.astrometrySource}`)
   if (selection.kind === 'cultureFigure') return '—'
+  if (selection.object.id === 'moon') {
+    const kilometers = selection.object.distanceAu * ASTRONOMICAL_UNIT_KM
+    return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(kilometers)} km`
+  }
+  return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 3 }).format(selection.object.distanceAu)} AU`
+}
+
+function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 'solarSystemBody' }>): string {
   if (selection.object.id === 'moon') {
     const kilometers = selection.object.distanceAu * ASTRONOMICAL_UNIT_KM
     return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(kilometers)} km`
@@ -789,6 +876,17 @@ function formatSelectedData(): string {
           <span>{{ errorMessage }}</span>
           <button type="button" class="secondary-command" @click="initialize">{{ t('skyMap.retry') }}</button>
         </div>
+        <CatalogInfoCard
+          v-if="catalogCardOpen && catalogCardIdentity && selectedObject"
+          :entry="catalogCardEntry"
+          :object-type="catalogCardIdentity.objectType"
+          :object-key="catalogCardIdentity.objectKey"
+          :object-name="formatSelectedObject(selectedObject)"
+          :facts="catalogCardFacts"
+          :loading="catalogCardLoading"
+          :error="catalogCardError"
+          @close="closeCatalogCard"
+        />
       </div>
     </div>
 

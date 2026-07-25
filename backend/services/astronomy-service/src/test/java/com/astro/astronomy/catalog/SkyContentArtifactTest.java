@@ -27,7 +27,7 @@ class SkyContentArtifactTest {
                 Validation.buildDefaultValidatorFactory().getValidator()
         ).getManifest();
 
-        assertThat(manifest.defaultCultureId()).isEqualTo("chinese-traditional");
+        assertThat(manifest.defaultCultureId()).isEqualTo("western-iau");
         assertThat(manifest.cultureIds()).containsExactly("chinese-traditional", "western-iau");
         assertThat(manifest.assets()).hasSize(4);
 
