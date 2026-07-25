@@ -16,6 +16,42 @@ export interface ObservationTimeWheelResult {
   step: ObservationMinuteStep | null
 }
 
+type RequestFrame = (callback: FrameRequestCallback) => number
+type CancelFrame = (handle: number) => void
+
+export class ObservationTimeWheelBatcher {
+  private pendingMinutes = 0
+  private frameHandle: number | null = null
+
+  constructor(
+    private readonly onMinutes: (minuteDelta: number) => void,
+    private readonly requestFrame: RequestFrame = (callback) => (
+      globalThis.requestAnimationFrame(callback)
+    ),
+    private readonly cancelFrame: CancelFrame = (handle) => (
+      globalThis.cancelAnimationFrame(handle)
+    ),
+  ) {}
+
+  enqueue(step: ObservationMinuteStep): void {
+    this.pendingMinutes += step === 'nextMinute' ? 1 : -1
+    if (this.frameHandle === null) this.frameHandle = this.requestFrame(this.flush)
+  }
+
+  reset(): void {
+    if (this.frameHandle !== null) this.cancelFrame(this.frameHandle)
+    this.frameHandle = null
+    this.pendingMinutes = 0
+  }
+
+  private readonly flush = (): void => {
+    this.frameHandle = null
+    const minuteDelta = this.pendingMinutes
+    this.pendingMinutes = 0
+    if (minuteDelta !== 0) this.onMinutes(minuteDelta)
+  }
+}
+
 const OBSERVATION_TIME_WHEEL_THRESHOLD = 80
 
 export function observationTimeForPreset(

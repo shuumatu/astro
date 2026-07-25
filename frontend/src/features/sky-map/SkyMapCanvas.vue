@@ -313,8 +313,11 @@ function draw(): void {
   if (!element || size <= 0) return
 
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2)
-  element.width = Math.round(size * pixelRatio)
-  element.height = Math.round(size * pixelRatio)
+  const backingSize = Math.round(size * pixelRatio)
+  if (element.width !== backingSize || element.height !== backingSize) {
+    element.width = backingSize
+    element.height = backingSize
+  }
   const context = element.getContext('2d')
   if (!context) return
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)

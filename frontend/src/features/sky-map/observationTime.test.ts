@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
+  ObservationTimeWheelBatcher,
   accumulateObservationTimeWheel,
   observationTimeForPreset,
   shiftObservationTime,
@@ -79,6 +80,72 @@ describe('accumulateObservationTimeWheel', () => {
       accumulatedDelta: -40,
       step: null,
     })
+  })
+})
+
+describe('ObservationTimeWheelBatcher', () => {
+  it('keeps the browser frame functions bound to the global scope', () => {
+    let scheduledFrame: FrameRequestCallback | null = null
+    const requestFrame = vi.fn(function (this: typeof globalThis, callback: FrameRequestCallback) {
+      expect(this).toBe(globalThis)
+      scheduledFrame = callback
+      return 7
+    })
+    const cancelFrame = vi.fn(function (this: typeof globalThis, handle: number) {
+      expect(this).toBe(globalThis)
+      expect(handle).toBe(7)
+    })
+    vi.stubGlobal('requestAnimationFrame', requestFrame)
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame)
+
+    try {
+      const onMinutes = vi.fn()
+      const batcher = new ObservationTimeWheelBatcher(onMinutes)
+
+      batcher.enqueue('nextMinute')
+      expect(scheduledFrame).not.toBeNull()
+      if (scheduledFrame) scheduledFrame(0)
+      expect(onMinutes).toHaveBeenCalledWith(1)
+
+      batcher.enqueue('previousMinute')
+      batcher.reset()
+      expect(cancelFrame).toHaveBeenCalledOnce()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('publishes all wheel steps once in the next animation frame', () => {
+    const scheduledFrames: FrameRequestCallback[] = []
+    const onMinutes = vi.fn()
+    const batcher = new ObservationTimeWheelBatcher(
+      onMinutes,
+      (callback) => {
+        scheduledFrames.push(callback)
+        return scheduledFrames.length
+      },
+      vi.fn(),
+    )
+
+    for (let index = 0; index < 12; index += 1) batcher.enqueue('nextMinute')
+
+    expect(onMinutes).not.toHaveBeenCalled()
+    expect(scheduledFrames).toHaveLength(1)
+    scheduledFrames[0](0)
+    expect(onMinutes).toHaveBeenCalledOnce()
+    expect(onMinutes).toHaveBeenCalledWith(12)
+  })
+
+  it('cancels a pending frame when reset', () => {
+    const cancelFrame = vi.fn()
+    const onMinutes = vi.fn()
+    const batcher = new ObservationTimeWheelBatcher(onMinutes, () => 7, cancelFrame)
+
+    batcher.enqueue('previousMinute')
+    batcher.reset()
+
+    expect(cancelFrame).toHaveBeenCalledWith(7)
+    expect(onMinutes).not.toHaveBeenCalled()
   })
 })
 

@@ -6,6 +6,7 @@ import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
 import { selectLocalizedName } from '../features/sky-map/localizedName'
 import {
+  ObservationTimeWheelBatcher,
   OBSERVATION_TIME_PRESETS,
   OBSERVATION_TIME_STEPS,
   accumulateObservationTimeWheel,
@@ -90,6 +91,7 @@ let targetSearchTimer: ReturnType<typeof setTimeout> | null = null
 let targetSearchSequence = 0
 let timeWheelResetTimer: ReturnType<typeof setTimeout> | null = null
 let accumulatedTimeWheelDelta = 0
+let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
@@ -130,6 +132,7 @@ watch(
 )
 
 onMounted(() => {
+  timeWheelBatcher = new ObservationTimeWheelBatcher(applyObservationMinuteDelta)
   window.addEventListener('wheel', handlePageWheel, { passive: false })
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   document.addEventListener('keydown', handleFullscreenKeydown)
@@ -145,6 +148,8 @@ onBeforeUnmount(() => {
   if (targetSearchTimer) clearTimeout(targetSearchTimer)
   targetSearchSequence += 1
   if (timeWheelResetTimer) clearTimeout(timeWheelResetTimer)
+  timeWheelBatcher?.reset()
+  timeWheelBatcher = null
   calculationScheduler?.dispose()
   calculationScheduler = null
   const client = workerClient
@@ -226,6 +231,7 @@ function scheduleCalculation(): void {
 }
 
 function useTimePreset(preset: ObservationTimePreset): void {
+  resetPendingTimeWheel()
   activeTimePreset.value = preset
   controls.observedAt = localDateTimeValue(observationTimeForPreset(preset))
 }
@@ -235,6 +241,7 @@ function useCustomTime(): void {
 }
 
 function adjustObservationTime(step: ObservationTimeStep): void {
+  resetPendingTimeWheel()
   const current = new Date(controls.observedAt)
   if (Number.isNaN(current.getTime())) return
   activeTimePreset.value = 'custom'
@@ -257,7 +264,23 @@ function handlePageWheel(event: WheelEvent): void {
     accumulatedTimeWheelDelta = 0
     timeWheelResetTimer = null
   }, TIME_WHEEL_RESET_MS)
-  if (result.step) adjustObservationTime(result.step)
+  if (!result.step) return
+  timeWheelBatcher?.enqueue(result.step)
+}
+
+function applyObservationMinuteDelta(minuteDelta: number): void {
+  const current = new Date(controls.observedAt)
+  if (Number.isNaN(current.getTime())) return
+  current.setMinutes(current.getMinutes() + minuteDelta)
+  activeTimePreset.value = 'custom'
+  controls.observedAt = localDateTimeValue(current)
+}
+
+function resetPendingTimeWheel(): void {
+  if (timeWheelResetTimer) clearTimeout(timeWheelResetTimer)
+  timeWheelResetTimer = null
+  timeWheelBatcher?.reset()
+  accumulatedTimeWheelDelta = 0
 }
 
 function handleFullscreenChange(): void {
