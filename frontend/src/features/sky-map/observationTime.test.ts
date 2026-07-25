@@ -85,10 +85,10 @@ describe('accumulateObservationTimeWheel', () => {
 
 describe('ObservationTimeWheelBatcher', () => {
   it('keeps the browser frame functions bound to the global scope', () => {
-    let scheduledFrame: FrameRequestCallback | null = null
+    const scheduledFrames: FrameRequestCallback[] = []
     const requestFrame = vi.fn(function (this: typeof globalThis, callback: FrameRequestCallback) {
       expect(this).toBe(globalThis)
-      scheduledFrame = callback
+      scheduledFrames.push(callback)
       return 7
     })
     const cancelFrame = vi.fn(function (this: typeof globalThis, handle: number) {
@@ -103,8 +103,8 @@ describe('ObservationTimeWheelBatcher', () => {
       const batcher = new ObservationTimeWheelBatcher(onMinutes)
 
       batcher.enqueue('nextMinute')
-      expect(scheduledFrame).not.toBeNull()
-      if (scheduledFrame) scheduledFrame(0)
+      expect(scheduledFrames).toHaveLength(1)
+      scheduledFrames[0](0)
       expect(onMinutes).toHaveBeenCalledWith(1)
 
       batcher.enqueue('previousMinute')
