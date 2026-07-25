@@ -151,6 +151,7 @@ export interface SkyCulturePack {
   descriptions: Array<{ language: string; value: string; sourceId: string }>
   sources: SkyContentSource[]
   starNames: StarNameRecord[]
+  artworkAnchorObjectIds?: string[]
   figures: CultureFigureRecord[]
   groups: CultureGroupRecord[]
   regions: CultureRegionRecord[]
@@ -257,6 +258,14 @@ export interface ComputedStar extends HorizontalCoordinate {
   astrometrySource: AstrometrySource
 }
 
+/**
+ * A culture-defined star position retained for figure artwork and geometry.
+ * It is intentionally independent from the user's limiting magnitude.
+ */
+export interface ComputedCultureAnchorStar extends HorizontalCoordinate {
+  hipId: number
+}
+
 export interface ComputedCultureFigure {
   id: string
   type: CultureFigureType
@@ -324,6 +333,7 @@ export interface SkyFrame {
   cultureId: string
   interfaceLanguage: string
   stars: ComputedStar[]
+  cultureAnchorStars: ComputedCultureAnchorStar[]
   cultureFigures: ComputedCultureFigure[]
   cultureRegions: ComputedCultureRegion[]
   starLabels: ComputedStarLabel[]

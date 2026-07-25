@@ -16,7 +16,7 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const PACK_VERSION = "2026.07.4";
+const PACK_VERSION = "2026.07.5";
 const IMPORTED_AT = "2026-07-24";
 const STELLARIUM_COMMIT = "014fbb5e59233d133c22f9811af96b67d05a95c9";
 const D3_CELESTIAL_COMMIT = "7e720a3de062059d4c5400a379146a601d9010e0";
@@ -438,6 +438,11 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseC
       sourceIds: [stellariumSourceId],
     };
   }).sort((left, right) => left.iauCode.localeCompare(right.iauCode));
+  const artworkAnchorObjectIds = [...new Set(
+    index.constellations.flatMap((figure) => (figure.image?.anchors ?? [])
+      .filter((anchor) => Number.isInteger(anchor.hip))
+      .map((anchor) => `HIP:${anchor.hip}`)),
+  )].sort(compareHipIds);
   const figureByIau = new Map(figures.map((figure) => [figure.iauCode, figure]));
 
   const polygonsByIau = new Map();
@@ -527,6 +532,7 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseC
     ],
     sources,
     starNames,
+    artworkAnchorObjectIds,
     figures,
     groups: [
       {
@@ -872,7 +878,10 @@ function compareHipIds(left, right) {
 }
 
 function collectCultureObjectIds(culture) {
-  const objectIds = new Set(culture.starNames.map((record) => record.objectId));
+  const objectIds = new Set([
+    ...culture.starNames.map((record) => record.objectId),
+    ...(culture.artworkAnchorObjectIds ?? []),
+  ]);
   for (const figure of culture.figures) {
     for (const path of figure.paths) {
       for (const objectId of path) objectIds.add(objectId);

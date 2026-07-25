@@ -463,7 +463,7 @@ function drawCultureArtwork(
     return
   }
 
-  const starsByHip = new Map(props.frame.stars.map((star) => [star.hipId, star]))
+  const starsByHip = new Map(props.frame.cultureAnchorStars.map((star) => [star.hipId, star]))
   context.globalAlpha = 0.48
   for (const artwork of westernCultureArtwork) {
     const anchors = artwork.anchors.slice(0, 3).map((anchor) => {

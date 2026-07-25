@@ -8,6 +8,7 @@ import {
   Rotation_EQJ_HOR,
 } from 'astronomy-engine'
 import type {
+  ComputedCultureAnchorStar,
   ComputedCultureFigure,
   ComputedCultureRegion,
   ComputedFeaturedPattern,
@@ -74,6 +75,7 @@ interface PreparedSkyCulture {
   culture: SkyCulturePack
   regionVectors: CartesianVector[][][]
   starIndexes: Int32Array
+  artworkAnchorStarIndexes: Int32Array
   localizedByLanguage: Map<string, LocalizedSkyCulture>
 }
 
@@ -142,12 +144,18 @@ function prepareSkyCulture(
       culture.starNames[recordIndex].objectId,
     ) ?? -1
   }
+  const artworkAnchorStarIndexes = new Set<number>()
+  for (const objectId of culture.artworkAnchorObjectIds ?? []) {
+    const starIndex = preparedCatalog.starIndexById.get(objectId)
+    if (starIndex !== undefined) artworkAnchorStarIndexes.add(starIndex)
+  }
   return {
     culture,
     regionVectors: culture.regions.map((region) => region.geometry.coordinates.flatMap((polygon) =>
       polygon.map((ring) => ring.map(equatorialToVector)),
     )),
     starIndexes,
+    artworkAnchorStarIndexes: Int32Array.from(artworkAnchorStarIndexes).sort(),
     localizedByLanguage: new Map(),
   }
 }
@@ -246,6 +254,12 @@ function calculatePreparedSkyFrame(
     parameters.interfaceLanguage,
     coordinateForObject,
   )
+  const cultureAnchorStars = calculateCultureAnchorStars(
+    preparedCatalog,
+    preparedCulture.artworkAnchorStarIndexes,
+    coordinateForIndex,
+    parameters.minimumAltitudeDeg,
+  )
   const cultureRegions = calculateCultureRegions(
     preparedCulture,
     parameters.interfaceLanguage,
@@ -276,12 +290,28 @@ function calculatePreparedSkyFrame(
     cultureId: culture.id,
     interfaceLanguage: parameters.interfaceLanguage,
     stars,
+    cultureAnchorStars,
     cultureFigures,
     cultureRegions,
     starLabels,
     featuredPatterns,
     solarSystemBodies,
   }
+}
+
+function calculateCultureAnchorStars(
+  preparedCatalog: PreparedSkyCatalog,
+  starIndexes: Int32Array,
+  coordinateForIndex: (starIndex: number) => HorizontalCoordinate,
+  minimumAltitudeDeg: number,
+): ComputedCultureAnchorStar[] {
+  const anchors: ComputedCultureAnchorStar[] = []
+  for (const starIndex of starIndexes) {
+    const coordinate = coordinateForIndex(starIndex)
+    if (coordinate.altitudeDeg < minimumAltitudeDeg) continue
+    anchors.push({ hipId: preparedCatalog.catalog.stars[starIndex].hipId, ...coordinate })
+  }
+  return anchors
 }
 
 function calculateCultureFigures(

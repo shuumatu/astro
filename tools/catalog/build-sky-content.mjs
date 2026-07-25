@@ -24,7 +24,7 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const VERSION = "2026.07.4";
+const VERSION = "2026.07.5";
 const PUBLISHED_AT = "2026-07-25T00:00:00Z";
 const WESTERN_STARS_WITHOUT_CHINESE_NAMES = new Set([
   "HIP:24003",

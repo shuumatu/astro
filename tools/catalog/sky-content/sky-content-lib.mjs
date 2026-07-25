@@ -41,6 +41,17 @@ export function validateCulturePack(pack, { knownObjectIds } = {}) {
     validateNames(record.names, sources, `${label}.names`);
   }
 
+  if (pack.artworkAnchorObjectIds !== undefined) {
+    const artworkAnchorIds = new Set();
+    requireArray(pack.artworkAnchorObjectIds, `${pack.id}.artworkAnchorObjectIds`);
+    for (const [index, objectId] of pack.artworkAnchorObjectIds.entries()) {
+      const label = `${pack.id}.artworkAnchorObjectIds[${index}]`;
+      requireHip(objectId, label);
+      requireKnownObject(objectId, knownObjectIds, label);
+      unique(artworkAnchorIds, objectId, `${pack.id} has duplicate artwork anchor ${objectId}`);
+    }
+  }
+
   const figures = new Map();
   requireArray(pack.figures, `${pack.id}.figures`);
   for (const [index, figure] of pack.figures.entries()) {

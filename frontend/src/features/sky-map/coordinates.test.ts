@@ -68,6 +68,34 @@ describe('calculateSkyFrame', () => {
     expect(frame.stars.map((star) => star.id)).toEqual(['HIP:1'])
   })
 
+  it('retains culture artwork anchors below the limiting magnitude', () => {
+    const catalog = sampleCatalog([
+      sampleStar({ id: 'HIP:1', hipId: 1, visualMagnitude: 1 }),
+      sampleStar({ id: 'HIP:2', hipId: 2, visualMagnitude: 5 }),
+    ])
+    const culture = sampleCulture({
+      figures: [{
+        id: 'test-figure',
+        type: 'constellation',
+        names: [sampleName('en', 'Test figure')],
+        paths: [['HIP:1']],
+        labelAnchor: { objectId: 'HIP:1' },
+        rank: 1,
+        groupIds: [],
+        sourceIds: ['test-source'],
+      }],
+      artworkAnchorObjectIds: ['HIP:2'],
+    })
+    const frame = calculate(catalog, {
+      ...parameters('2026-07-23T14:00:00.000Z'),
+      magnitudeLimit: 2,
+      minimumAltitudeDeg: -90,
+    }, culture)
+
+    expect(frame.stars.map((star) => star.id)).toEqual(['HIP:1'])
+    expect(frame.cultureAnchorStars.map((star) => star.hipId)).toEqual([2])
+  })
+
   it('calculates topocentric positions and illumination for solar system bodies', () => {
     const observedAt = '2026-07-23T14:00:00.000Z'
     const location = { latitudeDeg: 22.5431, longitudeDeg: 114.0579, elevationMeters: 20 }

@@ -41,6 +41,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/starNameRecord" }
     },
+    "artworkAnchorObjectIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/objectId" }
+    },
     "figures": {
       "type": "array",
       "items": { "$ref": "#/$defs/figure" }
