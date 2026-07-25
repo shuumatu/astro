@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  MAX_SKY_ZOOM,
   centerSkyViewOn,
   defaultSkyViewTransform,
   panSkyView,
@@ -26,6 +27,12 @@ describe('sky view transforms', () => {
 
     const reset = zoomSkyViewAt(panned, 0.5, { x: 100, y: 100 }, 100, 100)
     expect(reset).toEqual(defaultSkyViewTransform())
+  })
+
+  it('allows detailed inspection up to the configured maximum zoom', () => {
+    const zoomed = zoomSkyViewAt(defaultSkyViewTransform(), 99, { x: 100, y: 100 }, 100, 90)
+
+    expect(zoomed.scale).toBe(MAX_SKY_ZOOM)
   })
 
   it('centers an inner target and clamps a horizon target to the navigable edge', () => {

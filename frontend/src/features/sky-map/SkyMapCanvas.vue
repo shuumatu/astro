@@ -133,12 +133,25 @@ const skyTextLabels = computed(() => {
   const { size, center, radius } = geometry.value
   const selectedStarId = props.selectedObject?.kind === 'star' ? props.selectedObject.object.id : null
   const patternMembers = new Set(props.frame.featuredPatterns.flatMap((pattern) => pattern.memberObjectIds))
+  const hardProtectedStarBounds: LabelBounds[] = []
+  for (const star of props.frame.stars) {
+    const selected = star.id === selectedStarId
+    const patternMember = patternMembers.has(star.id)
+    if (!selected && !patternMember) continue
+    const point = transformSkyPoint(
+      projectHorizontal(star, radius, center),
+      viewTransform.value,
+      center,
+    )
+    if (!isPointInViewport(point, size, 12)) continue
+    const padding = selected ? 10 : 7
+    hardProtectedStarBounds.push(pointBounds(point, screenStarRadius(star.visualMagnitude) + padding))
+  }
   const candidates: SkyTextLabel[] = []
 
   if (props.showCultureLabels) {
     for (const figure of props.frame.cultureFigures) {
       if (!figure.labelPosition || figure.labelPosition.altitudeDeg < 5) continue
-      if (figure.rank === 3 && viewTransform.value.scale < 2.5) continue
       const point = transformSkyPoint(
         projectHorizontal(figure.labelPosition, radius, center),
         viewTransform.value,
@@ -152,7 +165,7 @@ const skyTextLabels = computed(() => {
         x: point.x,
         y: point.y,
         anchor: 'middle',
-        priority: figure.rank === 1 ? 50_000 : figure.rank === 2 ? 28_000 : 18_000,
+        priority: figure.rank === 1 ? 24_000 : figure.rank === 2 ? 19_000 : 14_000,
       })
     }
   }
@@ -211,9 +224,24 @@ const skyTextLabels = computed(() => {
   for (const candidate of candidates) {
     const alwaysVisible = candidate.priority >= 90_000
     if (candidate.kind === 'star' && !alwaysVisible && ordinaryCount >= ordinaryLimit) continue
-    const bounds = labelBounds(candidate, size)
-    if (!bounds || occupied.some((other) => intersects(bounds, other))) continue
-    accepted.push(candidate)
+    if (candidate.kind === 'culture') {
+      const attempts = labelPlacementCandidates(candidate, size)
+      const placement = attempts.find((attempt) => {
+        const bounds = labelBounds(attempt, size)
+        return bounds && !hardProtectedStarBounds.some((star) => intersects(bounds, star))
+      }) ?? attempts.find((attempt) => labelBounds(attempt, size))
+      if (placement) accepted.push(placement)
+      continue
+    }
+    const placement = labelPlacementCandidates(candidate, size).find((attempt) => {
+      const bounds = labelBounds(attempt, size)
+      if (!bounds || occupied.some((other) => intersects(bounds, other))) return false
+      return true
+    })
+    if (!placement) continue
+    const bounds = labelBounds(placement, size)
+    if (!bounds) continue
+    accepted.push(placement)
     occupied.push(bounds)
     if (candidate.kind === 'star' && !alwaysVisible) ordinaryCount += 1
   }
@@ -682,6 +710,28 @@ function hitTestCollection(
 
 function isPointInViewport(point: ProjectedPoint, size: number, margin: number): boolean {
   return point.x >= margin && point.x <= size - margin && point.y >= margin && point.y <= size - margin
+}
+
+function pointBounds(point: ProjectedPoint, radius: number): LabelBounds {
+  return {
+    left: point.x - radius,
+    right: point.x + radius,
+    top: point.y - radius,
+    bottom: point.y + radius,
+  }
+}
+
+function labelPlacementCandidates(label: SkyTextLabel, viewportSize: number): SkyTextLabel[] {
+  if (label.kind !== 'culture') return [label]
+  const offset = Math.max(20, viewportSize * 0.035)
+  return [
+    { x: 0, y: -offset },
+    { x: offset, y: -offset },
+    { x: -offset, y: -offset },
+    { x: offset, y: 0 },
+    { x: -offset, y: 0 },
+    { x: 0, y: offset },
+  ].map(({ x, y }) => ({ ...label, x: label.x + x, y: label.y + y }))
 }
 
 function labelBounds(label: SkyTextLabel, viewportSize: number): LabelBounds | null {
