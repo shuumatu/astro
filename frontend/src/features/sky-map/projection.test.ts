@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
+import {
+  clipAndProjectHorizonSegment,
+  clipProjectedSegmentToCircle,
+  projectHorizontal,
+} from './projection'
 
 describe('projectHorizontal', () => {
   it('places zenith at the center and cardinal horizon points around the rim', () => {
@@ -48,5 +52,34 @@ describe('clipAndProjectHorizonSegment', () => {
 
     expect(segment?.end.x).toBeCloseTo(100, 12)
     expect(segment?.end.y).toBeCloseTo(0, 12)
+  })
+})
+
+describe('clipProjectedSegmentToCircle', () => {
+  it('keeps a visual line straight while clipping its off-map endpoint', () => {
+    const start = { x: 140, y: 70 }
+    const end = { x: 260, y: 160 }
+    const segment = clipProjectedSegmentToCircle(start, end, 100)
+
+    expect(segment).not.toBeNull()
+    expect(segment!.start).toEqual(start)
+    expect(Math.hypot(segment!.end.x - 100, segment!.end.y - 100)).toBeCloseTo(100, 6)
+    const originalSlope = (end.y - start.y) / (end.x - start.x)
+    const clippedSlope = (segment!.end.y - start.y) / (segment!.end.x - start.x)
+    expect(clippedSlope).toBeCloseTo(originalSlope, 10)
+  })
+
+  it('keeps only the portion of an outside-to-outside line crossing the map', () => {
+    expect(clipProjectedSegmentToCircle(
+      { x: -20, y: 100 },
+      { x: 220, y: 100 },
+      100,
+    )).toEqual({ start: { x: 0, y: 100 }, end: { x: 200, y: 100 } })
+
+    expect(clipProjectedSegmentToCircle(
+      { x: -20, y: 10 },
+      { x: -10, y: 20 },
+      100,
+    )).toBeNull()
   })
 })

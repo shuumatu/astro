@@ -2,7 +2,11 @@
 import { Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { clipAndProjectHorizonSegment, projectHorizontal } from './projection'
+import {
+  clipAndProjectHorizonSegment,
+  clipProjectedSegmentToCircle,
+  projectHorizontal,
+} from './projection'
 import type { ProjectedPoint } from './projection'
 import { layoutSolarSystemLabels } from './solarSystemLabels'
 import { starColor } from './starColor'
@@ -583,13 +587,34 @@ function drawFeaturedPatterns(
   if (!props.frame || props.frame.featuredPatterns.length === 0) return
   context.beginPath()
   for (const pattern of props.frame.featuredPatterns) {
-    addHorizontalLinesToPath(context, pattern.lines, center, radius)
+    addFeaturedPatternLinesToPath(context, pattern.lines, center, radius)
   }
   context.strokeStyle = '#d6ad52'
   context.globalAlpha = 0.92
   context.lineWidth = 1.6 / viewTransform.value.scale
   context.stroke()
   context.globalAlpha = 1
+}
+
+function addFeaturedPatternLinesToPath(
+  context: CanvasRenderingContext2D,
+  lines: Array<Array<{ azimuthDeg: number; altitudeDeg: number }>>,
+  center: number,
+  radius: number,
+): void {
+  for (const line of lines) {
+    for (let index = 1; index < line.length; index += 1) {
+      const segment = clipProjectedSegmentToCircle(
+        projectHorizontal(line[index - 1], radius, center),
+        projectHorizontal(line[index], radius, center),
+        radius,
+        center,
+      )
+      if (!segment) continue
+      context.moveTo(segment.start.x, segment.start.y)
+      context.lineTo(segment.end.x, segment.end.y)
+    }
+  }
 }
 
 function addHorizontalLinesToPath(
