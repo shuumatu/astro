@@ -11,6 +11,7 @@ import {
 } from './westernCultureArtwork'
 import type { WesternCultureArtwork } from './westernCultureArtwork'
 import type {
+  ComputedCultureFigure,
   ComputedSolarSystemBody,
   ComputedStar,
   SkyFrame,
@@ -300,7 +301,16 @@ const selectedMarker = computed(() => {
   return { ...point, radius: markerRadius }
 })
 
-const hoveredMarker = computed(() => hoveredObject.value
+const selectedCultureFigureId = computed(() => props.selectedObject?.kind === 'cultureFigure'
+  ? props.selectedObject.object.id
+  : null)
+
+const selectedCultureFigure = computed(() => {
+  if (!props.frame || !selectedCultureFigureId.value) return null
+  return props.frame.cultureFigures.find((figure) => figure.id === selectedCultureFigureId.value) ?? null
+})
+
+const hoveredMarker = computed(() => hoveredObject.value && hoveredObject.value.selection.kind !== 'cultureFigure'
   ? { ...hoveredObject.value.point, radius: hoveredObject.value.radius }
   : null)
 
@@ -311,6 +321,7 @@ watch(
     props.showCultureBoundaries,
     props.showCultureArtwork,
     props.showSolarSystemBodies,
+    props.selectedObject,
     viewTransform.value,
   ] as const,
   scheduleDraw,
@@ -373,6 +384,7 @@ function draw(): void {
   if (props.frame && props.showCultureBoundaries) drawCultureRegions(context, center, radius)
   if (props.frame && props.showCultureArtwork) drawCultureArtwork(context, center, radius)
   if (props.frame && props.showCultureLines) drawCultureFigures(context, center, radius)
+  if (props.frame) drawSelectedCultureFigure(context, center, radius)
   if (props.frame) drawFeaturedPatterns(context, center, radius)
   renderedStars = props.frame ? drawStars(context, center, radius) : []
   renderedSolarSystemBodies = props.frame && props.showSolarSystemBodies
@@ -525,6 +537,43 @@ function drawCultureFigures(
   context.globalAlpha = 1
 }
 
+function drawSelectedCultureFigure(
+  context: CanvasRenderingContext2D,
+  center: number,
+  radius: number,
+): void {
+  const figure = selectedCultureFigure.value
+  if (!props.frame || !figure) return
+  const inverseScale = 1 / viewTransform.value.scale
+  const regions = props.frame.cultureRegions.filter((region) => region.figureId === figure.id)
+
+  context.save()
+  context.beginPath()
+  for (const region of regions) addVisibleRingsToPath(context, region.rings, center, radius)
+  context.fillStyle = '#72dccd'
+  context.globalAlpha = 0.1
+  context.fill()
+
+  context.beginPath()
+  for (const region of regions) addHorizontalLinesToPath(context, region.rings, center, radius)
+  context.setLineDash([5 * inverseScale, 3 * inverseScale])
+  context.strokeStyle = '#f4d47a'
+  context.globalAlpha = 0.98
+  context.lineWidth = 2.1 * inverseScale
+  context.stroke()
+  context.setLineDash([])
+
+  context.beginPath()
+  addHorizontalLinesToPath(context, figure.lines, center, radius)
+  context.strokeStyle = '#d8fff6'
+  context.shadowColor = '#57d9c4'
+  context.shadowBlur = 7 * inverseScale
+  context.globalAlpha = 1
+  context.lineWidth = 2.7 * inverseScale
+  context.stroke()
+  context.restore()
+}
+
 function drawFeaturedPatterns(
   context: CanvasRenderingContext2D,
   center: number,
@@ -555,6 +604,21 @@ function addHorizontalLinesToPath(
       context.moveTo(segment.start.x, segment.start.y)
       context.lineTo(segment.end.x, segment.end.y)
     }
+  }
+}
+
+function addVisibleRingsToPath(
+  context: CanvasRenderingContext2D,
+  rings: Array<Array<{ azimuthDeg: number; altitudeDeg: number }>>,
+  center: number,
+  radius: number,
+): void {
+  for (const ring of rings) {
+    if (ring.length < 3 || ring.some((point) => point.altitudeDeg < 0)) continue
+    const [first, ...rest] = ring.map((point) => projectHorizontal(point, radius, center))
+    context.moveTo(first.x, first.y)
+    for (const point of rest) context.lineTo(point.x, point.y)
+    context.closePath()
   }
 }
 
@@ -683,6 +747,18 @@ function resetView(): void {
 }
 
 function focusObject(selection: SkyObjectSelection): boolean {
+  if (selection.kind === 'cultureFigure') {
+    const figure = props.frame?.cultureFigures.find(({ id }) => id === selection.object.id)
+    if (!figure?.labelPosition) return false
+    const { center, radius } = geometry.value
+    viewTransform.value = centerSkyViewOn(
+      projectHorizontal(figure.labelPosition, radius, center),
+      Math.max(2.25, viewTransform.value.scale),
+      center,
+      radius,
+    )
+    return true
+  }
   const object = resolveSelection(selection)
   if (!object) return false
   const { center, radius } = geometry.value
@@ -772,7 +848,43 @@ function eventPoint(event: MouseEvent): ProjectedPoint | null {
 
 function hitTest(x: number, y: number): RenderedSkyObject | null {
   return hitTestCollection(renderedSolarSystemBodies, x, y, 8)
+    ?? hitTestCultureLabels(x, y)
     ?? hitTestCollection(renderedStars, x, y, 6)
+}
+
+function hitTestCultureLabels(x: number, y: number): RenderedSkyObject | null {
+  if (!props.frame) return null
+  const { size } = geometry.value
+  const labels = cultureLabels.value
+    .map((label) => ({
+      figure: props.frame!.cultureFigures.find((candidate) => `culture-${candidate.id}` === label.key),
+      bounds: labelBounds(label, size),
+      priority: label.priority,
+      point: { x: label.x, y: label.y },
+    }))
+    .filter((candidate): candidate is {
+      figure: ComputedCultureFigure
+      bounds: LabelBounds
+      priority: number
+      point: ProjectedPoint
+    } => candidate.figure !== undefined && candidate.bounds !== null)
+    .filter(({ bounds }) => pointInBounds({ x, y }, bounds))
+    .sort((left, right) => right.priority - left.priority)
+  if (labels[0]) return cultureFigureHit(labels[0].figure, labels[0].point)
+
+  return null
+}
+
+function cultureFigureHit(figure: ComputedCultureFigure, point: ProjectedPoint): RenderedSkyObject {
+  return {
+    selection: { kind: 'cultureFigure', object: figure },
+    point,
+    radius: 0,
+  }
+}
+
+function pointInBounds(point: ProjectedPoint, bounds: LabelBounds): boolean {
+  return point.x >= bounds.left && point.x <= bounds.right && point.y >= bounds.top && point.y <= bounds.bottom
 }
 
 function hitTestCollection(
@@ -886,7 +998,7 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
         v-for="label in cultureLabels"
         :key="label.key"
         class="culture-label"
-        :class="`rank-${label.rank}`"
+        :class="[`rank-${label.rank}`, { selected: label.key === `culture-${selectedCultureFigureId}` }]"
         :x="label.x"
         :y="label.y"
         :text-anchor="label.anchor"
@@ -1021,11 +1133,12 @@ text {
 
 .culture-label {
   fill: #8ab8b3;
-  font-size: clamp(8px, 1.4cqw, 12px);
+  font-size: clamp(10px, 1.8cqw, 16px);
 }
 
 .culture-label.rank-2 { fill: #668f8c; }
 .culture-label.rank-3 { fill: #557576; }
+.culture-label.selected { fill: #f6f8e7; font-size: clamp(12px, 2cqw, 18px); font-weight: 700; }
 
 .pattern-label {
   fill: #f1c969;
