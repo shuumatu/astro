@@ -27,6 +27,10 @@ import static com.astro.content.catalog.CatalogResponses.Summary;
 @Service
 public class CatalogService {
     private static final Pattern HTML_TAG = Pattern.compile("<\\/?[A-Za-z][^>]*>");
+    private static final Pattern STAR_KEY = Pattern.compile("HIP:[1-9][0-9]*");
+    private static final Pattern SOLAR_SYSTEM_KEY = Pattern.compile("solar-system:[a-z0-9]+(?:-[a-z0-9]+)*");
+    private static final Pattern CULTURE_FIGURE_KEY = Pattern.compile("culture:[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*");
+    private static final Pattern FEATURED_PATTERN_KEY = Pattern.compile("featured-pattern:[a-z0-9]+(?:-[a-z0-9]+)*");
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() { };
 
     private final CatalogEntryRepository repository;
@@ -67,18 +71,27 @@ public class CatalogService {
     }
 
     @Transactional(readOnly = true)
-    public AdminPage listAdmin(int page, int size) {
-        Page<CatalogEntry> entries = repository.findAll(PageRequest.of(page, size));
+    public AdminPage listAdmin(CatalogObjectType objectType, String query, int page, int size) {
+        Page<CatalogEntry> entries = repository.findAdmin(
+                objectType,
+                query == null ? "" : query.trim(),
+                PageRequest.of(page, size));
         List<AdminSummary> items = entries.getContent().stream().map(this::adminSummary).toList();
         return new AdminPage(items, page, size, entries.getTotalElements(), entries.getTotalPages());
     }
 
     @Transactional
     public AdminSummary create(CreateCatalogEntryRequest request) {
+        validateObjectKey(request.objectType(), request.objectKey());
         if (repository.existsByObjectTypeAndObjectKey(request.objectType(), request.objectKey())) {
             throw new CatalogConflictException("A catalog entry already exists for " + request.objectKey());
         }
         return adminSummary(repository.save(new CatalogEntry(request.objectType(), request.objectKey())));
+    }
+
+    @Transactional
+    public void delete(UUID entryId) {
+        repository.delete(findById(entryId));
     }
 
     @Transactional
@@ -231,6 +244,18 @@ public class CatalogService {
     private void validateRestrictedMarkdown(String markdown) {
         if (HTML_TAG.matcher(markdown).find()) {
             throw new CatalogValidationException("Raw HTML is not allowed in catalog Markdown");
+        }
+    }
+
+    private void validateObjectKey(CatalogObjectType objectType, String objectKey) {
+        Pattern expected = switch (objectType) {
+            case STAR -> STAR_KEY;
+            case SOLAR_SYSTEM_BODY -> SOLAR_SYSTEM_KEY;
+            case CULTURE_FIGURE -> CULTURE_FIGURE_KEY;
+            case FEATURED_PATTERN -> FEATURED_PATTERN_KEY;
+        };
+        if (!expected.matcher(objectKey).matches()) {
+            throw new CatalogValidationException("Object key does not match type " + objectType.value());
         }
     }
 

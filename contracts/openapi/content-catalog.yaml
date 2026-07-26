@@ -42,6 +42,11 @@ paths:
     get:
       operationId: listAdminCatalogEntries
       security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: objectType, in: query, schema: { $ref: '#/components/schemas/ObjectType' } }
+        - { name: query, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
       responses:
         '200': { description: Entries including draft translation status. }
         '401': { description: Missing or invalid token. }
@@ -62,6 +67,15 @@ paths:
       responses:
         '200': { description: Entry created. }
         '409': { description: The stable key already exists. }
+  /api/content/admin/catalog-entries/{entryId}:
+    delete:
+      operationId: deleteCatalogEntry
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: entryId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Entry and all translations deleted. }
+        '404': { description: Entry not found. }
   /api/content/admin/catalog-entries/{entryId}/translations/{locale}:
     put:
       operationId: saveCatalogTranslationDraft

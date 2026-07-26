@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -151,6 +152,49 @@ class CatalogApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.objectType").value("featured-pattern"))
                 .andExpect(jsonPath("$.title").value("夏季大三角"));
+    }
+
+    @Test
+    void filtersAdminEntriesAndDeletesAnEntry() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"objectType":"star","objectKey":"HIP:654321"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        String entryId = objectMapper.readTree(created.getResponse().getContentAsByteArray()).path("id").asText();
+
+        mockMvc.perform(get("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .queryParam("objectType", "star")
+                        .queryParam("query", "654321"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].objectKey").value("HIP:654321"));
+
+        mockMvc.perform(delete("/api/content/admin/catalog-entries/{entryId}", entryId)
+                        .with(adminJwt()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .queryParam("query", "654321"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void rejectsObjectKeysThatDoNotMatchTheirType() throws Exception {
+        mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"objectType":"featured-pattern","objectKey":"HIP:91262"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CATALOG_REQUEST_INVALID"));
     }
 
     @Test

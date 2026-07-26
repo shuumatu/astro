@@ -50,8 +50,17 @@ export function loginAdmin(username: string, password: string): Promise<AdminSes
   })
 }
 
-export function loadAdminCatalog(token: string): Promise<AdminCatalogPage> {
-  return adminRequest<AdminCatalogPage>('/content/admin/catalog-entries?size=100', token)
+export function loadAdminCatalog(
+  token: string,
+  options: { objectType?: CatalogObjectType | ''; query?: string; page?: number; size?: number } = {},
+): Promise<AdminCatalogPage> {
+  const parameters = new URLSearchParams({
+    page: String(options.page ?? 0),
+    size: String(options.size ?? 50),
+    query: options.query?.trim() ?? '',
+  })
+  if (options.objectType) parameters.set('objectType', options.objectType)
+  return adminRequest<AdminCatalogPage>(`/content/admin/catalog-entries?${parameters}`, token)
 }
 
 export function createAdminCatalogEntry(
@@ -63,6 +72,13 @@ export function createAdminCatalogEntry(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ objectType, objectKey }),
+  })
+}
+
+export async function deleteAdminCatalogEntry(token: string, entryId: string): Promise<void> {
+  await requestRaw(`/content/admin/catalog-entries/${entryId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
   })
 }
 

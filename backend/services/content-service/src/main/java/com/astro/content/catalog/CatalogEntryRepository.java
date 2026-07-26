@@ -15,6 +15,27 @@ public interface CatalogEntryRepository extends JpaRepository<CatalogEntry, UUID
     boolean existsByObjectTypeAndObjectKey(CatalogObjectType objectType, String objectKey);
 
     @Query(value = """
+            select distinct e from CatalogEntry e
+            left join e.translations t
+            where (:objectType is null or e.objectType = :objectType)
+              and (:query = '' or lower(e.objectKey) like lower(concat('%', :query, '%'))
+                or lower(t.title) like lower(concat('%', :query, '%')))
+            order by e.updatedAt desc
+            """,
+            countQuery = """
+            select count(distinct e) from CatalogEntry e
+            left join e.translations t
+            where (:objectType is null or e.objectType = :objectType)
+              and (:query = '' or lower(e.objectKey) like lower(concat('%', :query, '%'))
+                or lower(t.title) like lower(concat('%', :query, '%')))
+            """)
+    Page<CatalogEntry> findAdmin(
+            @Param("objectType") CatalogObjectType objectType,
+            @Param("query") String query,
+            Pageable pageable
+    );
+
+    @Query(value = """
             select e from CatalogEntry e
             where (:objectType is null or e.objectType = :objectType)
               and exists (
