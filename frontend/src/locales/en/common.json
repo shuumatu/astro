@@ -71,6 +71,7 @@
     "constellation": "Constellation",
     "solarSystem": "Solar System bodies",
     "featuredPatterns": "Featured patterns",
+    "memberStars": "Member stars",
     "refraction": "Atmospheric refraction",
     "retry": "Reload",
     "loadFailed": "Sky data could not be loaded",
@@ -132,7 +133,8 @@
     "types": {
       "star": "Star",
       "solar-system-body": "Solar System",
-      "culture-figure": "Constellation"
+      "culture-figure": "Constellation",
+      "featured-pattern": "Featured pattern"
     },
     "loading": "Loading catalog content",
     "loadFailed": "Catalog content is temporarily unavailable",

@@ -233,24 +233,34 @@ const skyTextLabels = computed(() => {
 
   candidates.sort((left, right) => right.priority - left.priority || left.key.localeCompare(right.key))
   const accepted: SkyTextLabel[] = []
+  const cultureBounds: LabelBounds[] = []
+
+  // Constellation names remain visible even when they overlap each other. They
+  // reserve their own areas so optional featured-pattern labels do not cover them.
+  for (const candidate of candidates.filter((candidate) => candidate.kind === 'culture')) {
+    const attempts = labelPlacementCandidates(candidate, size)
+    const placement = attempts.find((attempt) => {
+      const bounds = labelBounds(attempt, size)
+      return bounds && !hardProtectedStarBounds.some((star) => intersects(bounds, star))
+    }) ?? attempts.find((attempt) => labelBounds(attempt, size))
+    if (!placement) continue
+    const bounds = labelBounds(placement, size)
+    if (!bounds) continue
+    accepted.push(placement)
+    cultureBounds.push(bounds)
+  }
+
   const occupied: LabelBounds[] = []
   const ordinaryLimit = Math.min(260, Math.round(42 * viewTransform.value.scale))
   let ordinaryCount = 0
   for (const candidate of candidates) {
+    if (candidate.kind === 'culture') continue
     const alwaysVisible = candidate.priority >= 90_000
     if (candidate.kind === 'star' && !alwaysVisible && ordinaryCount >= ordinaryLimit) continue
-    if (candidate.kind === 'culture') {
-      const attempts = labelPlacementCandidates(candidate, size)
-      const placement = attempts.find((attempt) => {
-        const bounds = labelBounds(attempt, size)
-        return bounds && !hardProtectedStarBounds.some((star) => intersects(bounds, star))
-      }) ?? attempts.find((attempt) => labelBounds(attempt, size))
-      if (placement) accepted.push(placement)
-      continue
-    }
     const placement = labelPlacementCandidates(candidate, size).find((attempt) => {
       const bounds = labelBounds(attempt, size)
       if (!bounds || occupied.some((other) => intersects(bounds, other))) return false
+      if (candidate.kind === 'pattern' && cultureBounds.some((culture) => intersects(bounds, culture))) return false
       return true
     })
     if (!placement) continue
@@ -294,7 +304,7 @@ const solarSystemLabels = computed(() => {
 const selectedMarker = computed(() => {
   if (!props.frame || !props.selectedObject || viewportSize.value === 0) return null
   if (props.selectedObject.kind === 'solarSystemBody' && !props.showSolarSystemBodies) return null
-  if (props.selectedObject.kind === 'cultureFigure') return null
+  if (props.selectedObject.kind === 'cultureFigure' || props.selectedObject.kind === 'featuredPattern') return null
   const object = resolveSelection(props.selectedObject)
   if (!object) return null
   const { size, center, radius } = geometry.value
@@ -315,7 +325,13 @@ const selectedCultureFigure = computed(() => {
   return props.frame.cultureFigures.find((figure) => figure.id === selectedCultureFigureId.value) ?? null
 })
 
-const hoveredMarker = computed(() => hoveredObject.value && hoveredObject.value.selection.kind !== 'cultureFigure'
+const selectedFeaturedPatternId = computed(() => props.selectedObject?.kind === 'featuredPattern'
+  ? props.selectedObject.object.id
+  : null)
+
+const hoveredMarker = computed(() => hoveredObject.value
+  && hoveredObject.value.selection.kind !== 'cultureFigure'
+  && hoveredObject.value.selection.kind !== 'featuredPattern'
   ? { ...hoveredObject.value.point, radius: hoveredObject.value.radius }
   : null)
 
@@ -590,9 +606,11 @@ function drawFeaturedPatterns(
     addFeaturedPatternLinesToPath(context, pattern.lines, center, radius)
   }
   context.strokeStyle = '#d6ad52'
-  context.globalAlpha = 0.92
+  context.globalAlpha = 0.56
   context.lineWidth = 1.6 / viewTransform.value.scale
+  context.setLineDash([6 / viewTransform.value.scale, 4 / viewTransform.value.scale])
   context.stroke()
+  context.setLineDash([])
   context.globalAlpha = 1
 }
 
@@ -764,12 +782,14 @@ function resetView(): void {
 }
 
 function focusObject(selection: SkyObjectSelection): boolean {
-  if (selection.kind === 'cultureFigure') {
-    const figure = props.frame?.cultureFigures.find(({ id }) => id === selection.object.id)
-    if (!figure?.labelPosition) return false
+  if (selection.kind === 'cultureFigure' || selection.kind === 'featuredPattern') {
+    const object = selection.kind === 'cultureFigure'
+      ? props.frame?.cultureFigures.find(({ id }) => id === selection.object.id)
+      : props.frame?.featuredPatterns.find(({ id }) => id === selection.object.id)
+    if (!object?.labelPosition) return false
     const { center, radius } = geometry.value
     viewTransform.value = centerSkyViewOn(
-      projectHorizontal(figure.labelPosition, radius, center),
+      projectHorizontal(object.labelPosition, radius, center),
       Math.max(2.25, viewTransform.value.scale),
       center,
       radius,
@@ -792,7 +812,7 @@ function focusObject(selection: SkyObjectSelection): boolean {
 function resolveSelection(selection: SkyObjectSelection): ComputedStar | ComputedSolarSystemBody | null {
   if (!props.frame) return null
   if (selection.kind === 'star') return props.frame.stars.find(({ id }) => id === selection.object.id) ?? null
-  if (selection.kind === 'cultureFigure') return null
+  if (selection.kind === 'cultureFigure' || selection.kind === 'featuredPattern') return null
   return props.frame.solarSystemBodies.find(({ id }) => id === selection.object.id) ?? null
 }
 
@@ -865,8 +885,32 @@ function eventPoint(event: MouseEvent): ProjectedPoint | null {
 
 function hitTest(x: number, y: number): RenderedSkyObject | null {
   return hitTestCollection(renderedSolarSystemBodies, x, y, 8)
+    ?? hitTestPatternLabels(x, y)
     ?? hitTestCultureLabels(x, y)
     ?? hitTestCollection(renderedStars, x, y, 6)
+}
+
+function hitTestPatternLabels(x: number, y: number): RenderedSkyObject | null {
+  if (!props.frame) return null
+  const { size } = geometry.value
+  const labels = patternLabels.value
+    .map((label) => ({
+      pattern: props.frame!.featuredPatterns.find((candidate) => `pattern-${candidate.id}` === label.key),
+      bounds: labelBounds(label, size),
+      point: { x: label.x, y: label.y },
+    }))
+    .filter((candidate): candidate is {
+      pattern: import('./types').ComputedFeaturedPattern
+      bounds: LabelBounds
+      point: ProjectedPoint
+    } => candidate.pattern !== undefined && candidate.bounds !== null)
+    .filter(({ bounds }) => pointInBounds({ x, y }, bounds))
+  if (!labels[0]) return null
+  return {
+    selection: { kind: 'featuredPattern', object: labels[0].pattern },
+    point: labels[0].point,
+    radius: 0,
+  }
 }
 
 function hitTestCultureLabels(x: number, y: number): RenderedSkyObject | null {
@@ -937,8 +981,19 @@ function pointBounds(point: ProjectedPoint, radius: number): LabelBounds {
 }
 
 function labelPlacementCandidates(label: SkyTextLabel, viewportSize: number): SkyTextLabel[] {
-  if (label.kind !== 'culture') return [label]
   const offset = Math.max(20, viewportSize * 0.035)
+  if (label.kind === 'pattern') {
+    return [
+      { x: 0, y: 0 },
+      { x: 0, y: -offset },
+      { x: offset, y: -offset },
+      { x: -offset, y: -offset },
+      { x: offset, y: offset },
+      { x: -offset, y: offset },
+      { x: 0, y: offset * 1.5 },
+    ].map(({ x, y }) => ({ ...label, x: label.x + x, y: label.y + y }))
+  }
+  if (label.kind !== 'culture') return [label]
   return [
     { x: 0, y: -offset },
     { x: offset, y: -offset },
@@ -1024,6 +1079,7 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
         v-for="label in patternLabels"
         :key="label.key"
         class="pattern-label"
+        :class="{ selected: label.key === `pattern-${selectedFeaturedPatternId}` }"
         :x="label.x"
         :y="label.y"
         :text-anchor="label.anchor"
@@ -1162,6 +1218,7 @@ text {
   font-size: clamp(9px, 1.55cqw, 13px);
   font-weight: 700;
 }
+.pattern-label.selected { fill: #fff1be; font-size: clamp(11px, 1.8cqw, 15px); }
 
 .star-label {
   fill: rgb(217 228 220 / 92%);

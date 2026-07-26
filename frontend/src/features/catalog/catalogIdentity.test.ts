@@ -3,13 +3,15 @@ import { catalogIdentityForSelection, catalogSelectionAction, sameSkyObject } fr
 import type { SkyObjectSelection } from '../sky-map/types'
 
 describe('catalogIdentityForSelection', () => {
-  it('uses stable keys for stars, Solar System bodies, and culture figures', () => {
+  it('uses stable keys for stars, Solar System bodies, culture figures, and featured patterns', () => {
     expect(catalogIdentityForSelection(selection('star', { id: 'HIP:91262', hipId: 91262 }), 'western-iau'))
       .toEqual({ objectType: 'star', objectKey: 'HIP:91262' })
     expect(catalogIdentityForSelection(selection('solarSystemBody', { id: 'moon' }), 'western-iau'))
       .toEqual({ objectType: 'solar-system-body', objectKey: 'solar-system:moon' })
     expect(catalogIdentityForSelection(selection('cultureFigure', { id: 'constellation-lyr' }), 'western-iau'))
       .toEqual({ objectType: 'culture-figure', objectKey: 'culture:western-iau:constellation-lyr' })
+    expect(catalogIdentityForSelection(selection('featuredPattern', { id: 'summer-triangle' }), 'western-iau'))
+      .toEqual({ objectType: 'featured-pattern', objectKey: 'featured-pattern:summer-triangle' })
   })
 
   it('compares selections by stable kind and object id', () => {

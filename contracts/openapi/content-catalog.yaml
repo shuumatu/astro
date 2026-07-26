@@ -103,7 +103,7 @@ components:
   schemas:
     ObjectType:
       type: string
-      enum: [star, solar-system-body, culture-figure]
+      enum: [star, solar-system-body, culture-figure, featured-pattern]
     CatalogEntry:
       type: object
       required: [id, objectType, objectKey, requestedLocale, contentLocale, localeFallback, status, title, summary, bodyMarkdown, knowledgePoints, sources, media, revision, updatedAt]

@@ -14,7 +14,7 @@ const activeQuery = ref('')
 const loading = ref(false)
 const failed = ref(false)
 
-const typeOptions: Array<CatalogObjectType | ''> = ['', 'solar-system-body', 'star', 'culture-figure']
+const typeOptions: Array<CatalogObjectType | ''> = ['', 'solar-system-body', 'star', 'culture-figure', 'featured-pattern']
 
 onMounted(load)
 watch([locale, selectedType], load)

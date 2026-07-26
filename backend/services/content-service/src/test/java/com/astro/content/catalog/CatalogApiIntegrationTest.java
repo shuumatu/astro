@@ -112,6 +112,48 @@ class CatalogApiIntegrationTest {
     }
 
     @Test
+    void allowsFeaturedPatternsToBeWrittenAndPublished() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"objectType":"featured-pattern","objectKey":"featured-pattern:summer-triangle"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.objectType").value("featured-pattern"))
+                .andReturn();
+        String entryId = objectMapper.readTree(created.getResponse().getContentAsByteArray()).path("id").asText();
+
+        mockMvc.perform(put("/api/content/admin/catalog-entries/{entryId}/translations/zh-CN", entryId)
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title":"夏季大三角",
+                                  "summary":"由织女星、河鼓二和天津四组成的醒目星群。",
+                                  "bodyMarkdown":"夏季夜空中的经典辨识图形。",
+                                  "knowledgePoints":["三个顶点都是亮星"],
+                                  "imageCaption":null,
+                                  "sources":[],
+                                  "media":[]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DRAFT"));
+
+        mockMvc.perform(post("/api/content/admin/catalog-entries/{entryId}/translations/zh-CN/publish", entryId)
+                        .with(adminJwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+
+        mockMvc.perform(get("/api/content/catalog-entries/featured-pattern/featured-pattern:summer-triangle")
+                        .queryParam("locale", "zh-CN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.objectType").value("featured-pattern"))
+                .andExpect(jsonPath("$.title").value("夏季大三角"));
+    }
+
+    @Test
     void protectsAdminRoutesAndRejectsRawHtml() throws Exception {
         mockMvc.perform(get("/api/content/admin/catalog-entries"))
                 .andExpect(status().isUnauthorized());

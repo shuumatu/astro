@@ -1,4 +1,4 @@
-export type CatalogObjectType = 'star' | 'solar-system-body' | 'culture-figure'
+export type CatalogObjectType = 'star' | 'solar-system-body' | 'culture-figure' | 'featured-pattern'
 export type PublicationStatus = 'DRAFT' | 'PUBLISHED'
 
 export interface CatalogSource {

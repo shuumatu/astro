@@ -242,6 +242,7 @@ function parseSources(value: string): TranslationDraft['sources'] {
             <option value="star">{{ t('catalog.types.star') }}</option>
             <option value="solar-system-body">{{ t('catalog.types.solar-system-body') }}</option>
             <option value="culture-figure">{{ t('catalog.types.culture-figure') }}</option>
+            <option value="featured-pattern">{{ t('catalog.types.featured-pattern') }}</option>
           </select>
           <input v-model="createKey" :placeholder="t('adminCatalog.objectKey')" required>
           <button type="submit" class="icon-button" :title="t('adminCatalog.create')" :aria-label="t('adminCatalog.create')"><Plus :size="17" /></button>

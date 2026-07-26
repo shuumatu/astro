@@ -125,7 +125,9 @@ const catalogCardIdentity = computed(() => selectedObject.value
 const catalogCardFacts = computed(() => {
   const selection = selectedObject.value
   if (!selection) return []
-  const position = selection.kind === 'cultureFigure' ? selection.object.labelPosition : selection.object
+  const position = selection.kind === 'cultureFigure' || selection.kind === 'featuredPattern'
+    ? selection.object.labelPosition
+    : selection.object
   const facts = [
     {
       label: t('skyMap.position'),
@@ -137,6 +139,14 @@ const catalogCardFacts = computed(() => {
   if (selection.kind === 'cultureFigure') {
     facts.push({ label: t('skyMap.constellation'), value: selection.object.name })
     facts.push({ label: t('skyMap.culture'), value: t(`skyMap.cultures.${controls.cultureId}`) })
+    return facts
+  }
+  if (selection.kind === 'featuredPattern') {
+    facts.push({ label: t('skyMap.featuredPatterns'), value: selection.object.name })
+    facts.push({
+      label: t('skyMap.memberStars'),
+      value: new Intl.NumberFormat(locale.value).format(selection.object.memberObjectIds.length),
+    })
     return facts
   }
   facts.push({
@@ -571,6 +581,7 @@ function formatSelectedObject(selection = selectedObject.value): string {
   if (!selection) return '—'
   if (selection.kind === 'solarSystemBody') return t(`skyMap.solarSystemBodies.${selection.object.id}`)
   if (selection.kind === 'cultureFigure') return selection.object.name
+  if (selection.kind === 'featuredPattern') return selection.object.name
   const cultureName = frame.value?.starLabels.find(
     (label) => label.objectId === selection.object.id,
   )?.name
@@ -589,6 +600,10 @@ function resolveSelectionInFrame(
     const figure = nextFrame.cultureFigures.find((candidate) => candidate.id === selection.object.id)
     return figure ? { kind: 'cultureFigure', object: figure } : null
   }
+  if (selection.kind === 'featuredPattern') {
+    const pattern = nextFrame.featuredPatterns.find((candidate) => candidate.id === selection.object.id)
+    return pattern ? { kind: 'featuredPattern', object: pattern } : null
+  }
   const body = nextFrame.solarSystemBodies.find((candidate) => candidate.id === selection.object.id)
   return body ? { kind: 'solarSystemBody', object: body } : null
 }
@@ -598,6 +613,7 @@ function formatSelectedDetail(): string {
   if (!selection) return '—'
   if (selection.kind === 'star') return selection.object.spectralType ?? '—'
   if (selection.kind === 'cultureFigure') return t('skyMap.constellation')
+  if (selection.kind === 'featuredPattern') return t('skyMap.featuredPatterns')
   return new Intl.NumberFormat(locale.value, {
     style: 'percent',
     maximumFractionDigits: 0,
@@ -609,6 +625,9 @@ function formatSelectedData(): string {
   if (!selection) return '—'
   if (selection.kind === 'star') return t(`skyMap.sources.${selection.object.astrometrySource}`)
   if (selection.kind === 'cultureFigure') return '—'
+  if (selection.kind === 'featuredPattern') {
+    return new Intl.NumberFormat(locale.value).format(selection.object.memberObjectIds.length)
+  }
   if (selection.object.id === 'moon') {
     const kilometers = selection.object.distanceAu * ASTRONOMICAL_UNIT_KM
     return `${new Intl.NumberFormat(locale.value, { maximumFractionDigits: 0 }).format(kilometers)} km`
@@ -910,19 +929,19 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
         </div>
         <div>
           <dt>{{ t('skyMap.magnitude') }}</dt>
-          <dd :title="selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—'">{{ selectedObject && selectedObject.kind !== 'cultureFigure' ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
+          <dd :title="selectedObject && (selectedObject.kind === 'star' || selectedObject.kind === 'solarSystemBody') ? selectedObject.object.visualMagnitude.toFixed(2) : '—'">{{ selectedObject && (selectedObject.kind === 'star' || selectedObject.kind === 'solarSystemBody') ? selectedObject.object.visualMagnitude.toFixed(2) : '—' }}</dd>
         </div>
         <div>
-          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : selectedObject?.kind === 'cultureFigure' ? t('skyMap.constellation') : t('skyMap.spectralType') }}</dt>
+          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.phase') : selectedObject?.kind === 'cultureFigure' ? t('skyMap.constellation') : selectedObject?.kind === 'featuredPattern' ? t('skyMap.featuredPatterns') : t('skyMap.spectralType') }}</dt>
           <dd :title="formatSelectedDetail()">{{ formatSelectedDetail() }}</dd>
         </div>
         <div>
-          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.distance') : t('skyMap.dataSource') }}</dt>
+          <dt>{{ selectedObject?.kind === 'solarSystemBody' ? t('skyMap.distance') : selectedObject?.kind === 'featuredPattern' ? t('skyMap.memberStars') : t('skyMap.dataSource') }}</dt>
           <dd :title="formatSelectedData()">{{ formatSelectedData() }}</dd>
         </div>
         <div>
           <dt>{{ t('skyMap.position') }}</dt>
-          <dd :title="`${selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°')} / ${selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°')}`">{{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ selectedObject?.kind === 'cultureFigure' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
+          <dd :title="`${selectedObject?.kind === 'cultureFigure' || selectedObject?.kind === 'featuredPattern' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°')} / ${selectedObject?.kind === 'cultureFigure' || selectedObject?.kind === 'featuredPattern' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°')}`">{{ selectedObject?.kind === 'cultureFigure' || selectedObject?.kind === 'featuredPattern' ? '—' : formatCoordinate(selectedObject?.object.azimuthDeg, '°') }} / {{ selectedObject?.kind === 'cultureFigure' || selectedObject?.kind === 'featuredPattern' ? '—' : formatCoordinate(selectedObject?.object.altitudeDeg, '°') }}</dd>
         </div>
       </dl>
     </footer>

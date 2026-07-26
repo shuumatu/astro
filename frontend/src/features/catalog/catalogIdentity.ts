@@ -16,6 +16,9 @@ export function catalogIdentityForSelection(
   if (selection.kind === 'solarSystemBody') {
     return { objectType: 'solar-system-body', objectKey: `solar-system:${selection.object.id}` }
   }
+  if (selection.kind === 'featuredPattern') {
+    return { objectType: 'featured-pattern', objectKey: `featured-pattern:${selection.object.id}` }
+  }
   return {
     objectType: 'culture-figure',
     objectKey: `culture:${cultureId}:${selection.object.id}`,

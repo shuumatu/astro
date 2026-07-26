@@ -8,7 +8,8 @@ import java.util.Arrays;
 public enum CatalogObjectType {
     STAR("star"),
     SOLAR_SYSTEM_BODY("solar-system-body"),
-    CULTURE_FIGURE("culture-figure");
+    CULTURE_FIGURE("culture-figure"),
+    FEATURED_PATTERN("featured-pattern");
 
     private final String value;
 

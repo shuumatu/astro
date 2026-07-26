@@ -71,6 +71,7 @@
     "constellation": "星座",
     "solarSystem": "太阳系天体",
     "featuredPatterns": "常见星群",
+    "memberStars": "成员恒星",
     "refraction": "大气折射修正",
     "retry": "重新加载",
     "loadFailed": "星图数据加载失败",
@@ -132,7 +133,8 @@
     "types": {
       "star": "恒星",
       "solar-system-body": "太阳系天体",
-      "culture-figure": "星座"
+      "culture-figure": "星座",
+      "featured-pattern": "常见星群"
     },
     "loading": "正在加载图鉴内容",
     "loadFailed": "图鉴内容暂时无法加载",
