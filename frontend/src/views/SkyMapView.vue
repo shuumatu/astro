@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Search, Triangle } from 'lucide-vue-next'
+import { ChevronDown, PanelLeftClose, PanelLeftOpen, Search, Triangle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { loadCatalogEntry } from '../features/catalog/api'
@@ -79,6 +79,7 @@ const catalogCardOpen = ref(false)
 const catalogCardEntry = ref<CatalogEntry | null>(null)
 const catalogCardLoading = ref(false)
 const catalogCardError = ref(false)
+const controlsCollapsed = ref(false)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const skyMapStage = ref<HTMLDivElement | null>(null)
 const isSkyMapFullscreen = ref(false)
@@ -658,7 +659,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
       </div>
     </header>
 
-    <div class="sky-map-workspace">
+    <div class="sky-map-workspace" :class="{ 'controls-collapsed': controlsCollapsed }">
       <aside class="sky-controls">
         <form @submit.prevent>
           <fieldset>
@@ -871,6 +872,17 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
       </aside>
 
       <div ref="skyMapStage" class="sky-map-stage">
+        <button
+          v-if="!isSkyMapFullscreen"
+          type="button"
+          class="controls-toggle"
+          :aria-label="t(controlsCollapsed ? 'skyMap.showControls' : 'skyMap.hideControls')"
+          :title="t(controlsCollapsed ? 'skyMap.showControls' : 'skyMap.hideControls')"
+          @click="controlsCollapsed = !controlsCollapsed"
+        >
+          <PanelLeftOpen v-if="controlsCollapsed" :size="18" aria-hidden="true" />
+          <PanelLeftClose v-else :size="18" aria-hidden="true" />
+        </button>
         <SkyMapCanvas
           ref="skyCanvas"
           :frame="frame"
@@ -949,7 +961,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 </template>
 
 <style scoped>
-.sky-map-page { padding: 1.5rem 0 2.5rem; }
+.sky-map-page { padding: 1rem 0 2rem; }
 
 @media (min-width: 901px) {
   .sky-map-page {
@@ -958,7 +970,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
     height: calc(100vh - 68px);
     height: calc(100dvh - 68px);
     min-height: 480px;
-    padding: 1rem 0;
+    padding: .5rem 0;
   }
 }
 
@@ -967,7 +979,8 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
   align-items: end;
   justify-content: space-between;
   gap: 1.5rem;
-  padding-bottom: 1rem;
+  min-height: 40px;
+  padding-bottom: .5rem;
 }
 
 .sky-map-kicker {
@@ -980,7 +993,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
 .sky-map-header h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.35rem;
   line-height: 1.2;
 }
 
@@ -1006,10 +1019,13 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
 .sky-map-workspace {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 264px minmax(0, 1fr);
   border: 1px solid #26333a;
   background: #080c10;
 }
+
+.sky-map-workspace.controls-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.sky-map-workspace.controls-collapsed .sky-controls { overflow: hidden; visibility: hidden; border-right: 0; }
 
 .sky-controls {
   min-height: 0;
@@ -1021,10 +1037,10 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
 fieldset {
   display: grid;
-  gap: .75rem;
+  gap: .6rem;
   min-width: 0;
   margin: 0;
-  padding: 1rem;
+  padding: .8rem;
   border: 0;
   border-bottom: 1px solid #26333a;
 }
@@ -1234,6 +1250,25 @@ button:disabled { cursor: wait; opacity: .55; }
   background: #030609;
 }
 
+.controls-toggle {
+  position: absolute;
+  z-index: 7;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #3a4b51;
+  border-radius: 4px;
+  padding: 0;
+  color: #d2dddd;
+  background: rgb(9 14 18 / 92%);
+  cursor: pointer;
+}
+
+.controls-toggle:hover { color: #07110f; background: #6fcbbb; }
+
 .sky-map-stage:fullscreen {
   width: 100vw;
   height: 100vh;
@@ -1264,19 +1299,23 @@ button:disabled { cursor: wait; opacity: .55; }
     height: auto;
   }
 
-  .sky-readout { height: 76px; overflow: hidden; }
+  .sky-map-kicker { display: none; }
+  .sky-readout { height: 66px; overflow: hidden; }
   .sky-readout dl { height: 100%; }
   .sky-readout dl > div {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: 15px 22px;
+    align-content: center;
     min-height: 0;
-    padding: .65rem .75rem;
+    padding: .35rem .65rem;
   }
+  .sky-readout dt { margin: 0; line-height: 15px; }
   .sky-readout dd {
-    display: -webkit-box;
+    display: block;
     overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    line-height: 22px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -1331,8 +1370,11 @@ button:disabled { cursor: wait; opacity: .55; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 900px) {
-  .sky-map-workspace { grid-template-columns: 1fr; }
+  .sky-map-workspace,
+  .sky-map-workspace.controls-collapsed { grid-template-columns: 1fr; }
   .sky-controls { border-right: 0; border-bottom: 1px solid #26333a; }
+  .sky-map-workspace.controls-collapsed .sky-controls { overflow: visible; visibility: visible; border-bottom: 1px solid #26333a; }
+  .controls-toggle { display: none; }
   .sky-controls form { grid-template-columns: repeat(3, 1fr); }
   fieldset { border-right: 1px solid #26333a; border-bottom: 0; }
   .sky-readout dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }

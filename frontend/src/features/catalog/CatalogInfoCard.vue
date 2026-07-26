@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { BookOpen, ExternalLink, X } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { BookOpen, ExternalLink, GripHorizontal, X } from 'lucide-vue-next'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import type { CSSProperties } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { renderRestrictedMarkdown } from './markdown'
@@ -20,16 +21,146 @@ defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
 const renderedBody = computed(() => props.entry ? renderRestrictedMarkdown(props.entry.bodyMarkdown) : '')
+const card = ref<HTMLElement | null>(null)
+const position = reactive({ x: 12, y: 12 })
+const positioned = ref(false)
+const dragging = ref(false)
+const mobileDrawer = ref(false)
+let resizeObserver: ResizeObserver | null = null
+let mobileLayoutQuery: MediaQueryList | null = null
+let dragSession: {
+  pointerId: number
+  clientX: number
+  clientY: number
+  startX: number
+  startY: number
+} | null = null
+
+const cardStyle = computed<CSSProperties>(() => ({
+  transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+  visibility: positioned.value ? 'visible' : 'hidden',
+}))
+
+onMounted(() => {
+  mobileLayoutQuery = window.matchMedia('(max-width: 720px)')
+  mobileDrawer.value = mobileLayoutQuery.matches
+  mobileLayoutQuery.addEventListener('change', updateMobileLayout)
+  void nextTick(() => {
+    resetPosition()
+    const element = card.value
+    if (!element?.parentElement) return
+    resizeObserver = new ResizeObserver(() => clampPosition(position.x, position.y))
+    resizeObserver.observe(element)
+    resizeObserver.observe(element.parentElement)
+  })
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+  mobileLayoutQuery?.removeEventListener('change', updateMobileLayout)
+})
+
+function updateMobileLayout(event: MediaQueryListEvent): void {
+  mobileDrawer.value = event.matches
+  if (!event.matches) void nextTick(resetPosition)
+}
+
+function resetPosition(): void {
+  const element = card.value
+  const parent = element?.parentElement
+  if (!element || !parent) return
+  const margin = 12
+  position.x = Math.max(margin, parent.clientWidth - element.offsetWidth - margin)
+  position.y = Math.min(58, Math.max(margin, parent.clientHeight - element.offsetHeight - margin))
+  positioned.value = true
+}
+
+function clampPosition(x: number, y: number): void {
+  const element = card.value
+  const parent = element?.parentElement
+  if (!element || !parent || isMobileDrawer()) return
+  const margin = 12
+  const maximumX = Math.max(margin, parent.clientWidth - element.offsetWidth - margin)
+  const maximumY = Math.max(margin, parent.clientHeight - element.offsetHeight - margin)
+  position.x = Math.min(maximumX, Math.max(margin, x))
+  position.y = Math.min(maximumY, Math.max(margin, y))
+  positioned.value = true
+}
+
+function startDrag(event: PointerEvent): void {
+  if (event.button !== 0 || isMobileDrawer()) return
+  const handle = event.currentTarget as HTMLElement
+  dragSession = {
+    pointerId: event.pointerId,
+    clientX: event.clientX,
+    clientY: event.clientY,
+    startX: position.x,
+    startY: position.y,
+  }
+  dragging.value = true
+  handle.setPointerCapture(event.pointerId)
+}
+
+function moveDrag(event: PointerEvent): void {
+  if (!dragSession || dragSession.pointerId !== event.pointerId) return
+  clampPosition(
+    dragSession.startX + event.clientX - dragSession.clientX,
+    dragSession.startY + event.clientY - dragSession.clientY,
+  )
+}
+
+function finishDrag(event: PointerEvent): void {
+  if (!dragSession || dragSession.pointerId !== event.pointerId) return
+  const handle = event.currentTarget as HTMLElement
+  if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId)
+  dragSession = null
+  dragging.value = false
+}
+
+function moveWithKeyboard(event: KeyboardEvent): void {
+  if (isMobileDrawer()) return
+  const step = event.shiftKey ? 32 : 12
+  const movement = {
+    ArrowLeft: [-step, 0],
+    ArrowRight: [step, 0],
+    ArrowUp: [0, -step],
+    ArrowDown: [0, step],
+  }[event.key]
+  if (!movement) return
+  event.preventDefault()
+  clampPosition(position.x + movement[0], position.y + movement[1])
+}
+
+function isMobileDrawer(): boolean {
+  return mobileLayoutQuery?.matches ?? window.matchMedia('(max-width: 720px)').matches
+}
 </script>
 
 <template>
-  <aside class="catalog-info-card" role="dialog" :aria-label="t('catalog.cardTitle')">
-    <header class="card-header">
+  <aside
+    ref="card"
+    class="catalog-info-card"
+    :class="{ dragging }"
+    :style="cardStyle"
+    role="complementary"
+    aria-labelledby="catalog-card-title"
+  >
+    <header
+      class="card-header"
+      :tabindex="mobileDrawer ? -1 : 0"
+      :aria-label="mobileDrawer ? undefined : t('catalog.dragCard')"
+      @pointerdown="startDrag"
+      @pointermove="moveDrag"
+      @pointerup="finishDrag"
+      @pointercancel="finishDrag"
+      @keydown="moveWithKeyboard"
+    >
+      <GripHorizontal class="drag-handle" :size="17" aria-hidden="true" />
       <div>
         <p>{{ t(`catalog.types.${objectType}`) }}</p>
-        <h2>{{ entry?.title || objectName }}</h2>
+        <h2 id="catalog-card-title">{{ entry?.title || objectName }}</h2>
       </div>
-      <button type="button" class="icon-button" :aria-label="t('catalog.close')" :title="t('catalog.close')" @click="$emit('close')">
+      <button type="button" class="icon-button" :aria-label="t('catalog.close')" :title="t('catalog.close')" @pointerdown.stop @click="$emit('close')">
         <X :size="18" aria-hidden="true" />
       </button>
     </header>
@@ -84,20 +215,26 @@ const renderedBody = computed(() => props.entry ? renderRestrictedMarkdown(props
 .catalog-info-card {
   position: absolute;
   z-index: 8;
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
+  top: 0;
+  left: 0;
   width: min(380px, calc(100% - 24px));
+  height: min(620px, calc(100% - 70px));
+  min-height: min(360px, calc(100% - 24px));
   display: flex;
   flex-direction: column;
   border: 1px solid #34515a;
   background: rgba(8, 17, 21, .97);
   box-shadow: 0 18px 44px rgba(0, 0, 0, .42);
   color: #eaf2f1;
+  will-change: transform;
 }
-.card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px 16px 13px; border-bottom: 1px solid #243b41; }
+.catalog-info-card.dragging { box-shadow: 0 22px 54px rgba(0, 0, 0, .55); }
+.card-header { display: grid; grid-template-columns: 18px minmax(0, 1fr) 34px; align-items: start; gap: 10px; padding: 13px 13px 12px; border-bottom: 1px solid #243b41; cursor: grab; touch-action: none; user-select: none; }
+.card-header:focus-visible { outline: 2px solid #72c9bd; outline-offset: -2px; }
+.dragging .card-header { cursor: grabbing; }
+.drag-handle { margin-top: 3px; color: #607c81; }
 .card-header p { margin: 0 0 4px; color: #72c9bd; font-size: 11px; text-transform: uppercase; }
-.card-header h2 { margin: 0; font-size: 22px; line-height: 1.15; }
+.card-header h2 { margin: 0; overflow-wrap: anywhere; font-size: 20px; line-height: 1.2; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #31494f; border-radius: 4px; color: #b9caca; background: transparent; cursor: pointer; }
 .card-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; }
 .live-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0 0 18px; background: #263a3e; }
@@ -123,6 +260,8 @@ const renderedBody = computed(() => props.entry ? renderRestrictedMarkdown(props
 .full-entry-link { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 46px; border-top: 1px solid #2b4449; color: #8edbd1; font-size: 13px; }
 @keyframes pulse { to { opacity: .35; } }
 @media (max-width: 720px) {
-  .catalog-info-card { top: auto; right: 0; bottom: 0; left: 0; width: 100%; max-height: min(72vh, 560px); border-right: 0; border-bottom: 0; border-left: 0; }
+  .catalog-info-card { top: auto; right: 0; bottom: 0; left: 0; width: 100%; height: auto; min-height: 0; max-height: min(72dvh, 560px); transform: none !important; visibility: visible !important; border-right: 0; border-bottom: 0; border-left: 0; will-change: auto; }
+  .card-header { grid-template-columns: minmax(0, 1fr) 34px; cursor: default; touch-action: pan-y; }
+  .drag-handle { display: none; }
 }
 </style>

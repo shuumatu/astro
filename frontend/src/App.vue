@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const isSkyMapRoute = computed(() => route.path === '/sky-map')
 const locales = [
   { code: 'zh-CN', label: '中文' },
   { code: 'en', label: 'English' }
@@ -33,7 +36,7 @@ function switchLocale(localeCode: string) {
       >{{ option.label }}</button>
     </div>
   </header>
-  <main class="page-shell">
+  <main class="page-shell" :class="{ 'sky-map-shell': isSkyMapRoute }">
     <RouterView />
   </main>
 </template>
