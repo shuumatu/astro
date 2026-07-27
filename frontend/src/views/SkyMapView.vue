@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, PanelLeftClose, PanelLeftOpen, Search, Triangle } from 'lucide-vue-next'
+import { ChevronDown, PanelLeftClose, PanelLeftOpen, Triangle } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { loadCatalogEntry } from '../features/catalog/api'
@@ -7,6 +7,7 @@ import CatalogInfoCard from '../features/catalog/CatalogInfoCard.vue'
 import { catalogIdentityForSelection, catalogSelectionAction } from '../features/catalog/catalogIdentity'
 import type { CatalogEntry } from '../features/catalog/types'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
+import SkyTargetSearch from '../features/sky-map/SkyTargetSearch.vue'
 import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
 import { selectLocalizedName } from '../features/sky-map/localizedName'
 import {
@@ -26,16 +27,11 @@ import {
   observerLocationForPreset,
 } from '../features/sky-map/observerPresets'
 import type { ObserverPresetId } from '../features/sky-map/observerPresets'
-import {
-  normalizeSkyTargetSearchTerm,
-  parseSkyTargetQuery,
-} from '../features/sky-map/targetSearch'
 import type {
   CatalogSummary,
   SkyCalculationParameters,
   SkyFrame,
   SkyObjectSelection,
-  SkySearchResult,
   SkySearchSuggestion,
 } from '../features/sky-map/types'
 import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
@@ -45,8 +41,6 @@ type SkyCalculationResult = Awaited<ReturnType<SkyMapWorkerClient['calculate']>>
 
 const ASTRONOMICAL_UNIT_KM = 149_597_870.7
 const CALCULATION_DEBOUNCE_MS = 80
-const TARGET_SEARCH_DEBOUNCE_MS = 70
-const TARGET_SEARCH_LIMIT = 8
 const TIME_WHEEL_RESET_MS = 240
 
 const DEFAULT_OBSERVER_PRESET: ObserverPresetId = 'shenzhen'
@@ -84,21 +78,14 @@ const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const skyMapStage = ref<HTMLDivElement | null>(null)
 const isSkyMapFullscreen = ref(false)
 const fullscreenSupported = ref(false)
-const targetInput = ref<HTMLInputElement | null>(null)
 const targetQuery = ref('')
 const targetMessage = ref('')
-const targetSuggestions = ref<SkySearchSuggestion[]>([])
-const targetSearchOpen = ref(false)
-const targetSearchPending = ref(false)
-const activeSuggestionIndex = ref(-1)
 let workerClient: SkyMapWorkerClient | null = null
 let calculationScheduler: LatestCalculationScheduler<
   SkyCalculationParameters,
   SkyCalculationResult
 > | null = null
 let calculationTimer: ReturnType<typeof setTimeout> | null = null
-let targetSearchTimer: ReturnType<typeof setTimeout> | null = null
-let targetSearchSequence = 0
 let timeWheelResetTimer: ReturnType<typeof setTimeout> | null = null
 let accumulatedTimeWheelDelta = 0
 let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
@@ -112,9 +99,6 @@ const observedAtLabel = computed(() => frame.value
 const visibleStarCount = computed(() => frame.value
   ? new Intl.NumberFormat(locale.value).format(frame.value.stars.length)
   : '—')
-const activeSuggestionId = computed(() => activeSuggestionIndex.value >= 0
-  ? `sky-target-suggestion-${activeSuggestionIndex.value}`
-  : undefined)
 const featuredPatternOptions = computed(() => (catalog.value?.featuredPatterns ?? []).map((pattern) => ({
   id: pattern.id,
   name: selectLocalizedName(pattern.names, locale.value, 'en'),
@@ -163,13 +147,11 @@ const catalogCardFacts = computed(() => {
 
 watch(targetQuery, () => {
   targetMessage.value = ''
-  scheduleTargetSuggestions()
 })
 watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
 watch(() => [...controls.enabledFeaturedPatternIds], requestCalculation, { flush: 'sync' })
 watch(() => [controls.cultureId, locale.value] as const, () => {
   requestCalculation()
-  scheduleTargetSuggestions()
   if (catalogCardOpen.value) void loadSelectedCatalogEntry()
 }, { flush: 'sync' })
 watch(
@@ -197,8 +179,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
   document.removeEventListener('keydown', handleFullscreenKeydown)
   if (calculationTimer) clearTimeout(calculationTimer)
-  if (targetSearchTimer) clearTimeout(targetSearchTimer)
-  targetSearchSequence += 1
   if (timeWheelResetTimer) clearTimeout(timeWheelResetTimer)
   timeWheelBatcher?.reset()
   timeWheelBatcher = null
@@ -370,152 +350,42 @@ function useCustomLocation(): void {
   activeLocationPreset.value = 'custom'
 }
 
-async function searchTarget(): Promise<void> {
-  const target = parseSkyTargetQuery(
-    targetQuery.value,
-    (id) => t(`skyMap.solarSystemBodies.${id}`),
-  )
-  if (target.kind === 'solarSystemBody') {
-    const bodyName = t(`skyMap.solarSystemBodies.${target.id}`)
-    const body = frame.value?.solarSystemBodies.find((candidate) => candidate.id === target.id)
-    if (!body) {
-      selectedObject.value = null
-      targetMessage.value = t('skyMap.targetNotVisible', { id: bodyName })
-      return
-    }
-    controls.showSolarSystemBodies = true
-    locateTarget({ kind: 'solarSystemBody', object: body })
-    return
-  }
-
-  if (!normalizeSkyTargetSearchTerm(targetQuery.value)) {
-    selectedObject.value = null
-    targetMessage.value = t('skyMap.invalidTarget')
-    return
-  }
-
-  const result = await requestTargetSuggestions()
-  if (!result) return
-  const exactSuggestions = result.suggestions.filter((suggestion) => suggestion.matchType === 'exact')
-  if (exactSuggestions.length === 1) {
-    selectTargetSuggestion(exactSuggestions[0])
-    return
-  }
-  targetSuggestions.value = result.suggestions
-  activeSuggestionIndex.value = -1
-  targetSearchOpen.value = result.suggestions.length > 0
-  if (result.suggestions.length === 0) {
-    selectedObject.value = null
-    targetMessage.value = t('skyMap.noTargetMatches')
-  } else {
-    targetMessage.value = t('skyMap.chooseTarget', { count: result.suggestions.length })
-  }
-}
-
-function scheduleTargetSuggestions(): void {
-  if (targetSearchTimer) clearTimeout(targetSearchTimer)
-  targetSearchTimer = setTimeout(() => {
-    targetSearchTimer = null
-    void refreshTargetSuggestions()
-  }, TARGET_SEARCH_DEBOUNCE_MS)
-}
-
-async function refreshTargetSuggestions(): Promise<void> {
-  const target = parseSkyTargetQuery(
-    targetQuery.value,
-    (id) => t(`skyMap.solarSystemBodies.${id}`),
-  )
-  if (!normalizeSkyTargetSearchTerm(targetQuery.value) || target.kind === 'solarSystemBody') {
-    targetSearchSequence += 1
-    targetSearchPending.value = false
-    targetSuggestions.value = []
-    targetSearchOpen.value = false
-    activeSuggestionIndex.value = -1
-    return
-  }
-  const result = await requestTargetSuggestions()
-  if (!result) return
-  targetSuggestions.value = result.suggestions
-  activeSuggestionIndex.value = -1
-  targetSearchOpen.value = document.activeElement === targetInput.value
-    && result.suggestions.length > 0
-}
-
-async function requestTargetSuggestions(): Promise<SkySearchResult | null> {
-  const client = workerClient
-  if (!client || !catalog.value) return null
-  const sequence = ++targetSearchSequence
-  targetSearchPending.value = true
-  try {
-    const result = await client.search({
-      query: targetQuery.value,
-      cultureId: controls.cultureId,
-      interfaceLanguage: locale.value,
-      limit: TARGET_SEARCH_LIMIT,
-    })
-    return sequence === targetSearchSequence ? result : null
-  } catch (error) {
-    if (sequence === targetSearchSequence) fail(error)
-    return null
-  } finally {
-    if (sequence === targetSearchSequence) targetSearchPending.value = false
-  }
-}
-
 function selectTargetSuggestion(suggestion: SkySearchSuggestion): void {
-  targetSearchOpen.value = false
-  activeSuggestionIndex.value = -1
-  const label = suggestionDisplayLabel(suggestion)
+  if (suggestion.targetType === 'solarSystemBody') {
+    const id = suggestion.objectId.slice('solar-system:'.length)
+    const body = frame.value?.solarSystemBodies.find((candidate) => candidate.id === id)
+    if (body) {
+      controls.showSolarSystemBodies = true
+      locateTarget({ kind: 'solarSystemBody', object: body })
+    } else {
+      selectedObject.value = null
+      targetMessage.value = t('skyMap.targetNotVisible', { id: suggestion.term })
+    }
+    return
+  }
+  if (suggestion.targetType === 'cultureFigure') {
+    const id = suggestion.objectId.split(':').at(-1)
+    const figure = frame.value?.cultureFigures.find((candidate) => candidate.id === id)
+    if (figure) locateTarget({ kind: 'cultureFigure', object: figure })
+    return
+  }
   if (!suggestion.availableInCatalog) {
     selectedObject.value = null
-    targetMessage.value = t('skyMap.targetUnavailable', { id: label })
+    targetMessage.value = t('skyMap.targetUnavailable', { id: suggestion.term })
     return
   }
   const star = frame.value?.stars.find((candidate) => candidate.id === suggestion.objectId)
   if (!star) {
     selectedObject.value = null
-    targetMessage.value = t('skyMap.targetNotVisible', { id: label })
+    targetMessage.value = t('skyMap.targetNotVisible', { id: suggestion.term })
     return
   }
   locateTarget({ kind: 'star', object: star })
 }
 
-function handleTargetFocus(): void {
-  targetSearchOpen.value = targetSuggestions.value.length > 0
-}
-
-function handleTargetBlur(): void {
-  targetSearchOpen.value = false
-  activeSuggestionIndex.value = -1
-}
-
-function handleTargetKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') {
-    targetSearchOpen.value = false
-    activeSuggestionIndex.value = -1
-    return
-  }
-  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-    if (targetSuggestions.value.length === 0) return
-    event.preventDefault()
-    targetSearchOpen.value = true
-    const direction = event.key === 'ArrowDown' ? 1 : -1
-    activeSuggestionIndex.value = (
-      activeSuggestionIndex.value + direction + targetSuggestions.value.length
-    ) % targetSuggestions.value.length
-    return
-  }
-  if (event.key !== 'Enter') return
-  event.preventDefault()
-  const suggestion = targetSuggestions.value[activeSuggestionIndex.value]
-  if (targetSearchOpen.value && suggestion) selectTargetSuggestion(suggestion)
-  else void searchTarget()
-}
-
-function suggestionDisplayLabel(suggestion: SkySearchSuggestion): string {
-  return suggestion.nameType === 'identifier'
-    ? suggestion.term
-    : `${suggestion.term} · HIP ${suggestion.hipId}`
+function handleTargetSearchEmpty(): void {
+  selectedObject.value = null
+  targetMessage.value = t('skyMap.noTargetMatches')
 }
 
 function locateTarget(selection: SkyObjectSelection): void {
@@ -731,63 +601,17 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
           <fieldset>
             <legend>{{ t('skyMap.target') }}</legend>
-            <div class="target-search-shell">
-              <div class="target-search">
-                <input
-                  ref="targetInput"
-                  v-model="targetQuery"
-                  type="search"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-controls="sky-target-suggestions"
-                  :aria-activedescendant="activeSuggestionId"
-                  :aria-expanded="targetSearchOpen"
-                  :aria-label="t('skyMap.target')"
-                  :aria-busy="targetSearchPending"
-                  :placeholder="t('skyMap.targetPlaceholder')"
-                  @focus="handleTargetFocus"
-                  @blur="handleTargetBlur"
-                  @keydown="handleTargetKeydown"
-                >
-                <button
-                  type="button"
-                  class="icon-command"
-                  :aria-label="t('skyMap.targetSearch')"
-                  :title="t('skyMap.targetSearch')"
-                  :disabled="!catalog || targetSearchPending"
-                  @mousedown.prevent
-                  @click="searchTarget"
-                ><Search :size="17" aria-hidden="true" /></button>
-              </div>
-              <ul
-                v-if="targetSearchOpen"
-                id="sky-target-suggestions"
-                class="target-suggestions"
-                role="listbox"
-              >
-                <li
-                  v-for="(suggestion, index) in targetSuggestions"
-                  :id="`sky-target-suggestion-${index}`"
-                  :key="suggestion.objectId"
-                  role="option"
-                  :aria-selected="index === activeSuggestionIndex"
-                >
-                  <button
-                    type="button"
-                    class="target-suggestion"
-                    :class="{ active: index === activeSuggestionIndex }"
-                    @mousedown.prevent
-                    @click="selectTargetSuggestion(suggestion)"
-                  >
-                    <span class="suggestion-name">{{ suggestion.term }}</span>
-                    <span class="suggestion-meta">
-                      HIP {{ suggestion.hipId }} · {{ t(`skyMap.cultures.${suggestion.cultureId}`) }}
-                      <template v-if="!suggestion.availableInCatalog"> · {{ t('skyMap.targetUnavailableShort') }}</template>
-                    </span>
-                  </button>
-                </li>
-              </ul>
-            </div>
+            <SkyTargetSearch
+              v-model="targetQuery"
+              :culture-id="controls.cultureId"
+              :interface-language="locale"
+              :placeholder="t('skyMap.targetPlaceholder')"
+              :input-aria-label="t('skyMap.targetSearch')"
+              :disabled="!catalog"
+              @select="selectTargetSuggestion"
+              @empty="handleTargetSearchEmpty"
+              @error="fail"
+            />
             <p v-if="targetMessage" class="target-message" role="status">{{ targetMessage }}</p>
           </fieldset>
 

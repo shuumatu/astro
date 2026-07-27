@@ -185,11 +185,13 @@ export interface SkySearchParameters {
   cultureId: string
   interfaceLanguage: string
   limit: number
+  solarSystemBodies?: Array<{ id: SolarSystemBodyId; names: string[] }>
 }
 
 export interface SkySearchSuggestion {
+  targetType: 'star' | 'solarSystemBody' | 'cultureFigure'
   objectId: string
-  hipId: number
+  hipId?: number
   term: string
   cultureId: string
   language: string

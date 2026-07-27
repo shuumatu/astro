@@ -61,10 +61,11 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
     }
     const initialized = await initializationPromise
     if (request.type === 'search') {
+      const culture = await loadCulture(initialized, request.parameters.cultureId)
       post({
         type: 'search-results',
         requestId: request.requestId,
-        result: searchSkyNames(initialized.searchIndex, request.parameters, initialized.catalogObjectIds),
+        result: searchSkyNames(initialized.searchIndex, request.parameters, initialized.catalogObjectIds, culture),
       })
       return
     }

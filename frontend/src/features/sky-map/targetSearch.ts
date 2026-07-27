@@ -6,6 +6,7 @@ import type {
   SkySearchParameters,
   SkySearchResult,
   SkySearchSuggestion,
+  SkyCulturePack,
   SolarSystemBodyId,
 } from './types'
 
@@ -39,6 +40,7 @@ export function searchSkyNames(
   index: SkySearchIndex,
   parameters: SkySearchParameters,
   catalogObjectIds: ReadonlySet<string>,
+  culture?: SkyCulturePack,
 ): SkySearchResult {
   const normalizedQuery = normalizeSkyTargetSearchTerm(parameters.query)
   if (!normalizedQuery || parameters.limit <= 0) {
@@ -52,6 +54,7 @@ export function searchSkyNames(
       query: parameters.query,
       normalizedQuery,
       suggestions: [{
+        targetType: 'star',
         objectId,
         hipId: directHipId,
         term: `HIP ${directHipId}`,
@@ -76,6 +79,7 @@ export function searchSkyNames(
     if (seenObjects.has(entry.objectId)) continue
     seenObjects.add(entry.objectId)
     suggestions.push({
+      targetType: 'star',
       objectId: entry.objectId,
       hipId: Number(entry.objectId.slice(4)),
       term: entry.term,
@@ -87,7 +91,62 @@ export function searchSkyNames(
     })
     if (suggestions.length >= parameters.limit) break
   }
-  return { query: parameters.query, normalizedQuery, suggestions }
+  const localSuggestions = searchLocalTargets(parameters, normalizedQuery, culture)
+  return {
+    query: parameters.query,
+    normalizedQuery,
+    suggestions: [...localSuggestions, ...suggestions]
+      .sort((left, right) => matchRank(left.matchType) - matchRank(right.matchType))
+      .filter((suggestion, index, all) => all.findIndex((item) => item.objectId === suggestion.objectId) === index)
+      .slice(0, parameters.limit),
+  }
+}
+
+function searchLocalTargets(
+  parameters: SkySearchParameters,
+  normalizedQuery: string,
+  culture?: SkyCulturePack,
+): SkySearchSuggestion[] {
+  const matches: SkySearchSuggestion[] = []
+  for (const body of parameters.solarSystemBodies ?? []) {
+    const match = bestTermMatch(body.names, normalizedQuery)
+    if (!match) continue
+    matches.push({
+      targetType: 'solarSystemBody',
+      objectId: `solar-system:${body.id}`,
+      term: match.term,
+      cultureId: parameters.cultureId,
+      language: parameters.interfaceLanguage,
+      nameType: 'official',
+      matchType: match.matchType,
+      availableInCatalog: true,
+    })
+  }
+  for (const figure of culture?.figures ?? []) {
+    const searchableNames = figure.names.filter((name) => name.searchable)
+    const terms = [...searchableNames.map((name) => name.value), figure.id, ...(figure.iauCode ? [figure.iauCode] : [])]
+    const match = bestTermMatch(terms, normalizedQuery)
+    if (!match) continue
+    const matchedName = searchableNames.find((name) => name.value === match.term)
+    matches.push({
+      targetType: 'cultureFigure',
+      objectId: `culture:${culture!.id}:${figure.id}`,
+      term: match.term,
+      cultureId: culture!.id,
+      language: matchedName?.language ?? 'und',
+      nameType: matchedName?.type ?? 'identifier',
+      matchType: match.matchType,
+      availableInCatalog: true,
+    })
+  }
+  return matches
+}
+
+function bestTermMatch(terms: string[], normalizedQuery: string): { term: string; matchType: SkySearchMatchType } | null {
+  return terms
+    .map((term) => ({ term, matchType: classifyMatch(normalizeSkyTargetSearchTerm(term), normalizedQuery) }))
+    .filter((match): match is { term: string; matchType: SkySearchMatchType } => match.matchType !== null)
+    .sort((left, right) => matchRank(left.matchType) - matchRank(right.matchType))[0] ?? null
 }
 
 export function normalizeSkyTargetSearchTerm(value: string): string {

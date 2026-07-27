@@ -6,7 +6,7 @@ import {
   parseSkyTargetQuery,
   searchSkyNames,
 } from './targetSearch'
-import type { SkySearchIndex, SolarSystemBodyId } from './types'
+import type { SkyCulturePack, SkySearchIndex, SolarSystemBodyId } from './types'
 
 const CHINESE_NAMES: Record<SolarSystemBodyId, string> = {
   sun: '太阳',
@@ -112,6 +112,53 @@ describe('searchSkyNames', () => {
     }, new Set(['HIP:1', 'HIP:2']))
 
     expect(result.suggestions.map((suggestion) => suggestion.objectId)).toEqual(['HIP:1', 'HIP:2'])
+  })
+
+  it('prioritizes a Solar System alias over a colliding star name', () => {
+    const collisionIndex: SkySearchIndex = {
+      schemaVersion: 1,
+      id: 'sky-search-index',
+      version: 'test',
+      normalization: 'test',
+      collisions: [],
+      entries: [searchEntry('月', 'HIP:19038', 'chinese-traditional')],
+    }
+    const result = searchSkyNames(collisionIndex, {
+      query: '月',
+      cultureId: 'western-iau',
+      interfaceLanguage: 'zh-CN',
+      limit: 8,
+      solarSystemBodies: [{ id: 'moon', names: ['月球', '月', '月亮'] }],
+    }, new Set(['HIP:19038']))
+
+    expect(result.suggestions[0]).toMatchObject({
+      targetType: 'solarSystemBody',
+      objectId: 'solar-system:moon',
+      matchType: 'exact',
+    })
+  })
+
+  it('searches constellation names from the active culture', () => {
+    const culture = {
+      id: 'western-iau',
+      figures: [{
+        id: 'constellation-ori',
+        iauCode: 'Ori',
+        names: [{ language: 'zh', value: '猎户座', type: 'translation', preferred: true, searchable: true, sourceId: 'test' }],
+      }],
+    } as SkyCulturePack
+    const result = searchSkyNames({ schemaVersion: 1, id: 'sky-search-index', version: 'test', normalization: 'test', collisions: [], entries: [] }, {
+      query: '猎户座',
+      cultureId: 'western-iau',
+      interfaceLanguage: 'zh-CN',
+      limit: 8,
+    }, new Set(), culture)
+
+    expect(result.suggestions[0]).toMatchObject({
+      targetType: 'cultureFigure',
+      objectId: 'culture:western-iau:constellation-ori',
+      matchType: 'exact',
+    })
   })
 })
 

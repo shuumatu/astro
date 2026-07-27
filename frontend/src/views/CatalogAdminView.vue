@@ -43,9 +43,8 @@ import {
   objectKeyExample,
 } from '../features/catalog/adminCatalog'
 import { renderRestrictedMarkdown } from '../features/catalog/markdown'
-import { parseSkyTargetQuery } from '../features/sky-map/targetSearch'
+import SkyTargetSearch from '../features/sky-map/SkyTargetSearch.vue'
 import type { SkySearchSuggestion } from '../features/sky-map/types'
-import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
 import type {
   AdminCatalogPage,
   AdminCatalogSummary,
@@ -80,10 +79,6 @@ const createKey = ref('')
 const createPending = ref(false)
 const createError = ref('')
 const targetQuery = ref('')
-const targetSuggestions = ref<SkySearchSuggestion[]>([])
-const targetSearchPending = ref(false)
-const targetSearchError = ref(false)
-const targetSearchOpen = ref(false)
 
 const draft = reactive<TranslationDraft>(emptyTranslationDraft())
 const baselineFingerprint = ref(draftFingerprint(draft))
@@ -103,9 +98,6 @@ const pendingMediaCleanup = ref<string[]>([])
 let listSequence = 0
 let translationSequence = 0
 let feedbackTimer: number | undefined
-let targetSearchTimer: number | undefined
-let targetSearchSequence = 0
-let targetSearchClient: SkyMapWorkerClient | null = null
 
 const entries = computed(() => page.value?.items ?? [])
 const selectedEntry = computed(() => entries.value.find((entry) => entry.id === selectedEntryId.value) ?? null)
@@ -135,14 +127,10 @@ watch(isDirty, (dirty) => {
   else window.removeEventListener('beforeunload', preventUnsavedUnload)
 })
 
-watch(targetQuery, scheduleTargetSearch)
-
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', preventUnsavedUnload)
   if (feedbackTimer) window.clearTimeout(feedbackTimer)
   revokeUploadPreview()
-  if (targetSearchTimer) window.clearTimeout(targetSearchTimer)
-  targetSearchClient?.dispose()
 })
 onBeforeRouteLeave(() => confirmDiscard())
 
@@ -392,53 +380,11 @@ function removeMedia(index: number): void {
   }
 }
 
-function scheduleTargetSearch(): void {
-  if (targetSearchTimer) window.clearTimeout(targetSearchTimer)
-  const query = targetQuery.value.trim()
-  if (!query) {
-    targetSuggestions.value = []
-    targetSearchOpen.value = false
-    return
-  }
-  targetSearchTimer = window.setTimeout(() => void searchCatalogTarget(query), 100)
-}
-
-async function searchCatalogTarget(query: string): Promise<void> {
-  const sequence = ++targetSearchSequence
-  targetSearchPending.value = true
-  targetSearchError.value = false
-  try {
-    const direct = parseSkyTargetQuery(query, (id) => t(`skyMap.solarSystemBodies.${id}`))
-    if (direct.kind === 'solarSystemBody') {
-      targetSuggestions.value = []
-      chooseCatalogTarget('solar-system-body', `solar-system:${direct.id}`)
-      return
-    }
-    const client = await ensureTargetSearchClient()
-    const result = await client.search({
-      query,
-      cultureId: 'western-iau',
-      interfaceLanguage: locale.value,
-      limit: 8,
-    })
-    if (sequence !== targetSearchSequence) return
-    targetSuggestions.value = result.suggestions.filter((suggestion) => suggestion.availableInCatalog)
-    targetSearchOpen.value = true
-  } catch {
-    if (sequence === targetSearchSequence) targetSearchError.value = true
-  } finally {
-    if (sequence === targetSearchSequence) targetSearchPending.value = false
-  }
-}
-
-async function ensureTargetSearchClient(): Promise<SkyMapWorkerClient> {
-  if (!targetSearchClient) targetSearchClient = new SkyMapWorkerClient()
-  await targetSearchClient.initialize()
-  return targetSearchClient
-}
-
 function chooseCatalogSuggestion(suggestion: SkySearchSuggestion): void {
-  chooseCatalogTarget('star', suggestion.objectId)
+  const type: CatalogObjectType = suggestion.targetType === 'solarSystemBody'
+    ? 'solar-system-body'
+    : suggestion.targetType === 'cultureFigure' ? 'culture-figure' : 'star'
+  chooseCatalogTarget(type, suggestion.objectId)
 }
 
 function chooseCatalogTarget(type: CatalogObjectType, objectKey: string): void {
@@ -446,8 +392,6 @@ function chooseCatalogTarget(type: CatalogObjectType, objectKey: string): void {
   createKey.value = objectKey
   createError.value = ''
   targetQuery.value = ''
-  targetSuggestions.value = []
-  targetSearchOpen.value = false
 }
 
 async function cleanupRemovedMedia(mediaIds: string[]): Promise<boolean> {
@@ -647,20 +591,14 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
         <form class="create-entry" @submit.prevent="createEntry">
           <div class="target-picker">
             <label>{{ t('adminCatalog.findSkyObject') }}</label>
-            <div class="target-search-field">
-              <input v-model="targetQuery" type="search" :placeholder="t('adminCatalog.findSkyObjectHint')" :aria-label="t('adminCatalog.findSkyObject')" @focus="targetSearchOpen = targetSuggestions.length > 0">
-              <Search :size="15" aria-hidden="true" />
-            </div>
-            <ul v-if="targetSearchOpen && targetSuggestions.length" class="target-picker-results" role="listbox">
-              <li v-for="suggestion in targetSuggestions" :key="suggestion.objectId">
-                <button type="button" @click="chooseCatalogSuggestion(suggestion)">
-                  <span>{{ suggestion.term }}</span>
-                  <small>{{ suggestion.objectId }}</small>
-                </button>
-              </li>
-            </ul>
-            <small v-if="targetSearchPending" class="target-picker-note">{{ t('catalog.loading') }}</small>
-            <small v-else-if="targetSearchError" class="field-error">{{ t('adminCatalog.targetSearchFailed') }}</small>
+            <SkyTargetSearch
+              v-model="targetQuery"
+              culture-id="western-iau"
+              :interface-language="locale"
+              :placeholder="t('adminCatalog.findSkyObjectHint')"
+              :input-aria-label="t('adminCatalog.findSkyObject')"
+              @select="chooseCatalogSuggestion"
+            />
           </div>
           <div class="create-row">
             <select v-model="createType" :aria-label="t('adminCatalog.objectType')" @change="createError = ''">
