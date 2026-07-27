@@ -35,10 +35,16 @@ public class CatalogService {
 
     private final CatalogEntryRepository repository;
     private final ObjectMapper objectMapper;
+    private final MediaUrlProperties mediaUrlProperties;
 
-    public CatalogService(CatalogEntryRepository repository, ObjectMapper objectMapper) {
+    public CatalogService(
+            CatalogEntryRepository repository,
+            ObjectMapper objectMapper,
+            MediaUrlProperties mediaUrlProperties
+    ) {
         this.repository = repository;
         this.objectMapper = objectMapper;
+        this.mediaUrlProperties = mediaUrlProperties;
     }
 
     @Transactional(readOnly = true)
@@ -90,8 +96,24 @@ public class CatalogService {
     }
 
     @Transactional
-    public void delete(UUID entryId) {
-        repository.delete(findById(entryId));
+    public List<String> delete(UUID entryId) {
+        CatalogEntry entry = findById(entryId);
+        List<String> mediaIds = entry.getTranslations().stream()
+                .flatMap(translation -> translation.getMedia().stream())
+                .map(MediaReference::getMediaId)
+                .distinct()
+                .toList();
+        repository.delete(entry);
+        repository.flush();
+        return unreferencedMedia(mediaIds);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> unreferencedMedia(List<String> mediaIds) {
+        return mediaIds.stream()
+                .filter(mediaId -> repository.countMediaReferencesByMediaId(mediaId) == 0)
+                .distinct()
+                .toList();
     }
 
     @Transactional
@@ -193,7 +215,7 @@ public class CatalogService {
                 .sorted(Comparator.comparingInt(MediaReference::getSortOrder))
                 .map(reference -> new Media(
                         reference.getMediaId(),
-                        "/api/media/assets/" + reference.getMediaId(),
+                        mediaUrlProperties.assetUrl(reference.getMediaId()),
                         reference.getAltText(),
                         reference.getCaption(),
                         reference.getAuthor(),
@@ -224,7 +246,7 @@ public class CatalogService {
         if (translation == null) return null;
         String primaryMediaUrl = translation.getMedia().stream()
                 .min(Comparator.comparingInt(MediaReference::getSortOrder))
-                .map(reference -> "/api/media/assets/" + reference.getMediaId())
+                .map(reference -> mediaUrlProperties.assetUrl(reference.getMediaId()))
                 .orElse(null);
         return new Summary(
                 entry.getId(), entry.getObjectType(), entry.getObjectKey(), translation.getLocale(),

@@ -75,8 +75,24 @@ export function createAdminCatalogEntry(
   })
 }
 
-export async function deleteAdminCatalogEntry(token: string, entryId: string): Promise<void> {
-  await requestRaw(`/content/admin/catalog-entries/${entryId}`, {
+export async function deleteAdminCatalogEntry(token: string, entryId: string): Promise<string[]> {
+  const response = await requestRaw(`/content/admin/catalog-entries/${entryId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.json() as Promise<string[]>
+}
+
+export function findUnreferencedCatalogMedia(token: string, mediaIds: string[]): Promise<string[]> {
+  return adminRequest<string[]>('/content/admin/catalog-entries/media/unreferenced', token, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mediaIds }),
+  })
+}
+
+export async function deleteCatalogMedia(token: string, mediaId: string): Promise<void> {
+  await requestRaw(`/media/assets/${encodeURIComponent(mediaId)}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   })

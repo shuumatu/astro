@@ -88,5 +88,5 @@ export interface TranslationDraft {
   knowledgePoints: string[]
   imageCaption: string | null
   sources: CatalogSource[]
-  media: Omit<CatalogMedia, 'url'>[]
+  media: (Omit<CatalogMedia, 'url'> & { url?: string })[]
 }

@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableConfigurationProperties(MediaProperties.class)
 public class MediaApplication {
     public static void main(String[] args) {
+        LocalEnvironment.load();
         SpringApplication.run(MediaApplication.class, args);
     }
 }

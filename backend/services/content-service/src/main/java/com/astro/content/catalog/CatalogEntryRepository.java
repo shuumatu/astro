@@ -14,6 +14,9 @@ public interface CatalogEntryRepository extends JpaRepository<CatalogEntry, UUID
 
     boolean existsByObjectTypeAndObjectKey(CatalogObjectType objectType, String objectKey);
 
+    @Query("select count(reference) from MediaReference reference where reference.mediaId = :mediaId")
+    long countMediaReferencesByMediaId(@Param("mediaId") String mediaId);
+
     @Query(value = """
             select distinct e from CatalogEntry e
             left join e.translations t

@@ -1,5 +1,6 @@
 import type {
   AdminCatalogSummary,
+  CatalogMedia,
   CatalogObjectType,
   TranslationDraft,
 } from './types'
@@ -72,6 +73,15 @@ export function entryTitleForLocale(entry: AdminCatalogSummary, locale: string):
     || entry.translations.find((translation) => translation.locale === 'en')?.title
     || entry.translations[0]?.title
     || entry.objectKey
+}
+
+export function catalogMediaUrl(media: TranslationDraft['media'][number]): string {
+  return media.url || `/api/media/assets/${media.mediaId}`
+}
+
+export function mediaDraftPayload(media: TranslationDraft['media'][number]): Omit<CatalogMedia, 'url'> {
+  const { url: _url, ...payload } = media
+  return { ...payload, altText: payload.altText.trim() }
 }
 
 function normalizeSlug(value: string): string {

@@ -20,6 +20,8 @@ import { onBeforeRouteLeave } from 'vue-router'
 import {
   createAdminCatalogEntry,
   deleteAdminCatalogEntry,
+  deleteCatalogMedia,
+  findUnreferencedCatalogMedia,
   loadAdminCatalog,
   loadAdminTranslation,
   loginAdmin,
@@ -29,16 +31,21 @@ import {
 } from '../features/catalog/api'
 import {
   ADMIN_CONTENT_LOCALES,
+  catalogMediaUrl,
   cloneTranslationDraft,
   draftFingerprint,
   emptyTranslationDraft,
   entryTitleForLocale,
   isPublishableDraft,
   isValidObjectKey,
+  mediaDraftPayload,
   normalizeObjectKey,
   objectKeyExample,
 } from '../features/catalog/adminCatalog'
 import { renderRestrictedMarkdown } from '../features/catalog/markdown'
+import { parseSkyTargetQuery } from '../features/sky-map/targetSearch'
+import type { SkySearchSuggestion } from '../features/sky-map/types'
+import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
 import type {
   AdminCatalogPage,
   AdminCatalogSummary,
@@ -72,6 +79,11 @@ const createType = ref<CatalogObjectType>('star')
 const createKey = ref('')
 const createPending = ref(false)
 const createError = ref('')
+const targetQuery = ref('')
+const targetSuggestions = ref<SkySearchSuggestion[]>([])
+const targetSearchPending = ref(false)
+const targetSearchError = ref(false)
+const targetSearchOpen = ref(false)
 
 const draft = reactive<TranslationDraft>(emptyTranslationDraft())
 const baselineFingerprint = ref(draftFingerprint(draft))
@@ -82,12 +94,18 @@ const uploadPending = ref(false)
 const uploadFile = ref<File | null>(null)
 const uploadAlt = ref('')
 const uploadInput = ref<HTMLInputElement | null>(null)
+const uploadPreviewUrl = ref('')
+const uploadError = ref('')
 const publishAttempted = ref(false)
 const feedback = reactive({ message: '', error: false })
+const pendingMediaCleanup = ref<string[]>([])
 
 let listSequence = 0
 let translationSequence = 0
 let feedbackTimer: number | undefined
+let targetSearchTimer: number | undefined
+let targetSearchSequence = 0
+let targetSearchClient: SkyMapWorkerClient | null = null
 
 const entries = computed(() => page.value?.items ?? [])
 const selectedEntry = computed(() => entries.value.find((entry) => entry.id === selectedEntryId.value) ?? null)
@@ -97,6 +115,16 @@ const renderedPreview = computed(() => renderRestrictedMarkdown(draft.bodyMarkdo
 const normalizedCreateKey = computed(() => normalizeObjectKey(createType.value, createKey.value))
 const createKeyValid = computed(() => isValidObjectKey(createType.value, normalizedCreateKey.value))
 const createKeyPlaceholder = computed(() => objectKeyExample(createType.value))
+const uploadFileLabel = computed(() => {
+  if (!uploadFile.value) return t('adminCatalog.noImageSelected')
+  return `${uploadFile.value.name} · ${formatFileSize(uploadFile.value.size)}`
+})
+const generatedUploadAlt = computed(() => {
+  const title = draft.title.trim() || selectedEntry.value?.objectKey || ''
+  const filename = uploadFile.value ? filenameWithoutExtension(uploadFile.value.name) : ''
+  return title || filename || t('adminCatalog.image')
+})
+const canUpload = computed(() => Boolean(uploadFile.value && !uploadError.value && !uploadPending.value))
 
 onMounted(() => {
   if (token.value) void refreshEntries({ loadSelection: true })
@@ -107,9 +135,14 @@ watch(isDirty, (dirty) => {
   else window.removeEventListener('beforeunload', preventUnsavedUnload)
 })
 
+watch(targetQuery, scheduleTargetSearch)
+
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', preventUnsavedUnload)
   if (feedbackTimer) window.clearTimeout(feedbackTimer)
+  revokeUploadPreview()
+  if (targetSearchTimer) window.clearTimeout(targetSearchTimer)
+  targetSearchClient?.dispose()
 })
 onBeforeRouteLeave(() => confirmDiscard())
 
@@ -256,14 +289,26 @@ async function createEntry(): Promise<void> {
 }
 
 async function save(): Promise<boolean> {
-  if (!selectedEntryId.value || !isDirty.value) return true
+  if (!selectedEntryId.value || (!isDirty.value && pendingMediaCleanup.value.length === 0)) return true
+  const mediaCleanupCandidates = [...pendingMediaCleanup.value]
+  if (!isDirty.value) {
+    saving.value = true
+    try {
+      const cleanupComplete = await cleanupRemovedMedia(mediaCleanupCandidates)
+      setFeedback(cleanupComplete ? t('adminCatalog.mediaCleanupRetried') : t('adminCatalog.mediaCleanupFailed'), !cleanupComplete)
+      return cleanupComplete
+    } finally {
+      saving.value = false
+    }
+  }
   saving.value = true
   clearFeedback()
   try {
     const saved = await saveAdminTranslation(token.value, selectedEntryId.value, activeLocale.value, cleanDraft())
     setDraft(draftFromEntry(saved))
     translationStatus.value = saved.status
-    setFeedback(t('adminCatalog.saved'))
+    const cleanupComplete = await cleanupRemovedMedia(mediaCleanupCandidates)
+    setFeedback(cleanupComplete ? t('adminCatalog.saved') : t('adminCatalog.mediaCleanupFailed'), !cleanupComplete)
     await refreshEntries({ selectId: selectedEntryId.value })
     return true
   } catch {
@@ -315,7 +360,8 @@ async function deleteEntry(): Promise<void> {
   saving.value = true
   clearFeedback()
   try {
-    await deleteAdminCatalogEntry(token.value, entry.id)
+    const mediaIds = await deleteAdminCatalogEntry(token.value, entry.id)
+    await deleteMediaObjects(mediaIds)
     selectedEntryId.value = ''
     setDraft(emptyTranslationDraft())
     await refreshEntries({ loadSelection: true })
@@ -337,7 +383,92 @@ function addSource(): void {
 }
 
 function removeMedia(index: number): void {
+  const media = draft.media[index]
+  if (!media || !window.confirm(t('adminCatalog.removeImageConfirm'))) return
   draft.media.splice(index, 1)
+  if (!draft.media.some((candidate) => candidate.mediaId === media.mediaId)
+      && !pendingMediaCleanup.value.includes(media.mediaId)) {
+    pendingMediaCleanup.value.push(media.mediaId)
+  }
+}
+
+function scheduleTargetSearch(): void {
+  if (targetSearchTimer) window.clearTimeout(targetSearchTimer)
+  const query = targetQuery.value.trim()
+  if (!query) {
+    targetSuggestions.value = []
+    targetSearchOpen.value = false
+    return
+  }
+  targetSearchTimer = window.setTimeout(() => void searchCatalogTarget(query), 100)
+}
+
+async function searchCatalogTarget(query: string): Promise<void> {
+  const sequence = ++targetSearchSequence
+  targetSearchPending.value = true
+  targetSearchError.value = false
+  try {
+    const direct = parseSkyTargetQuery(query, (id) => t(`skyMap.solarSystemBodies.${id}`))
+    if (direct.kind === 'solarSystemBody') {
+      targetSuggestions.value = []
+      chooseCatalogTarget('solar-system-body', `solar-system:${direct.id}`)
+      return
+    }
+    const client = await ensureTargetSearchClient()
+    const result = await client.search({
+      query,
+      cultureId: 'western-iau',
+      interfaceLanguage: locale.value,
+      limit: 8,
+    })
+    if (sequence !== targetSearchSequence) return
+    targetSuggestions.value = result.suggestions.filter((suggestion) => suggestion.availableInCatalog)
+    targetSearchOpen.value = true
+  } catch {
+    if (sequence === targetSearchSequence) targetSearchError.value = true
+  } finally {
+    if (sequence === targetSearchSequence) targetSearchPending.value = false
+  }
+}
+
+async function ensureTargetSearchClient(): Promise<SkyMapWorkerClient> {
+  if (!targetSearchClient) targetSearchClient = new SkyMapWorkerClient()
+  await targetSearchClient.initialize()
+  return targetSearchClient
+}
+
+function chooseCatalogSuggestion(suggestion: SkySearchSuggestion): void {
+  chooseCatalogTarget('star', suggestion.objectId)
+}
+
+function chooseCatalogTarget(type: CatalogObjectType, objectKey: string): void {
+  createType.value = type
+  createKey.value = objectKey
+  createError.value = ''
+  targetQuery.value = ''
+  targetSuggestions.value = []
+  targetSearchOpen.value = false
+}
+
+async function cleanupRemovedMedia(mediaIds: string[]): Promise<boolean> {
+  if (mediaIds.length === 0) return true
+  try {
+    const unreferenced = await findUnreferencedCatalogMedia(token.value, mediaIds)
+    await deleteMediaObjects(unreferenced)
+    pendingMediaCleanup.value = pendingMediaCleanup.value.filter((mediaId) => !mediaIds.includes(mediaId))
+    return true
+  } catch {
+    pendingMediaCleanup.value = [...new Set(mediaIds)]
+    return false
+  }
+}
+
+async function deleteMediaObjects(mediaIds: string[]): Promise<void> {
+  if (mediaIds.length === 0) return
+  const results = await Promise.allSettled(mediaIds.map((mediaId) => deleteCatalogMedia(token.value, mediaId)))
+  if (results.some((result) => result.status === 'rejected')) {
+    throw new Error('One or more media objects could not be deleted')
+  }
 }
 
 function moveMedia(index: number, offset: number): void {
@@ -348,25 +479,34 @@ function moveMedia(index: number, offset: number): void {
 }
 
 function selectUpload(event: Event): void {
-  uploadFile.value = (event.target as HTMLInputElement).files?.[0] ?? null
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  setUploadFile(file)
+  if (!uploadFile.value) input.value = ''
+}
+
+function dropUpload(event: DragEvent): void {
+  setUploadFile(event.dataTransfer?.files?.[0] ?? null)
+  if (uploadInput.value && !uploadFile.value) uploadInput.value.value = ''
 }
 
 async function upload(): Promise<void> {
-  if (!uploadFile.value || !uploadAlt.value.trim()) return
+  if (!uploadFile.value || uploadError.value) return
   uploadPending.value = true
   clearFeedback()
+  const altText = uploadAlt.value.trim() || generatedUploadAlt.value
   try {
-    const asset = await uploadCatalogMedia(token.value, uploadFile.value, { altText: uploadAlt.value.trim() })
+    const asset = await uploadCatalogMedia(token.value, uploadFile.value, { altText })
     draft.media.push({
       mediaId: asset.mediaId,
-      altText: uploadAlt.value.trim(),
+      url: asset.url,
+      altText,
       caption: null,
       author: null,
       license: null,
       attribution: null,
     })
-    uploadFile.value = null
-    uploadAlt.value = ''
+    resetUpload()
     if (uploadInput.value) uploadInput.value.value = ''
     setFeedback(t('adminCatalog.uploaded'))
   } catch {
@@ -376,9 +516,51 @@ async function upload(): Promise<void> {
   }
 }
 
+function setUploadFile(file: File | null): void {
+  revokeUploadPreview()
+  uploadFile.value = file
+  uploadError.value = ''
+  if (!file) return
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    uploadError.value = t('adminCatalog.unsupportedImageType')
+    uploadFile.value = null
+    return
+  }
+  if (file.size === 0 || file.size > 8 * 1024 * 1024) {
+    uploadError.value = t('adminCatalog.imageTooLarge')
+    uploadFile.value = null
+    return
+  }
+  uploadPreviewUrl.value = URL.createObjectURL(file)
+  if (!uploadAlt.value.trim()) uploadAlt.value = generatedUploadAlt.value
+}
+
+function resetUpload(): void {
+  revokeUploadPreview()
+  uploadFile.value = null
+  uploadAlt.value = ''
+  uploadError.value = ''
+}
+
+function revokeUploadPreview(): void {
+  if (!uploadPreviewUrl.value) return
+  URL.revokeObjectURL(uploadPreviewUrl.value)
+  uploadPreviewUrl.value = ''
+}
+
+function filenameWithoutExtension(filename: string): string {
+  return filename.replace(/\.[^.]+$/, '').trim()
+}
+
+function formatFileSize(size: number): string {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`
+  return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
 function setDraft(value: TranslationDraft): void {
   Object.assign(draft, cloneTranslationDraft(value))
   baselineFingerprint.value = draftFingerprint(draft)
+  pendingMediaCleanup.value = []
 }
 
 function draftFromEntry(entry: CatalogEntry): TranslationDraft {
@@ -389,7 +571,7 @@ function draftFromEntry(entry: CatalogEntry): TranslationDraft {
     knowledgePoints: [...entry.knowledgePoints],
     imageCaption: entry.imageCaption,
     sources: entry.sources.map((source) => ({ ...source })),
-    media: entry.media.map(({ url: _url, ...media }) => ({ ...media })),
+    media: entry.media.map((media) => ({ ...media })),
   }
 }
 
@@ -403,7 +585,7 @@ function cleanDraft(): TranslationDraft {
     sources: draft.sources
       .map((source) => ({ ...source, title: source.title.trim(), url: source.url.trim() }))
       .filter((source) => source.title && source.url),
-    media: draft.media.map((media) => ({ ...media, altText: media.altText.trim() })),
+    media: draft.media.map(mediaDraftPayload),
   }
 }
 
@@ -463,6 +645,23 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
         </form>
 
         <form class="create-entry" @submit.prevent="createEntry">
+          <div class="target-picker">
+            <label>{{ t('adminCatalog.findSkyObject') }}</label>
+            <div class="target-search-field">
+              <input v-model="targetQuery" type="search" :placeholder="t('adminCatalog.findSkyObjectHint')" :aria-label="t('adminCatalog.findSkyObject')" @focus="targetSearchOpen = targetSuggestions.length > 0">
+              <Search :size="15" aria-hidden="true" />
+            </div>
+            <ul v-if="targetSearchOpen && targetSuggestions.length" class="target-picker-results" role="listbox">
+              <li v-for="suggestion in targetSuggestions" :key="suggestion.objectId">
+                <button type="button" @click="chooseCatalogSuggestion(suggestion)">
+                  <span>{{ suggestion.term }}</span>
+                  <small>{{ suggestion.objectId }}</small>
+                </button>
+              </li>
+            </ul>
+            <small v-if="targetSearchPending" class="target-picker-note">{{ t('catalog.loading') }}</small>
+            <small v-else-if="targetSearchError" class="field-error">{{ t('adminCatalog.targetSearchFailed') }}</small>
+          </div>
           <div class="create-row">
             <select v-model="createType" :aria-label="t('adminCatalog.objectType')" @change="createError = ''">
               <option value="star">{{ t('catalog.types.star') }}</option>
@@ -521,9 +720,9 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
             <span :class="['status-badge', translationStatus.toLowerCase()]">{{ t(`adminCatalog.status.${translationStatus}`) }}</span>
           </div>
           <button type="button" class="danger-icon" :aria-label="t('adminCatalog.delete')" :title="t('adminCatalog.delete')" :disabled="saving" @click="deleteEntry"><Trash2 :size="16" /></button>
-          <button type="button" class="secondary-button" :disabled="saving || editorLoading || !isDirty" @click="save"><Save :size="16" />{{ t('adminCatalog.save') }}</button>
+          <button type="button" class="secondary-button" :disabled="saving || editorLoading || (!isDirty && pendingMediaCleanup.length === 0)" @click="save"><Save :size="16" />{{ t('adminCatalog.saveDraft') }}</button>
           <button type="button" class="primary-button" :disabled="saving || editorLoading" @click="togglePublished">
-            {{ translationStatus === 'PUBLISHED' ? t('adminCatalog.unpublish') : t('adminCatalog.publish') }}
+            {{ translationStatus === 'PUBLISHED' ? t('adminCatalog.takeOffline') : t('adminCatalog.publishNow') }}
           </button>
         </header>
 
@@ -591,7 +790,7 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
           <section class="collection-editor media-editor">
             <header><h2>{{ t('adminCatalog.media') }}</h2></header>
             <div v-for="(media, index) in draft.media" :key="media.mediaId" class="media-row">
-              <img :src="`/api/media/assets/${media.mediaId}`" :alt="media.altText">
+              <img :src="catalogMediaUrl(media)" :alt="media.altText">
               <div>
                 <code>{{ media.mediaId }}</code>
                 <input v-model="media.altText" maxlength="500" :placeholder="t('adminCatalog.altText')" :aria-label="t('adminCatalog.altText')">
@@ -600,14 +799,26 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
               <div class="media-actions">
                 <button type="button" :disabled="index === 0" :aria-label="t('adminCatalog.moveUp')" @click="moveMedia(index, -1)"><ChevronUp :size="15" /></button>
                 <button type="button" :disabled="index + 1 === draft.media.length" :aria-label="t('adminCatalog.moveDown')" @click="moveMedia(index, 1)"><ChevronDown :size="15" /></button>
-                <button type="button" :aria-label="t('adminCatalog.remove')" @click="removeMedia(index)"><Trash2 :size="15" /></button>
+                <button type="button" :aria-label="t('adminCatalog.removeImage')" :title="t('adminCatalog.removeImage')" @click="removeMedia(index)"><Trash2 :size="15" /></button>
               </div>
             </div>
-            <div class="upload-row">
-              <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" :aria-label="t('adminCatalog.image')" @change="selectUpload">
-              <input v-model="uploadAlt" maxlength="500" :placeholder="t('adminCatalog.altText')">
-              <button type="button" class="secondary-button" :disabled="!uploadFile || !uploadAlt.trim() || uploadPending" @click="upload">
-                <Upload :size="16" />{{ t('adminCatalog.upload') }}
+            <div class="upload-panel" @dragover.prevent @drop.prevent="dropUpload">
+              <label class="upload-picker">
+                <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" :aria-label="t('adminCatalog.image')" @change="selectUpload">
+                <span>{{ t('adminCatalog.chooseImage') }}</span>
+              </label>
+              <div class="upload-preview" :class="{ empty: !uploadPreviewUrl }">
+                <img v-if="uploadPreviewUrl" :src="uploadPreviewUrl" :alt="uploadAlt || generatedUploadAlt">
+                <span v-else>{{ t('adminCatalog.noPreview') }}</span>
+              </div>
+              <div class="upload-fields">
+                <strong>{{ uploadFileLabel }}</strong>
+                <input v-model="uploadAlt" maxlength="500" :placeholder="t('adminCatalog.altTextOptional')" :aria-label="t('adminCatalog.altText')">
+                <small v-if="uploadError" class="field-error" role="alert">{{ uploadError }}</small>
+                <small v-else>{{ t('adminCatalog.uploadHint') }}</small>
+              </div>
+              <button type="button" class="secondary-button" :disabled="!canUpload" @click="upload">
+                <Upload :size="16" />{{ uploadPending ? t('adminCatalog.uploading') : t('adminCatalog.upload') }}
               </button>
             </div>
           </section>
@@ -619,7 +830,7 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
             <h2>{{ draft.title || t('adminCatalog.untitled') }}</h2>
             <p>{{ draft.summary || t('adminCatalog.noSummary') }}</p>
           </header>
-          <img v-if="draft.media[0]" :src="`/api/media/assets/${draft.media[0].mediaId}`" :alt="draft.media[0].altText">
+          <img v-if="draft.media[0]" :src="catalogMediaUrl(draft.media[0])" :alt="draft.media[0].altText">
           <div v-if="draft.bodyMarkdown.trim()" class="markdown-preview" v-html="renderedPreview"></div>
           <p v-else class="empty-preview">{{ t('adminCatalog.noBody') }}</p>
           <ul v-if="draft.knowledgePoints.some(point => point.trim())">
@@ -654,6 +865,15 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: #bd6f6
 .entry-search input { min-width: 0; }
 .entry-search select { min-width: 0; }
 .entry-search .icon-button { width: 34px; height: 100%; }
+.target-picker { position: relative; display: grid; gap: 5px; padding: 10px 10px 0; color: #8fa3af; font-size: 11px; }
+.target-search-field { position: relative; }
+.target-search-field input { width: 100%; padding-right: 30px; }
+.target-search-field svg { position: absolute; top: 50%; right: 9px; color: #6fbbb0; pointer-events: none; transform: translateY(-50%); }
+.target-picker-results { position: absolute; z-index: 12; top: calc(100% - 2px); right: 10px; left: 10px; overflow: hidden; margin: 0; border: 1px solid #466b67; border-radius: 3px; padding: 3px; list-style: none; background: #0b1821; box-shadow: 0 12px 28px rgb(0 0 0 / 45%); }
+.target-picker-results button { display: grid; gap: 2px; width: 100%; border: 0; border-radius: 2px; padding: 7px 8px; color: #dbe8e7; background: transparent; text-align: left; cursor: pointer; }
+.target-picker-results button:hover { background: #17302f; }
+.target-picker-results small { color: #77bdb2; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 10px; }
+.target-picker-note { color: #83a7a1; }
 .create-entry { padding: 10px; border-bottom: 1px solid #263c4b; }
 .create-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 34px; gap: 5px; }
 .create-row select, .create-row input { min-width: 0; padding: 7px; font-size: 11px; }
@@ -711,8 +931,16 @@ button:disabled { cursor: default; opacity: .45; }
 .media-row code { grid-column: 1 / -1; overflow: hidden; color: #75bdb5; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .media-actions { display: grid; gap: 4px; }
 .media-actions button { width: 28px; height: 24px; border-color: #394d56; color: #9badb3; background: transparent; }
-.upload-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto; gap: 8px; }
-.upload-row input { min-width: 0; }
+.upload-panel { display: grid; grid-template-columns: 110px 110px minmax(0, 1fr) auto; gap: 10px; align-items: stretch; border: 1px dashed #2e4b57; padding: 10px; background: #07131b; }
+.upload-picker { display: grid; place-items: center; min-height: 86px; border: 1px solid #395663; border-radius: 3px; color: #b6c7cc; background: #0b1821; cursor: pointer; }
+.upload-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.upload-preview { display: grid; place-items: center; width: 110px; min-height: 86px; border: 1px solid #263c4b; color: #5f7680; background: #09141d; font-size: 11px; }
+.upload-preview img { width: 100%; height: 100%; max-height: 106px; object-fit: cover; }
+.upload-fields { display: grid; min-width: 0; gap: 6px; align-content: center; }
+.upload-fields strong { overflow: hidden; color: #c5d2d8; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.upload-fields small { color: #6e858e; font-size: 11px; }
+.upload-fields input { min-width: 0; }
+.upload-panel .secondary-button { align-self: center; min-width: 82px; }
 .content-preview { max-width: 880px; width: 100%; margin: 0 auto; color: #b9c9cc; }
 .content-preview > header { padding-bottom: 18px; border-bottom: 1px solid #263c4b; }
 .content-preview > header span { color: #72c9bd; font-size: 11px; }
@@ -739,9 +967,10 @@ button:disabled { cursor: default; opacity: .45; }
   .editor-toolbar, .editor-subnav { align-items: stretch; flex-wrap: wrap; }
   .entry-identity { width: 100%; }
   .editor-subnav { padding-top: 4px; }
-  .source-row, .upload-row, .media-row { grid-template-columns: 1fr; }
+  .source-row, .upload-panel, .media-row { grid-template-columns: 1fr; }
   .source-row .row-command { width: 100%; }
   .media-row img { width: 100%; height: 150px; }
   .media-actions { grid-template-columns: repeat(3, 32px); }
+  .upload-preview { width: 100%; min-height: 150px; }
 }
 </style>

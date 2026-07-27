@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "astro.media.public-base-url=https://media.example.com/")
 @AutoConfigureMockMvc
 class CatalogApiIntegrationTest {
     @Autowired
@@ -113,6 +113,53 @@ class CatalogApiIntegrationTest {
     }
 
     @Test
+    void returnsConfiguredAbsoluteMediaUrls() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"objectType":"star","objectKey":"HIP:112233"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        String entryId = objectMapper.readTree(created.getResponse().getContentAsByteArray()).path("id").asText();
+        String mediaId = "12345678-1234-1234-1234-123456789012.webp";
+
+        mockMvc.perform(put("/api/content/admin/catalog-entries/{entryId}/translations/en", entryId)
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title":"Media star",
+                                  "summary":"An entry with media.",
+                                  "bodyMarkdown":"Catalog body.",
+                                  "knowledgePoints":[],
+                                  "imageCaption":null,
+                                  "sources":[],
+                                  "media":[{
+                                    "mediaId":"%s",
+                                    "altText":"A star",
+                                    "caption":null,
+                                    "author":null,
+                                    "license":null,
+                                    "attribution":null
+                                  }]
+                                }
+                                """.formatted(mediaId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.media[0].url").value("https://media.example.com/" + mediaId));
+
+        mockMvc.perform(post("/api/content/admin/catalog-entries/{entryId}/translations/en/publish", entryId)
+                        .with(adminJwt()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/content/catalog-entries").queryParam("locale", "en").queryParam("query", "Media star"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].primaryMediaUrl")
+                        .value("https://media.example.com/" + mediaId));
+    }
+
+    @Test
     void allowsFeaturedPatternsToBeWrittenAndPublished() throws Exception {
         MvcResult created = mockMvc.perform(post("/api/content/admin/catalog-entries")
                         .with(adminJwt())
@@ -176,7 +223,8 @@ class CatalogApiIntegrationTest {
 
         mockMvc.perform(delete("/api/content/admin/catalog-entries/{entryId}", entryId)
                         .with(adminJwt()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(get("/api/content/admin/catalog-entries")
                         .with(adminJwt())
@@ -195,6 +243,52 @@ class CatalogApiIntegrationTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("CATALOG_REQUEST_INVALID"));
+    }
+
+    @Test
+    void identifiesOnlyMediaThatIsNoLongerReferenced() throws Exception {
+        String unusedMediaId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.webp";
+        String sharedMediaId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb.webp";
+        MvcResult first = mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"objectType\":\"star\",\"objectKey\":\"HIP:24680\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String firstId = objectMapper.readTree(first.getResponse().getContentAsByteArray()).path("id").asText();
+        MvcResult second = mockMvc.perform(post("/api/content/admin/catalog-entries")
+                        .with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"objectType\":\"star\",\"objectKey\":\"HIP:24681\"}"))
+                .andExpect(status().isOk()).andReturn();
+        String secondId = objectMapper.readTree(second.getResponse().getContentAsByteArray()).path("id").asText();
+
+        String body = """
+                {"title":"Entry","summary":"Summary","bodyMarkdown":"Body","knowledgePoints":[],"sources":[],"media":[
+                {"mediaId":"%s","altText":"Unused","caption":null,"author":null,"license":null,"attribution":null},
+                {"mediaId":"%s","altText":"Shared","caption":null,"author":null,"license":null,"attribution":null}]}
+                """.formatted(unusedMediaId, sharedMediaId);
+        mockMvc.perform(put("/api/content/admin/catalog-entries/{entryId}/translations/en", firstId)
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+        mockMvc.perform(put("/api/content/admin/catalog-entries/{entryId}/translations/en", secondId)
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body.replace(unusedMediaId, sharedMediaId)))
+                .andExpect(status().isOk());
+
+        String sharedOnlyBody = """
+                {"title":"Entry","summary":"Summary","bodyMarkdown":"Body","knowledgePoints":[],"sources":[],"media":[
+                {"mediaId":"%s","altText":"Shared","caption":null,"author":null,"license":null,"attribution":null}]}
+                """.formatted(sharedMediaId);
+        mockMvc.perform(put("/api/content/admin/catalog-entries/{entryId}/translations/en", firstId)
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(sharedOnlyBody))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/content/admin/catalog-entries/media/unreferenced")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"mediaIds\":[\"%s\",\"%s\"]}".formatted(unusedMediaId, sharedMediaId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value(unusedMediaId))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test

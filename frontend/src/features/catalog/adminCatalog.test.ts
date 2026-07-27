@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  catalogMediaUrl,
   draftFingerprint,
   emptyTranslationDraft,
   isPublishableDraft,
   isValidObjectKey,
+  mediaDraftPayload,
   normalizeObjectKey,
 } from './adminCatalog'
 
@@ -31,5 +33,29 @@ describe('catalog admin helpers', () => {
     draft.bodyMarkdown = '## Overview'
     expect(isPublishableDraft(draft)).toBe(true)
     expect(draftFingerprint(draft)).not.toBe(baseline)
+  })
+
+  it('uses API media URLs while keeping URLs out of saved content', () => {
+    const media = {
+      mediaId: '12345678-1234-1234-1234-123456789012.webp',
+      url: 'https://media.example.com/12345678-1234-1234-1234-123456789012.webp',
+      altText: '  Vega  ',
+      caption: null,
+      author: null,
+      license: null,
+      attribution: null,
+    }
+
+    expect(catalogMediaUrl(media)).toBe(media.url)
+    expect(mediaDraftPayload(media)).toEqual({
+      mediaId: media.mediaId,
+      altText: 'Vega',
+      caption: null,
+      author: null,
+      license: null,
+      attribution: null,
+    })
+    expect(Object.hasOwn(mediaDraftPayload(media), 'url')).toBe(false)
+    expect(catalogMediaUrl({ ...media, url: undefined })).toBe(`/api/media/assets/${media.mediaId}`)
   })
 })

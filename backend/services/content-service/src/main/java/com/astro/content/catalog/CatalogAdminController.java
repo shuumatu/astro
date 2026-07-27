@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.UUID;
+import java.util.List;
 
 @Validated
 @RestController
@@ -47,6 +48,11 @@ public class CatalogAdminController {
     @PostMapping
     public CatalogResponses.AdminSummary create(@Valid @RequestBody CreateCatalogEntryRequest request) {
         return catalogService.create(request);
+    }
+
+    @PostMapping("/media/unreferenced")
+    public List<String> findUnreferencedMedia(@Valid @RequestBody MediaReleaseRequest request) {
+        return catalogService.unreferencedMedia(request.mediaIds());
     }
 
     @PutMapping("/{entryId}/translations/{locale}")
@@ -83,8 +89,7 @@ public class CatalogAdminController {
     }
 
     @DeleteMapping("/{entryId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("entryId") UUID entryId) {
-        catalogService.delete(entryId);
+    public List<String> delete(@PathVariable("entryId") UUID entryId) {
+        return catalogService.delete(entryId);
     }
 }

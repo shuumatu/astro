@@ -20,6 +20,8 @@ spring:
 astro:
   security:
     jwt-secret: ${ASTRO_JWT_SECRET:astro-local-development-secret-change-before-production}
+  media:
+    public-base-url: ${MEDIA_PUBLIC_BASE_URL:/api/media/assets}
 management:
   endpoints:
     web:

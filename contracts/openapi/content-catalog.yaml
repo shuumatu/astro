@@ -74,8 +74,39 @@ paths:
       parameters:
         - { name: entryId, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
-        '204': { description: Entry and all translations deleted. }
+        '200':
+          description: Entry and all translations deleted. The returned IDs are safe to remove from object storage because no remaining translation references them.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
         '404': { description: Entry not found. }
+  /api/content/admin/catalog-entries/media/unreferenced:
+    post:
+      operationId: findUnreferencedCatalogMedia
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mediaIds]
+              properties:
+                mediaIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { type: string }
+      responses:
+        '200':
+          description: Input IDs which are not referenced by any catalog translation and may be deleted from object storage.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
   /api/content/admin/catalog-entries/{entryId}/translations/{locale}:
     put:
       operationId: saveCatalogTranslationDraft
@@ -142,11 +173,26 @@ components:
       type: object
       required: [items, page, size, totalElements, totalPages]
       properties:
-        items: { type: array, items: { type: object } }
+        items: { type: array, items: { $ref: '#/components/schemas/CatalogSummary' } }
         page: { type: integer }
         size: { type: integer }
         totalElements: { type: integer }
         totalPages: { type: integer }
+    CatalogSummary:
+      type: object
+      required: [id, objectType, objectKey, contentLocale, title, summary, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        objectType: { $ref: '#/components/schemas/ObjectType' }
+        objectKey: { type: string }
+        contentLocale: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        primaryMediaUrl:
+          type: [string, 'null']
+          format: uri-reference
+          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL in production.
+        updatedAt: { type: string, format: date-time }
     TranslationDraft:
       type: object
       required: [title, summary, bodyMarkdown, knowledgePoints, sources, media]
@@ -172,7 +218,10 @@ components:
       required: [mediaId, altText]
       properties:
         mediaId: { type: string }
-        url: { type: string }
+        url:
+          type: string
+          format: uri-reference
+          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL in production.
         altText: { type: string }
         caption: { type: [string, 'null'] }
         author: { type: [string, 'null'] }
