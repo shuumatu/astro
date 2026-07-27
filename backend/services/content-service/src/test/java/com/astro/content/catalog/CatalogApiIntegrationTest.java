@@ -74,7 +74,7 @@ class CatalogApiIntegrationTest {
     }
 
     @Test
-    void keepsDraftsPrivateAndAllowsTheSingleAdminToPublishWithoutSources() throws Exception {
+    void keepsDraftsPrivateAndAllowsPublishingWithoutSummaryBodyOrSources() throws Exception {
         MvcResult created = mockMvc.perform(post("/api/content/admin/catalog-entries")
                         .with(adminJwt())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,8 +92,8 @@ class CatalogApiIntegrationTest {
                         .content("""
                                 {
                                   "title":"Test star",
-                                  "summary":"A test catalog entry.",
-                                  "bodyMarkdown":"A short **Markdown** article.",
+                                  "summary":"",
+                                  "bodyMarkdown":"",
                                   "knowledgePoints":["One point"],
                                   "imageCaption":null,
                                   "sources":[],
@@ -113,6 +113,8 @@ class CatalogApiIntegrationTest {
 
         mockMvc.perform(get("/api/content/catalog-entries/star/HIP:12345").queryParam("locale", "en"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary").value(""))
+                .andExpect(jsonPath("$.bodyMarkdown").value(""))
                 .andExpect(jsonPath("$.sources.length()").value(0));
     }
 

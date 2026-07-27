@@ -30,8 +30,6 @@ describe('catalog admin helpers', () => {
     const baseline = draftFingerprint(draft)
     expect(isPublishableDraft(draft)).toBe(false)
     draft.title = 'Vega'
-    draft.summary = 'A bright star.'
-    draft.bodyMarkdown = '## Overview'
     expect(isPublishableDraft(draft)).toBe(true)
     expect(draftFingerprint(draft)).not.toBe(baseline)
   })

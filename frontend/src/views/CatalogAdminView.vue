@@ -723,13 +723,11 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
           </label>
           <label>
             <span>{{ t('adminCatalog.summary') }} <small>{{ draft.summary.length }}/600</small></span>
-            <textarea v-model="draft.summary" rows="3" maxlength="600" :aria-invalid="publishAttempted && !draft.summary.trim()"></textarea>
-            <small v-if="publishAttempted && !draft.summary.trim()" class="field-error">{{ t('adminCatalog.requiredForPublish') }}</small>
+            <textarea v-model="draft.summary" rows="3" maxlength="600"></textarea>
           </label>
           <label>
             <span>{{ t('adminCatalog.body') }}</span>
-            <textarea ref="bodyEditor" v-model="draft.bodyMarkdown" class="body-editor" rows="15" maxlength="50000" :aria-invalid="publishAttempted && !draft.bodyMarkdown.trim()"></textarea>
-            <small v-if="publishAttempted && !draft.bodyMarkdown.trim()" class="field-error">{{ t('adminCatalog.requiredForPublish') }}</small>
+            <textarea ref="bodyEditor" v-model="draft.bodyMarkdown" class="body-editor" rows="15" maxlength="50000"></textarea>
           </label>
 
           <section class="collection-editor">

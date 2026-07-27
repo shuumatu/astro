@@ -284,8 +284,6 @@ public class CatalogService {
     private void validatePublishable(CatalogTranslation translation) {
         List<String> missing = new ArrayList<>();
         if (translation.getTitle().isBlank()) missing.add("title");
-        if (translation.getSummary().isBlank()) missing.add("summary");
-        if (translation.getBodyMarkdown().isBlank()) missing.add("bodyMarkdown");
         if (!missing.isEmpty()) {
             throw new CatalogValidationException("Cannot publish; missing: " + String.join(", ", missing));
         }

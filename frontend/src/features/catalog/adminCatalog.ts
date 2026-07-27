@@ -42,7 +42,7 @@ export function draftFingerprint(value: TranslationDraft): string {
 }
 
 export function isPublishableDraft(value: TranslationDraft): boolean {
-  return Boolean(value.title.trim() && value.summary.trim() && value.bodyMarkdown.trim())
+  return Boolean(value.title.trim())
 }
 
 export function objectKeyExample(type: CatalogObjectType): string {

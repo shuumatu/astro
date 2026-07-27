@@ -189,8 +189,8 @@ function openMediaReference(event: MouseEvent): void {
       <div v-else-if="error" class="content-state error" role="alert">{{ t('catalog.loadFailed') }}</div>
       <template v-else-if="entry">
         <CatalogMediaGallery ref="mediaGallery" :media="entry.media" collapsible compact />
-        <p class="catalog-summary">{{ entry.summary }}</p>
-        <div class="catalog-markdown" v-html="renderedBody" @click="openMediaReference"></div>
+        <p v-if="entry.summary" class="catalog-summary">{{ entry.summary }}</p>
+        <div v-if="entry.bodyMarkdown" class="catalog-markdown" v-html="renderedBody" @click="openMediaReference"></div>
         <ul v-if="entry.knowledgePoints.length" class="knowledge-points">
           <li v-for="point in entry.knowledgePoints" :key="point">{{ point }}</li>
         </ul>

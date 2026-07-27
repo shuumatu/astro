@@ -199,7 +199,7 @@
     "unsaved": "Unsaved",
     "discardChanges": "Discard the unsaved changes to this translation?",
     "unpublishConfirm": "Unpublish this language version?",
-    "publishMissingFields": "A title, summary, and article body are required before publishing",
+    "publishMissingFields": "A title is required before publishing",
     "requiredForPublish": "Required before publishing",
     "entryTitle": "Title",
     "summary": "Short summary",

@@ -199,7 +199,7 @@
     "unsaved": "未保存",
     "discardChanges": "当前修改尚未保存，确定放弃这些修改吗？",
     "unpublishConfirm": "确定撤回当前语言的已发布内容吗？",
-    "publishMissingFields": "发布前必须填写标题、短简介和正文",
+    "publishMissingFields": "发布前必须填写标题",
     "requiredForPublish": "发布前必须填写此项",
     "entryTitle": "标题",
     "summary": "短简介",

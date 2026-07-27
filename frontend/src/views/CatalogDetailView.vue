@@ -52,10 +52,10 @@ function openMediaReference(event: MouseEvent): void {
       <header class="detail-header">
         <span>{{ t(`catalog.types.${entry.objectType}`) }} · {{ entry.objectKey }}</span>
         <h1>{{ entry.title }}</h1>
-        <p>{{ entry.summary }}</p>
+        <p v-if="entry.summary">{{ entry.summary }}</p>
       </header>
-      <div class="detail-layout">
-        <div class="detail-body" v-html="renderedBody" @click="openMediaReference"></div>
+      <div class="detail-layout" :class="{ 'without-body': !entry.bodyMarkdown }">
+        <div v-if="entry.bodyMarkdown" class="detail-body" v-html="renderedBody" @click="openMediaReference"></div>
         <aside>
           <CatalogMediaGallery ref="mediaGallery" :media="entry.media" />
           <section v-if="entry.knowledgePoints.length">
@@ -87,6 +87,8 @@ function openMediaReference(event: MouseEvent): void {
 .detail-body :deep(a) { color: #7bd0c5; text-decoration: underline; }
 .detail-body :deep(a[href^="#catalog-media-"]) { display: inline-flex; align-items: center; min-height: 20px; border: 1px solid #3e625f; border-radius: 3px; padding: 0 4px; color: #8ad8cd; background: #102421; font-size: .78em; font-weight: 700; text-decoration: none; }
 .detail-layout aside { border-left: 1px solid #263d45; padding-left: 24px; }
+.detail-layout.without-body { grid-template-columns: minmax(0, 360px); }
+.detail-layout.without-body aside { border-left: 0; padding-left: 0; }
 .detail-layout aside .media-gallery + section { margin-top: 28px; }
 .detail-layout aside section + section { margin-top: 28px; }
 .detail-layout aside h2 { margin: 0 0 12px; color: #82999c; font-size: 12px; text-transform: uppercase; }
