@@ -42,7 +42,7 @@ public class S3MediaStorage implements MediaStorage {
     public void put(String mediaId, InputStream content, long contentLength, String contentType) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(properties.bucket())
-                .key(mediaId)
+                .key(properties.objectKey(mediaId))
                 .contentType(contentType)
                 .cacheControl(IMMUTABLE_CACHE_CONTROL)
                 .build();
@@ -53,7 +53,7 @@ public class S3MediaStorage implements MediaStorage {
     public StoredMedia open(String mediaId) {
         ResponseInputStream<GetObjectResponse> content = s3Client.getObject(GetObjectRequest.builder()
                 .bucket(properties.bucket())
-                .key(mediaId)
+                .key(properties.objectKey(mediaId))
                 .build());
         GetObjectResponse response = content.response();
         return new StoredMedia(content, response.contentType(), response.contentLength());
@@ -63,7 +63,7 @@ public class S3MediaStorage implements MediaStorage {
     public void delete(String mediaId) {
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(properties.bucket())
-                .key(mediaId)
+                .key(properties.objectKey(mediaId))
                 .build());
     }
 }

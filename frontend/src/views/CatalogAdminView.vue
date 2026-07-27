@@ -14,7 +14,7 @@ import {
   Upload,
   X,
 } from 'lucide-vue-next'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave } from 'vue-router'
 import {
@@ -38,11 +38,14 @@ import {
   entryTitleForLocale,
   isPublishableDraft,
   isValidObjectKey,
+  insertImageReference,
   mediaDraftPayload,
   normalizeObjectKey,
   objectKeyExample,
 } from '../features/catalog/adminCatalog'
 import { renderRestrictedMarkdown } from '../features/catalog/markdown'
+import CatalogMediaGallery from '../features/catalog/CatalogMediaGallery.vue'
+import type { CatalogMedia } from '../features/catalog/types'
 import SkyTargetSearch from '../features/sky-map/SkyTargetSearch.vue'
 import type { SkySearchSuggestion } from '../features/sky-map/types'
 import type {
@@ -89,6 +92,8 @@ const uploadPending = ref(false)
 const uploadFile = ref<File | null>(null)
 const uploadAlt = ref('')
 const uploadInput = ref<HTMLInputElement | null>(null)
+const bodyEditor = ref<HTMLTextAreaElement | null>(null)
+const previewMediaGallery = ref<InstanceType<typeof CatalogMediaGallery> | null>(null)
 const uploadPreviewUrl = ref('')
 const uploadError = ref('')
 const publishAttempted = ref(false)
@@ -104,6 +109,10 @@ const selectedEntry = computed(() => entries.value.find((entry) => entry.id === 
 const isDirty = computed(() => draftFingerprint(draft) !== baselineFingerprint.value)
 const publishable = computed(() => isPublishableDraft(draft))
 const renderedPreview = computed(() => renderRestrictedMarkdown(draft.bodyMarkdown))
+const previewMedia = computed<CatalogMedia[]>(() => draft.media.map((media) => ({
+  ...media,
+  url: catalogMediaUrl(media),
+})))
 const normalizedCreateKey = computed(() => normalizeObjectKey(createType.value, createKey.value))
 const createKeyValid = computed(() => isValidObjectKey(createType.value, normalizedCreateKey.value))
 const createKeyPlaceholder = computed(() => objectKeyExample(createType.value))
@@ -422,6 +431,25 @@ function moveMedia(index: number, offset: number): void {
   draft.media.splice(target, 0, media)
 }
 
+async function insertMediaReference(index: number): Promise<void> {
+  const editor = bodyEditor.value
+  const start = editor?.selectionStart ?? draft.bodyMarkdown.length
+  const end = editor?.selectionEnd ?? start
+  const result = insertImageReference(draft.bodyMarkdown, start, end, index + 1)
+  draft.bodyMarkdown = result.markdown
+  await nextTick()
+  editor?.focus()
+  editor?.setSelectionRange(result.caret, result.caret)
+}
+
+function openPreviewMediaReference(event: MouseEvent): void {
+  const reference = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#catalog-media-"]')
+  if (!reference) return
+  event.preventDefault()
+  const number = Number(reference.hash.slice('#catalog-media-'.length))
+  if (Number.isInteger(number)) previewMediaGallery.value?.open(number - 1)
+}
+
 function selectUpload(event: Event): void {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0] ?? null
@@ -700,7 +728,7 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
           </label>
           <label>
             <span>{{ t('adminCatalog.body') }}</span>
-            <textarea v-model="draft.bodyMarkdown" class="body-editor" rows="15" maxlength="50000" :aria-invalid="publishAttempted && !draft.bodyMarkdown.trim()"></textarea>
+            <textarea ref="bodyEditor" v-model="draft.bodyMarkdown" class="body-editor" rows="15" maxlength="50000" :aria-invalid="publishAttempted && !draft.bodyMarkdown.trim()"></textarea>
             <small v-if="publishAttempted && !draft.bodyMarkdown.trim()" class="field-error">{{ t('adminCatalog.requiredForPublish') }}</small>
           </label>
 
@@ -728,13 +756,17 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
           <section class="collection-editor media-editor">
             <header><h2>{{ t('adminCatalog.media') }}</h2></header>
             <div v-for="(media, index) in draft.media" :key="media.mediaId" class="media-row">
-              <img :src="catalogMediaUrl(media)" :alt="media.altText">
+              <div class="media-thumbnail">
+                <img :src="catalogMediaUrl(media)" :alt="media.altText">
+                <span>[{{ index + 1 }}]</span>
+              </div>
               <div>
                 <code>{{ media.mediaId }}</code>
                 <input v-model="media.altText" maxlength="500" :placeholder="t('adminCatalog.altText')" :aria-label="t('adminCatalog.altText')">
                 <input v-model="media.caption" maxlength="500" :placeholder="t('adminCatalog.imageCaption')" :aria-label="t('adminCatalog.imageCaption')">
               </div>
               <div class="media-actions">
+                <button type="button" class="reference-insert" :aria-label="t('adminCatalog.insertImageReference', { number: index + 1 })" :title="t('adminCatalog.insertImageReference', { number: index + 1 })" @click="insertMediaReference(index)">[{{ index + 1 }}]</button>
                 <button type="button" :disabled="index === 0" :aria-label="t('adminCatalog.moveUp')" @click="moveMedia(index, -1)"><ChevronUp :size="15" /></button>
                 <button type="button" :disabled="index + 1 === draft.media.length" :aria-label="t('adminCatalog.moveDown')" @click="moveMedia(index, 1)"><ChevronDown :size="15" /></button>
                 <button type="button" :aria-label="t('adminCatalog.removeImage')" :title="t('adminCatalog.removeImage')" @click="removeMedia(index)"><Trash2 :size="15" /></button>
@@ -768,9 +800,13 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
             <h2>{{ draft.title || t('adminCatalog.untitled') }}</h2>
             <p>{{ draft.summary || t('adminCatalog.noSummary') }}</p>
           </header>
-          <img v-if="draft.media[0]" :src="catalogMediaUrl(draft.media[0])" :alt="draft.media[0].altText">
-          <div v-if="draft.bodyMarkdown.trim()" class="markdown-preview" v-html="renderedPreview"></div>
-          <p v-else class="empty-preview">{{ t('adminCatalog.noBody') }}</p>
+          <div class="preview-layout">
+            <div>
+              <div v-if="draft.bodyMarkdown.trim()" class="markdown-preview" v-html="renderedPreview" @click="openPreviewMediaReference"></div>
+              <p v-else class="empty-preview">{{ t('adminCatalog.noBody') }}</p>
+            </div>
+            <CatalogMediaGallery ref="previewMediaGallery" :media="previewMedia" />
+          </div>
           <ul v-if="draft.knowledgePoints.some(point => point.trim())">
             <li v-for="point in draft.knowledgePoints.filter(point => point.trim())" :key="point">{{ point }}</li>
           </ul>
@@ -864,11 +900,14 @@ button:disabled { cursor: default; opacity: .45; }
 .row-command { width: 32px; min-height: 34px; border-color: #4f3c41; color: #cb8988; background: transparent; }
 .empty-collection { margin: 8px 0; color: #5f7680; font-size: 11px; }
 .media-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 32px; gap: 10px; margin-bottom: 8px; padding: 8px; border: 1px solid #203542; background: #0b1821; }
-.media-row img { width: 92px; height: 70px; object-fit: cover; }
+.media-thumbnail { position: relative; width: 92px; height: 70px; }
+.media-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.media-thumbnail span { position: absolute; right: 4px; bottom: 4px; border-radius: 2px; padding: 2px 4px; color: #e9f2f1; background: rgb(4 12 16 / 78%); font: 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .media-row > div:nth-child(2) { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; min-width: 0; }
 .media-row code { grid-column: 1 / -1; overflow: hidden; color: #75bdb5; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .media-actions { display: grid; gap: 4px; }
 .media-actions button { width: 28px; height: 24px; border-color: #394d56; color: #9badb3; background: transparent; }
+.media-actions .reference-insert { color: #8fd8cc; font: 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .upload-panel { display: grid; grid-template-columns: 110px 110px minmax(0, 1fr) auto; gap: 10px; align-items: stretch; border: 1px dashed #2e4b57; padding: 10px; background: #07131b; }
 .upload-picker { display: grid; place-items: center; min-height: 86px; border: 1px solid #395663; border-radius: 3px; color: #b6c7cc; background: #0b1821; cursor: pointer; }
 .upload-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -884,10 +923,11 @@ button:disabled { cursor: default; opacity: .45; }
 .content-preview > header span { color: #72c9bd; font-size: 11px; }
 .content-preview h2 { margin: 5px 0 10px; color: #edf4f4; font-size: 28px; }
 .content-preview > header p { margin: 0; color: #9aadb2; line-height: 1.6; }
-.content-preview > img { display: block; max-width: 100%; max-height: 360px; margin: 18px 0; object-fit: contain; }
+.preview-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 280px); gap: 28px; margin-top: 20px; }
 .markdown-preview { margin-top: 20px; line-height: 1.75; }
 .markdown-preview :deep(h2), .markdown-preview :deep(h3) { color: #e1eaea; }
 .markdown-preview :deep(a) { color: #78cfc2; }
+.markdown-preview :deep(a[href^="#catalog-media-"]) { display: inline-flex; align-items: center; min-height: 18px; border: 1px solid #3e625f; border-radius: 3px; padding: 0 3px; color: #8ad8cd; background: #102421; font-size: .82em; font-weight: 700; text-decoration: none; }
 .empty-preview { margin-top: 32px; color: #647b84; text-align: center; }
 .editor-feedback { position: absolute; right: 16px; bottom: 14px; z-index: 3; max-width: min(420px, calc(100% - 32px)); margin: 0; border: 1px solid #3d665f; padding: 9px 12px; color: #9edbd2; background: #102824; box-shadow: 0 8px 24px rgb(0 0 0 / 35%); font-size: 12px; }
 .editor-feedback.error { border-color: #754948; color: #e6aaa0; background: #2a1718; }
@@ -907,8 +947,9 @@ button:disabled { cursor: default; opacity: .45; }
   .editor-subnav { padding-top: 4px; }
   .source-row, .upload-panel, .media-row { grid-template-columns: 1fr; }
   .source-row .row-command { width: 100%; }
-  .media-row img { width: 100%; height: 150px; }
-  .media-actions { grid-template-columns: repeat(3, 32px); }
+  .media-thumbnail { width: 100%; height: 150px; }
+  .media-actions { grid-template-columns: repeat(4, 32px); }
   .upload-preview { width: 100%; min-height: 150px; }
+  .preview-layout { grid-template-columns: 1fr; }
 }
 </style>

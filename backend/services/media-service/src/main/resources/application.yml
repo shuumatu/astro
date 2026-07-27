@@ -16,6 +16,7 @@ astro:
     access-key: ${MEDIA_S3_ACCESS_KEY:${MINIO_ROOT_USER:astro}}
     secret-key: ${MEDIA_S3_SECRET_KEY:${MINIO_ROOT_PASSWORD:change_me_before_start}}
     bucket: ${MEDIA_S3_BUCKET:${MINIO_BUCKET:astro-catalog-media}}
+    key-prefix: ${MEDIA_S3_KEY_PREFIX:catalog}
     path-style: ${MEDIA_S3_PATH_STYLE:true}
     auto-create-bucket: ${MEDIA_S3_AUTO_CREATE_BUCKET:true}
     delivery-mode: ${MEDIA_DELIVERY_MODE:proxy}

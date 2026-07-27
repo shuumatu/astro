@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import { loadCatalogEntry } from '../features/catalog/api'
+import CatalogMediaGallery from '../features/catalog/CatalogMediaGallery.vue'
 import { renderRestrictedMarkdown } from '../features/catalog/markdown'
 import type { CatalogEntry, CatalogObjectType } from '../features/catalog/types'
 
@@ -12,6 +13,7 @@ const { t, locale } = useI18n()
 const entry = ref<CatalogEntry | null>(null)
 const loading = ref(false)
 const failed = ref(false)
+const mediaGallery = ref<InstanceType<typeof CatalogMediaGallery> | null>(null)
 
 const objectType = computed(() => route.params.objectType as CatalogObjectType)
 const objectKey = computed(() => route.params.objectKey as string)
@@ -30,6 +32,14 @@ async function load(): Promise<void> {
     loading.value = false
   }
 }
+
+function openMediaReference(event: MouseEvent): void {
+  const reference = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#catalog-media-"]')
+  if (!reference) return
+  event.preventDefault()
+  const number = Number(reference.hash.slice('#catalog-media-'.length))
+  if (Number.isInteger(number)) mediaGallery.value?.open(number - 1)
+}
 </script>
 
 <template>
@@ -44,13 +54,10 @@ async function load(): Promise<void> {
         <h1>{{ entry.title }}</h1>
         <p>{{ entry.summary }}</p>
       </header>
-      <figure v-if="entry.media[0]" class="detail-media">
-        <img :src="entry.media[0].url" :alt="entry.media[0].altText">
-        <figcaption>{{ entry.media[0].caption || entry.media[0].attribution }}</figcaption>
-      </figure>
       <div class="detail-layout">
-        <div class="detail-body" v-html="renderedBody"></div>
+        <div class="detail-body" v-html="renderedBody" @click="openMediaReference"></div>
         <aside>
+          <CatalogMediaGallery ref="mediaGallery" :media="entry.media" />
           <section v-if="entry.knowledgePoints.length">
             <h2>{{ t('catalog.keyFacts') }}</h2>
             <ul><li v-for="point in entry.knowledgePoints" :key="point">{{ point }}</li></ul>
@@ -74,14 +81,13 @@ async function load(): Promise<void> {
 .detail-header span { color: #72c9bd; font-size: 12px; }
 .detail-header h1 { margin: 9px 0 12px; font-size: 44px; letter-spacing: 0; }
 .detail-header p { margin: 0; color: #a7bac1; font-size: 18px; line-height: 1.65; }
-.detail-media { margin: 30px 0 0; }
-.detail-media img { display: block; width: 100%; max-height: 460px; object-fit: cover; }
-.detail-media figcaption { padding-top: 7px; color: #71868d; font-size: 11px; }
-.detail-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, .8fr); gap: 48px; margin-top: 32px; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, .85fr); gap: 48px; margin-top: 32px; }
 .detail-body { color: #bdcacc; font-size: 16px; line-height: 1.85; }
 .detail-body :deep(h2), .detail-body :deep(h3) { color: #edf4f3; }
 .detail-body :deep(a) { color: #7bd0c5; text-decoration: underline; }
+.detail-body :deep(a[href^="#catalog-media-"]) { display: inline-flex; align-items: center; min-height: 20px; border: 1px solid #3e625f; border-radius: 3px; padding: 0 4px; color: #8ad8cd; background: #102421; font-size: .78em; font-weight: 700; text-decoration: none; }
 .detail-layout aside { border-left: 1px solid #263d45; padding-left: 24px; }
+.detail-layout aside .media-gallery + section { margin-top: 28px; }
 .detail-layout aside section + section { margin-top: 28px; }
 .detail-layout aside h2 { margin: 0 0 12px; color: #82999c; font-size: 12px; text-transform: uppercase; }
 .detail-layout aside ul { display: grid; gap: 10px; margin: 0; padding-left: 18px; color: #c4d2d1; font-size: 13px; line-height: 1.55; }

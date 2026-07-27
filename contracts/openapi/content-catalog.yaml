@@ -191,7 +191,7 @@ components:
         primaryMediaUrl:
           type: [string, 'null']
           format: uri-reference
-          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL in production.
+          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL under `/catalog/{mediaId}` in production.
         updatedAt: { type: string, format: date-time }
     TranslationDraft:
       type: object
@@ -221,7 +221,7 @@ components:
         url:
           type: string
           format: uri-reference
-          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL in production.
+          description: Relative proxy URL in local development or an absolute HTTPS custom-domain URL under `/catalog/{mediaId}` in production.
         altText: { type: string }
         caption: { type: [string, 'null'] }
         author: { type: [string, 'null'] }

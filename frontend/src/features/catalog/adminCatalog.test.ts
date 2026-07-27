@@ -5,6 +5,7 @@ import {
   emptyTranslationDraft,
   isPublishableDraft,
   isValidObjectKey,
+  insertImageReference,
   mediaDraftPayload,
   normalizeObjectKey,
 } from './adminCatalog'
@@ -57,5 +58,16 @@ describe('catalog admin helpers', () => {
     })
     expect(Object.hasOwn(mediaDraftPayload(media), 'url')).toBe(false)
     expect(catalogMediaUrl({ ...media, url: undefined })).toBe(`/api/media/assets/${media.mediaId}`)
+  })
+
+  it('inserts a numbered image reference at the editor selection', () => {
+    expect(insertImageReference('See image here.', 4, 9, 2)).toEqual({
+      markdown: 'See [2] here.',
+      caret: 7,
+    })
+    expect(insertImageReference('Overview', 8, 8, 1)).toEqual({
+      markdown: 'Overview [1]',
+      caret: 12,
+    })
   })
 })

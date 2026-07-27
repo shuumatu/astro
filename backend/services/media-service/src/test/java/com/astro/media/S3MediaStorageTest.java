@@ -38,7 +38,7 @@ class S3MediaStorageTest {
         ArgumentCaptor<PutObjectRequest> request = ArgumentCaptor.forClass(PutObjectRequest.class);
         verify(client).putObject(request.capture(), any(RequestBody.class));
         assertThat(request.getValue().bucket()).isEqualTo("catalog-media");
-        assertThat(request.getValue().key()).isEqualTo("image.webp");
+        assertThat(request.getValue().key()).isEqualTo("catalog/image.webp");
         assertThat(request.getValue().contentType()).isEqualTo("image/webp");
         assertThat(request.getValue().cacheControl()).isEqualTo(S3MediaStorage.IMMUTABLE_CACHE_CONTROL);
         assertThat(request.getValue().metadata()).isEmpty();
@@ -49,7 +49,7 @@ class S3MediaStorageTest {
         S3Client client = mock(S3Client.class);
         S3MediaStorage storage = new S3MediaStorage(properties(false), client);
 
-        storage.delete("catalog/unused.webp");
+        storage.delete("unused.webp");
 
         ArgumentCaptor<DeleteObjectRequest> request = ArgumentCaptor.forClass(DeleteObjectRequest.class);
         verify(client).deleteObject(request.capture());
@@ -60,7 +60,7 @@ class S3MediaStorageTest {
     private MediaProperties properties(boolean autoCreateBucket) {
         return new MediaProperties(
                 URI.create("https://account-id.r2.cloudflarestorage.com"),
-                "auto", "key", "secret", "catalog-media", true, autoCreateBucket,
+                "auto", "key", "secret", "catalog-media", "catalog", true, autoCreateBucket,
                 MediaProperties.DeliveryMode.DIRECT, "https://media.example.com");
     }
 }

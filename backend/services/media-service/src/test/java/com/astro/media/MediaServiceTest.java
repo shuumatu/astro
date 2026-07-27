@@ -29,7 +29,7 @@ class MediaServiceTest {
         storage = mock(MediaStorage.class);
         MediaProperties properties = new MediaProperties(
                 URI.create("http://localhost:9000"), "us-east-1", "key", "secret", "media",
-                true, true, MediaProperties.DeliveryMode.PROXY, "/api/media/assets/");
+                "catalog", true, true, MediaProperties.DeliveryMode.PROXY, "/api/media/assets/");
         service = new MediaService(properties, storage);
     }
 

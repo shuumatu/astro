@@ -20,10 +20,11 @@ class MediaPropertiesTest {
     void acceptsAnHttpsBaseUrlForDirectDelivery() {
         MediaProperties properties = properties(
                 MediaProperties.DeliveryMode.DIRECT,
-                "https://media.example.com/catalog/");
+                "https://media.example.com/");
 
         assertThat(properties.assetUrl("image.webp"))
                 .isEqualTo("https://media.example.com/catalog/image.webp");
+        assertThat(properties.objectKey("image.webp")).isEqualTo("catalog/image.webp");
     }
 
     @Test
@@ -40,6 +41,7 @@ class MediaPropertiesTest {
                 "access-key",
                 "secret-key",
                 "catalog-media",
+                "catalog",
                 true,
                 true,
                 mode,

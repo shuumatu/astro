@@ -27,6 +27,7 @@ class R2MediaStorageSmokeTest {
                 required("MEDIA_S3_ACCESS_KEY"),
                 required("MEDIA_S3_SECRET_KEY"),
                 required("MEDIA_S3_BUCKET"),
+                environmentOrDefault("MEDIA_S3_KEY_PREFIX", "catalog"),
                 true,
                 false,
                 MediaProperties.DeliveryMode.DIRECT,
@@ -40,7 +41,7 @@ class R2MediaStorageSmokeTest {
                 storage.put(mediaId, new ByteArrayInputStream(image), image.length, "image/webp");
 
                 HeadObjectResponse head = client.headObject(HeadObjectRequest.builder()
-                        .bucket(properties.bucket()).key(mediaId).build());
+                        .bucket(properties.bucket()).key(properties.objectKey(mediaId)).build());
                 assertThat(head.contentType()).isEqualTo("image/webp");
                 assertThat(head.cacheControl()).isEqualTo(S3MediaStorage.IMMUTABLE_CACHE_CONTROL);
                 try (StoredMedia stored = storage.open(mediaId)) {
@@ -60,7 +61,7 @@ class R2MediaStorageSmokeTest {
                 assertThat(response.body()).containsExactly(image);
             } finally {
                 client.deleteObject(DeleteObjectRequest.builder()
-                        .bucket(properties.bucket()).key(mediaId).build());
+                        .bucket(properties.bucket()).key(properties.objectKey(mediaId)).build());
             }
         }
     }
@@ -71,5 +72,10 @@ class R2MediaStorageSmokeTest {
             throw new IllegalStateException(name + " is required for the R2 smoke test");
         }
         return value;
+    }
+
+    private String environmentOrDefault(String name, String fallback) {
+        String value = System.getenv(name);
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

@@ -21,7 +21,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "astro.media.public-base-url=https://media.example.com/")
+@SpringBootTest(properties = {
+        "astro.media.public-base-url=https://media.example.com/",
+        "astro.media.key-prefix=catalog",
+        "astro.media.delivery-mode=direct"
+})
 @AutoConfigureMockMvc
 class CatalogApiIntegrationTest {
     @Autowired
@@ -147,7 +151,7 @@ class CatalogApiIntegrationTest {
                                 }
                                 """.formatted(mediaId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.media[0].url").value("https://media.example.com/" + mediaId));
+                .andExpect(jsonPath("$.media[0].url").value("https://media.example.com/catalog/" + mediaId));
 
         mockMvc.perform(post("/api/content/admin/catalog-entries/{entryId}/translations/en/publish", entryId)
                         .with(adminJwt()))
@@ -156,7 +160,7 @@ class CatalogApiIntegrationTest {
         mockMvc.perform(get("/api/content/catalog-entries").queryParam("locale", "en").queryParam("query", "Media star"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].primaryMediaUrl")
-                        .value("https://media.example.com/" + mediaId));
+                        .value("https://media.example.com/catalog/" + mediaId));
     }
 
     @Test

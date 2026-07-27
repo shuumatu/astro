@@ -32,7 +32,7 @@ class S3MediaStorageIntegrationTest {
     void createsBucketAndPreservesObjectHeaders() throws Exception {
         MediaProperties properties = new MediaProperties(
                 URI.create("http://" + MINIO.getHost() + ":" + MINIO.getMappedPort(9000)),
-                "us-east-1", ACCESS_KEY, SECRET_KEY, BUCKET, true, true,
+                "us-east-1", ACCESS_KEY, SECRET_KEY, BUCKET, "catalog", true, true,
                 MediaProperties.DeliveryMode.PROXY, "/api/media/assets");
         try (S3Client client = new MediaStorageConfiguration().mediaS3Client(properties)) {
             S3MediaStorage storage = new S3MediaStorage(properties, client);
@@ -42,7 +42,7 @@ class S3MediaStorageIntegrationTest {
             storage.put("sample.webp", new ByteArrayInputStream(image), image.length, "image/webp");
 
             HeadObjectResponse head = client.headObject(HeadObjectRequest.builder()
-                    .bucket(BUCKET).key("sample.webp").build());
+                    .bucket(BUCKET).key("catalog/sample.webp").build());
             assertThat(head.contentType()).isEqualTo("image/webp");
             assertThat(head.cacheControl()).isEqualTo(S3MediaStorage.IMMUTABLE_CACHE_CONTROL);
             try (StoredMedia stored = storage.open("sample.webp")) {

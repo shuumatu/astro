@@ -150,7 +150,15 @@
     "openFull": "打开完整图鉴",
     "back": "返回图鉴",
     "keyFacts": "知识要点",
-    "sources": "参考资料"
+    "sources": "参考资料",
+    "images": "图片",
+    "openImage": "打开第 {number} 张图片",
+    "imageViewer": "图片查看器",
+    "previousImage": "上一张图片",
+    "nextImage": "下一张图片",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetZoom": "重置缩放"
   },
   "adminCatalog": {
     "privateArea": "单管理员内容工具",
@@ -208,6 +216,7 @@
     "image": "选择图片",
     "altText": "图片替代文本",
     "imageCaption": "图片说明（可选）",
+    "insertImageReference": "插入图片引用 [{number}]",
     "moveUp": "上移",
     "moveDown": "下移",
     "remove": "移除",

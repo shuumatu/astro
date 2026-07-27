@@ -5,6 +5,7 @@ import type { CSSProperties } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { renderRestrictedMarkdown } from './markdown'
+import CatalogMediaGallery from './CatalogMediaGallery.vue'
 import type { CatalogEntry, CatalogObjectType } from './types'
 
 const props = defineProps<{
@@ -22,6 +23,7 @@ defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const renderedBody = computed(() => props.entry ? renderRestrictedMarkdown(props.entry.bodyMarkdown) : '')
 const card = ref<HTMLElement | null>(null)
+const mediaGallery = ref<InstanceType<typeof CatalogMediaGallery> | null>(null)
 const position = reactive({ x: 12, y: 12 })
 const positioned = ref(false)
 const dragging = ref(false)
@@ -134,6 +136,14 @@ function moveWithKeyboard(event: KeyboardEvent): void {
 function isMobileDrawer(): boolean {
   return mobileLayoutQuery?.matches ?? window.matchMedia('(max-width: 720px)').matches
 }
+
+function openMediaReference(event: MouseEvent): void {
+  const reference = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#catalog-media-"]')
+  if (!reference) return
+  event.preventDefault()
+  const number = Number(reference.hash.slice('#catalog-media-'.length))
+  if (Number.isInteger(number)) mediaGallery.value?.open(number - 1)
+}
 </script>
 
 <template>
@@ -178,14 +188,9 @@ function isMobileDrawer(): boolean {
       </div>
       <div v-else-if="error" class="content-state error" role="alert">{{ t('catalog.loadFailed') }}</div>
       <template v-else-if="entry">
-        <figure v-if="entry.media[0]" class="catalog-media">
-          <img :src="entry.media[0].url" :alt="entry.media[0].altText">
-          <figcaption v-if="entry.media[0].caption || entry.media[0].attribution">
-            {{ entry.media[0].caption || entry.media[0].attribution }}
-          </figcaption>
-        </figure>
+        <CatalogMediaGallery ref="mediaGallery" :media="entry.media" collapsible compact />
         <p class="catalog-summary">{{ entry.summary }}</p>
-        <div class="catalog-markdown" v-html="renderedBody"></div>
+        <div class="catalog-markdown" v-html="renderedBody" @click="openMediaReference"></div>
         <ul v-if="entry.knowledgePoints.length" class="knowledge-points">
           <li v-for="point in entry.knowledgePoints" :key="point">{{ point }}</li>
         </ul>
@@ -241,13 +246,12 @@ function isMobileDrawer(): boolean {
 .live-facts div { min-width: 0; padding: 10px; background: #0d181c; }
 .live-facts dt { color: #789093; font-size: 11px; }
 .live-facts dd { margin: 4px 0 0; overflow: hidden; color: #d8e5e4; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.catalog-media { margin: 0 0 14px; }
-.catalog-media img { display: block; width: 100%; max-height: 190px; object-fit: cover; }
-.catalog-media figcaption { margin-top: 6px; color: #73898c; font-size: 11px; }
+.media-gallery { margin-bottom: 14px; }
 .catalog-summary { margin: 0 0 14px; color: #cedbda; font-size: 14px; line-height: 1.65; }
 .catalog-markdown { color: #9fb2b3; font-size: 13px; line-height: 1.7; }
 .catalog-markdown :deep(p) { margin: 0 0 12px; }
 .catalog-markdown :deep(a) { color: #81d3c8; text-decoration: underline; }
+.catalog-markdown :deep(a[href^="#catalog-media-"]) { display: inline-flex; align-items: center; min-height: 18px; border: 1px solid #3e625f; border-radius: 3px; padding: 0 3px; color: #8ad8cd; background: #102421; font-size: .82em; font-weight: 700; text-decoration: none; }
 .knowledge-points { display: grid; gap: 8px; margin: 16px 0; padding-left: 18px; color: #c5d4d2; font-size: 13px; line-height: 1.5; }
 .source-list { margin-top: 18px; padding-top: 14px; border-top: 1px solid #263b40; }
 .source-list h3 { margin: 0 0 8px; color: #809699; font-size: 11px; font-weight: 600; text-transform: uppercase; }

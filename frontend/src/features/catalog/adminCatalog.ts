@@ -84,6 +84,25 @@ export function mediaDraftPayload(media: TranslationDraft['media'][number]): Omi
   return { ...payload, altText: payload.altText.trim() }
 }
 
+export function insertImageReference(
+  markdown: string,
+  start: number,
+  end: number,
+  mediaNumber: number,
+): { markdown: string; caret: number } {
+  const safeStart = Math.max(0, Math.min(markdown.length, start))
+  const safeEnd = Math.max(safeStart, Math.min(markdown.length, end))
+  const before = markdown.slice(0, safeStart)
+  const after = markdown.slice(safeEnd)
+  const leadingSpace = before && !/\s$/.test(before) ? ' ' : ''
+  const trailingSpace = after && !/^\s/.test(after) ? ' ' : ''
+  const insertion = `${leadingSpace}[${mediaNumber}]${trailingSpace}`
+  return {
+    markdown: `${before}${insertion}${after}`,
+    caret: safeStart + insertion.length,
+  }
+}
+
 function normalizeSlug(value: string): string {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }

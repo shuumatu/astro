@@ -41,20 +41,23 @@ MEDIA_S3_REGION=auto
 MEDIA_S3_ACCESS_KEY=R2_ACCESS_KEY_ID
 MEDIA_S3_SECRET_KEY=R2_SECRET_ACCESS_KEY
 MEDIA_S3_BUCKET=astro
+MEDIA_S3_KEY_PREFIX=catalog
 MEDIA_S3_PATH_STYLE=true
 MEDIA_S3_AUTO_CREATE_BUCKET=false
 MEDIA_DELIVERY_MODE=direct
 MEDIA_PUBLIC_BASE_URL=https://astro-img.shuumatsu.org
 ```
 
-`MEDIA_PUBLIC_BASE_URL` must be supplied to both `media-service` and `content-service`. In direct mode, compatibility requests to `/api/media/assets/{mediaId}` receive a cacheable one-hour redirect to the custom domain.
+New catalog images are stored under `catalog/{mediaId}`. `MEDIA_S3_KEY_PREFIX` must be supplied to both `media-service` and `content-service`. In direct mode, the public URL is `https://astro-img.shuumatsu.org/catalog/{mediaId}`; compatibility requests to `/api/media/assets/{mediaId}` receive a cacheable one-hour redirect to that URL.
+
+Objects uploaded before this prefix was introduced remain at the bucket root. Copy any still-referenced legacy object to `catalog/{mediaId}` and verify the custom-domain URL before deleting its root-level key; the application does not move production objects automatically.
 
 To use a configuration file outside the repository, set `ASTRO_ENV_FILE` to its absolute path; `ASTRO_LOCAL_ENV_FILE` is also supported for compatibility.
 
 ## Deployment smoke test
 
 1. Start with `MEDIA_DELIVERY_MODE=proxy` and upload a small test image through the admin UI.
-2. Confirm that R2 contains an object whose key matches the returned `mediaId`.
+2. Confirm that R2 contains `catalog/{mediaId}` for the returned `mediaId`.
 3. Request the object through the custom domain and verify status `200`, its MIME type, and the immutable cache header.
 4. Load the admin preview and public catalog from every allowed origin and confirm there are no CORS errors.
 5. Switch to `MEDIA_DELIVERY_MODE=direct`, then confirm old `/api/media/assets/{mediaId}` links return `302` without exposing the endpoint or credentials.

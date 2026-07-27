@@ -45,6 +45,7 @@ MEDIA_S3_REGION=auto
 MEDIA_S3_ACCESS_KEY=replace_with_r2_access_key_id
 MEDIA_S3_SECRET_KEY=replace_with_r2_secret_access_key
 MEDIA_S3_BUCKET=astro
+MEDIA_S3_KEY_PREFIX=catalog
 MEDIA_S3_PATH_STYLE=true
 MEDIA_S3_AUTO_CREATE_BUCKET=false
 MEDIA_DELIVERY_MODE=direct
@@ -55,7 +56,9 @@ ASTRO_ADMIN_PASSWORD=replace_with_admin_password
 ASTRO_JWT_SECRET=replace_with_at_least_32_random_characters
 ```
 
-`MEDIA_PUBLIC_BASE_URL` 必须同时提供给两个服务。在 `direct` 模式下，旧的 `/api/media/assets/{mediaId}` 链接会得到缓存一小时的 `302` 跳转，前往自定义域名。
+新上传的图鉴图片统一保存在 `catalog/{mediaId}`。`MEDIA_S3_KEY_PREFIX` 必须同时提供给 `media-service` 和 `content-service`。在 `direct` 模式下，公开地址为 `https://astro-img.shuumatsu.org/catalog/{mediaId}`；旧的 `/api/media/assets/{mediaId}` 接口会返回缓存一小时的 `302` 跳转。
+
+启用前已经上传到桶根目录的对象不会被程序自动移动。仍被引用的旧对象应先复制到 `catalog/{mediaId}`，验证自定义域名能够访问后，再删除根目录中的旧 key，避免误删生产图片。
 
 ## 启动服务
 
@@ -71,7 +74,7 @@ mvn spring-boot:run
 ## 部署验收
 
 1. 先使用 `MEDIA_DELIVERY_MODE=proxy`，通过后台上传一张小图。
-2. 确认 R2 中出现与返回 `mediaId` 相同的对象键。
+2. 确认 R2 中出现与返回值对应的 `catalog/{mediaId}` 对象键。
 3. 通过自定义域名访问该对象，验证 `200`、正确 MIME 类型与长期缓存头。
 4. 在每个允许来源中检查后台预览和公开图鉴，确认没有 CORS 错误。
 5. 切换为 `MEDIA_DELIVERY_MODE=direct`，确认旧 `/api/media/assets/{mediaId}` 链接返回 `302`，并且请求中不暴露 R2 endpoint 或任何密钥。

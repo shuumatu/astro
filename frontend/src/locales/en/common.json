@@ -150,7 +150,15 @@
     "openFull": "Open full entry",
     "back": "Back to catalog",
     "keyFacts": "Key facts",
-    "sources": "References"
+    "sources": "References",
+    "images": "Images",
+    "openImage": "Open image {number}",
+    "imageViewer": "Image viewer",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetZoom": "Reset zoom"
   },
   "adminCatalog": {
     "privateArea": "Single-admin content tool",
@@ -208,6 +216,7 @@
     "image": "Choose image",
     "altText": "Image alternative text",
     "imageCaption": "Image caption (optional)",
+    "insertImageReference": "Insert image reference [{number}]",
     "moveUp": "Move up",
     "moveDown": "Move down",
     "remove": "Remove",

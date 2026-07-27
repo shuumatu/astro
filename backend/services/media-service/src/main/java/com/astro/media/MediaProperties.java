@@ -15,6 +15,7 @@ public record MediaProperties(
         @NotBlank String accessKey,
         @NotBlank String secretKey,
         @NotBlank String bucket,
+        @NotBlank String keyPrefix,
         boolean pathStyle,
         boolean autoCreateBucket,
         @NotNull DeliveryMode deliveryMode,
@@ -22,6 +23,7 @@ public record MediaProperties(
 ) {
     public MediaProperties {
         publicBaseUrl = stripTrailingSlashes(publicBaseUrl);
+        keyPrefix = normalizeKeyPrefix(keyPrefix);
         if (deliveryMode == DeliveryMode.DIRECT) {
             URI publicUri = URI.create(publicBaseUrl);
             if (!publicUri.isAbsolute() || !"https".equalsIgnoreCase(publicUri.getScheme())) {
@@ -31,7 +33,12 @@ public record MediaProperties(
     }
 
     public String assetUrl(String mediaId) {
-        return publicBaseUrl + "/" + mediaId;
+        String path = deliveryMode == DeliveryMode.DIRECT ? objectKey(mediaId) : mediaId;
+        return publicBaseUrl + "/" + path;
+    }
+
+    public String objectKey(String mediaId) {
+        return keyPrefix + "/" + mediaId;
     }
 
     private static String stripTrailingSlashes(String value) {
@@ -41,6 +48,16 @@ public record MediaProperties(
         }
         if (normalized.isEmpty()) {
             throw new IllegalArgumentException("Media public base URL must not be empty");
+        }
+        return normalized;
+    }
+
+    private static String normalizeKeyPrefix(String value) {
+        String normalized = value.trim().replace('\\', '/');
+        while (normalized.startsWith("/")) normalized = normalized.substring(1);
+        while (normalized.endsWith("/")) normalized = normalized.substring(0, normalized.length() - 1);
+        if (normalized.isBlank() || normalized.contains("//") || normalized.contains("..")) {
+            throw new IllegalArgumentException("Media S3 key prefix must be a safe, non-empty object-key prefix");
         }
         return normalized;
     }
