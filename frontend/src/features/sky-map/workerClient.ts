@@ -4,6 +4,8 @@ import type {
   SkyFrame,
   SkySearchParameters,
   SkySearchResult,
+  StarNamePresentation,
+  StarNamePresentationParameters,
   SkyWorkerRequest,
   SkyWorkerResponse,
 } from './types'
@@ -18,6 +20,7 @@ type SkyWorkerRequestPayload =
   | Omit<Extract<SkyWorkerRequest, { type: 'initialize' }>, 'requestId'>
   | Omit<Extract<SkyWorkerRequest, { type: 'calculate' }>, 'requestId'>
   | Omit<Extract<SkyWorkerRequest, { type: 'search' }>, 'requestId'>
+  | Omit<Extract<SkyWorkerRequest, { type: 'star-names' }>, 'requestId'>
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 export const defaultCatalogManifestUrl = `${apiBaseUrl}/astronomy/catalogs/naked-eye/manifest`
@@ -55,6 +58,14 @@ export class SkyMapWorkerClient {
   async search(parameters: SkySearchParameters): Promise<SkySearchResult> {
     const response = await this.send({ type: 'search', parameters })
     if (response.type !== 'search-results') {
+      throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
+    }
+    return response.result
+  }
+
+  async resolveStarNames(parameters: StarNamePresentationParameters): Promise<StarNamePresentation> {
+    const response = await this.send({ type: 'star-names', parameters })
+    if (response.type !== 'star-names') {
       throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
     }
     return response.result

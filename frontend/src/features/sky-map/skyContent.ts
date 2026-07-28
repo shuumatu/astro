@@ -15,7 +15,9 @@ const VERSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const OBJECT_ID_PATTERN = /^HIP:[1-9][0-9]*$/
 const LANGUAGE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/
-const NAME_TYPES = ['native', 'official', 'translation', 'transliteration', 'alias']
+const NAME_TYPES = [
+  'native', 'official', 'translation', 'transliteration', 'alias', 'bayer', 'flamsteed',
+]
 const FIGURE_TYPES = ['constellation', 'asterism', 'enclosure-wall', 'lunar-mansion']
 
 export async function loadSkyContentManifest(

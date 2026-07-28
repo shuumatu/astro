@@ -67,6 +67,22 @@ are not published in the initial culture pack.
 - Catalogue: https://iauarchive.eso.org/public/themes/naming_stars/
 - Snapshot SHA-256: `67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d`
 
+## Stellarium Bayer and Flamsteed designations
+
+Bayer and Flamsteed designation mappings are adapted from Stellarium's
+`stars/hip_gaia3/name.fab` at commit
+`3abb0f6eedf4e71540d05860a9a67c74144a0bdf`. The project imports only mappings whose
+HIP identifier is present in the physical naked-eye catalogue, preserves Stellarium's
+designation order, and derives English Greek-letter spellings for search only.
+
+The upstream Stellarium repository distributes this file without a separate file-level
+license notice under the repository's GNU General Public License version 2 terms.
+Redistributors must review and comply with those terms in addition to preserving this
+attribution.
+
+- Source: https://github.com/Stellarium/stellarium/blob/3abb0f6eedf4e71540d05860a9a67c74144a0bdf/stars/hip_gaia3/name.fab
+- License: https://github.com/Stellarium/stellarium/blob/3abb0f6eedf4e71540d05860a9a67c74144a0bdf/COPYING
+
 ## Hong Kong Space Museum astronomy glossaries
 
 Simplified and traditional Chinese names for the 88 Western constellations and safely

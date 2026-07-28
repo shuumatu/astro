@@ -16,13 +16,16 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const PACK_VERSION = "2026.07.5";
-const IMPORTED_AT = "2026-07-24";
+const PACK_VERSION = "2026.07.6";
+const IMPORTED_AT = "2026-07-28";
 const STELLARIUM_COMMIT = "014fbb5e59233d133c22f9811af96b67d05a95c9";
+const STELLARIUM_MAIN_COMMIT = "3abb0f6eedf4e71540d05860a9a67c74144a0bdf";
 const D3_CELESTIAL_COMMIT = "7e720a3de062059d4c5400a379146a601d9010e0";
 const IAU_WGSN_URL = "https://iauarchive.eso.org/public/themes/naming_stars/";
 const D3_BOUNDARIES_URL =
   `https://raw.githubusercontent.com/ofrohn/d3-celestial/${D3_CELESTIAL_COMMIT}/data/constellations.bounds.json`;
+const STELLARIUM_STAR_DESIGNATIONS_URL =
+  `https://raw.githubusercontent.com/Stellarium/stellarium/${STELLARIUM_MAIN_COMMIT}/stars/hip_gaia3/name.fab`;
 const HKSPM_WESTERN_CONSTELLATIONS_ZH_CN_URL =
   "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html";
 const HKSPM_WESTERN_CONSTELLATIONS_ZH_TW_URL =
@@ -61,6 +64,7 @@ async function main() {
     westernConstellationsZhTwHtml,
     brightStarsZhCnHtml,
     brightStarsZhTwHtml,
+    starDesignations,
     nakedEye,
   ] =
     await Promise.all([
@@ -82,6 +86,7 @@ async function main() {
       ),
       loadCachedText("hkspm-bright-stars-zh-cn.html", HKSPM_BRIGHT_STARS_ZH_CN_URL, refresh),
       loadCachedText("hkspm-bright-stars-zh-tw.html", HKSPM_BRIGHT_STARS_ZH_TW_URL, refresh),
+      loadCachedText("stellarium-star-designations.fab", STELLARIUM_STAR_DESIGNATIONS_URL, refresh),
       readFile(NAKED_EYE_PATH).then((bytes) => JSON.parse(gunzipSync(bytes).toString("utf8"))),
     ]);
 
@@ -94,6 +99,7 @@ async function main() {
     westernIndex,
     boundaries,
     iauHtml,
+    starDesignations,
     nakedEye.stars,
     chineseResult.pack,
     {
@@ -136,6 +142,12 @@ async function main() {
           url: `https://github.com/Stellarium/stellarium-skycultures/tree/${STELLARIUM_COMMIT}`,
         },
         {
+          id: "stellarium-star-designations",
+          version: STELLARIUM_MAIN_COMMIT,
+          url: STELLARIUM_STAR_DESIGNATIONS_URL,
+          snapshotSha256: sha256(Buffer.from(starDesignations, "utf8")),
+        },
+        {
           id: "d3-celestial-boundaries",
           version: D3_CELESTIAL_COMMIT,
           url: D3_BOUNDARIES_URL,
@@ -171,6 +183,7 @@ async function main() {
         "Omitted Chinese figures with no HIP path; their count is recorded above.",
         "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
         "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
+        "Imported Bayer and Flamsteed designations for physical HIP stars from Stellarium name.fab.",
         "Added explicit simplified and traditional Chinese names for Western constellations and safely matched IAU stars from Hong Kong Space Museum glossaries.",
         "Filled missing Western IAU Chinese star labels from source-backed Chinese sky-culture names sharing the same HIP identifier.",
         "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist.",
@@ -347,8 +360,17 @@ function buildChineseCulture(index, zhCn, zhTw) {
   };
 }
 
-function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseCulture, localizedHtml) {
+function buildWesternCulture(
+  index,
+  boundaries,
+  iauHtml,
+  starDesignations,
+  physicalStars,
+  chineseCulture,
+  localizedHtml,
+) {
   const stellariumSourceId = "stellarium-western";
+  const stellariumDesignationsSourceId = "stellarium-star-designations";
   const d3SourceId = "d3-celestial-boundaries";
   const iauSourceId = "iau-wgsn";
   const hkspmConstellationSourceId = "hkspm-western-constellations";
@@ -364,6 +386,15 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseC
       version: STELLARIUM_COMMIT,
       license: "CC-BY-SA (version not specified upstream)",
       attribution: "Western constellation names and line data adapted from Stellarium Sky Cultures.",
+    },
+    {
+      id: stellariumDesignationsSourceId,
+      title: "Stellarium Bayer and Flamsteed star designations",
+      authors: ["Stellarium contributors"],
+      url: STELLARIUM_STAR_DESIGNATIONS_URL,
+      version: STELLARIUM_MAIN_COMMIT,
+      license: "GPL-2.0",
+      attribution: "Bayer and Flamsteed designation mappings adapted from Stellarium name.fab.",
     },
     {
       id: d3SourceId,
@@ -508,8 +539,30 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseC
     assignPreferredNamePerLanguage(names);
     starNamesByObject.set(objectId, names);
   }
+  const physicalObjectIds = new Set(physicalStars.map((star) => `HIP:${star.hipId}`));
+  let bayerDesignations = 0;
+  let flamsteedDesignations = 0;
+  for (const [objectId, designations] of parseStellariumStarDesignations(starDesignations)) {
+    if (!physicalObjectIds.has(objectId)) continue;
+    const names = starNamesByObject.get(objectId) ?? [];
+    for (const [index, designation] of designations.entries()) {
+      const type = /^\d/.test(designation) ? "flamsteed" : "bayer";
+      if (type === "bayer") bayerDesignations += 1;
+      else flamsteedDesignations += 1;
+      names.push(name("und", designation, type, index === 0, stellariumDesignationsSourceId));
+    }
+    deduplicateNames(names);
+    assignPreferredNamePerLanguage(names);
+    starNamesByObject.set(objectId, names);
+  }
   const starNames = [...starNamesByObject]
-    .map(([objectId, names]) => ({ objectId, labelPriority: 80, names: deduplicateNames(names) }))
+    .map(([objectId, names]) => ({
+      objectId,
+      labelPriority: names.some((record) => record.type === "official")
+        ? 80
+        : names.some((record) => record.type === "bayer") ? 60 : 40,
+      names: deduplicateNames(names),
+    }))
     .sort(compareObjectIds);
   const vega = starNames.find((record) => record.objectId === "HIP:91262");
   if (!vega?.names.some((record) => record.value === "Vega")) {
@@ -555,6 +608,8 @@ function buildWesternCulture(index, boundaries, iauHtml, physicalStars, chineseC
       officialIauNames: starNames.reduce((count, record) =>
         count + record.names.filter((recordName) => recordName.type === "official").length,
       0),
+      bayerDesignations,
+      flamsteedDesignations,
       unmatchedIauNames,
       localizedIauStars: starNames.filter((record) =>
         record.names.some((recordName) => recordName.language === "zh-CN"),
@@ -826,6 +881,25 @@ function normalizeHipPaths(lines = []) {
     .map((line) => line.filter(Number.isInteger).map((hipId) => `HIP:${hipId}`))
     .map((path) => path.filter((objectId, index) => index === 0 || objectId !== path[index - 1]))
     .filter((path) => path.length > 0);
+}
+
+function parseStellariumStarDesignations(text) {
+  const designationsByObject = new Map();
+  for (const [lineIndex, rawLine] of text.split(/\r?\n/).entries()) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || line.startsWith("//")) continue;
+    const match = /^(\d+)\|([^|]+)$/.exec(line);
+    if (!match) throw new Error(`Invalid Stellarium star designation at line ${lineIndex + 1}`);
+    const hipId = Number(match[1]);
+    if (!Number.isSafeInteger(hipId) || hipId <= 0 || hipId > 120_404) continue;
+    const designation = match[2].trim().replaceAll("_", " ");
+    if (!designation) throw new Error(`Empty Stellarium star designation at line ${lineIndex + 1}`);
+    const objectId = `HIP:${hipId}`;
+    const values = designationsByObject.get(objectId) ?? [];
+    if (!values.includes(designation)) values.push(designation);
+    designationsByObject.set(objectId, values);
+  }
+  return designationsByObject;
 }
 
 function chooseAnchor(paths) {

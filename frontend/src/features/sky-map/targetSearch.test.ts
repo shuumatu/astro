@@ -56,12 +56,14 @@ describe('searchSkyNames', () => {
   const index = JSON.parse(gunzipSync(
     readFileSync(new URL('search-index.json.gz', resourceRoot)),
   ).toString('utf8')) as SkySearchIndex
-  const availableIds = new Set(['HIP:91262', 'HIP:95947'])
+  const availableIds = new Set(['HIP:32349', 'HIP:91262', 'HIP:95947'])
 
   it.each([
     ['织女星', 'chinese-traditional', 'HIP:91262'],
     ['辇道增七', 'chinese-traditional', 'HIP:95947'],
     ['Vega', 'chinese-traditional', 'HIP:91262'],
+    ['α CMa', 'western-iau', 'HIP:32349'],
+    ['Alpha CMa', 'western-iau', 'HIP:32349'],
   ])('resolves %s across cultures', (query, cultureId, expectedObjectId) => {
     const result = searchSkyNames(index, {
       query,

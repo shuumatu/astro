@@ -39,6 +39,7 @@ import type {
   SkyFrame,
   SkyObjectSelection,
   SkySearchSuggestion,
+  StarNamePresentation,
 } from '../features/sky-map/types'
 import { SkyMapWorkerClient } from '../features/sky-map/workerClient'
 
@@ -79,6 +80,7 @@ const catalogCardOpen = ref(false)
 const catalogCardEntry = ref<CatalogEntry | null>(null)
 const catalogCardLoading = ref(false)
 const catalogCardError = ref(false)
+const selectedStarNames = ref<StarNamePresentation | null>(null)
 const controlsCollapsed = ref(false)
 const skyCanvas = ref<InstanceType<typeof SkyMapCanvas> | null>(null)
 const skyMapStage = ref<HTMLDivElement | null>(null)
@@ -98,6 +100,7 @@ let accumulatedTimeWheelDelta = 0
 let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
 let timeNavigationDirection: TimeNavigationDirection = 1
 let catalogCardSequence = 0
+let starNameSequence = 0
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
@@ -115,6 +118,12 @@ const enabledFeaturedPatternCount = computed(() => controls.enabledFeaturedPatte
 const catalogCardIdentity = computed(() => selectedObject.value
   ? catalogIdentityForSelection(selectedObject.value, controls.cultureId)
   : null)
+const selectedStarObjectId = computed(() => selectedObject.value?.kind === 'star'
+  ? selectedObject.value.object.id
+  : null)
+const catalogCardAliases = computed(() => selectedStarNames.value?.objectId === selectedStarObjectId.value
+  ? selectedStarNames.value.aliases
+  : [])
 const catalogCardFacts = computed(() => {
   const selection = selectedObject.value
   if (!selection) return []
@@ -156,6 +165,11 @@ const catalogCardFacts = computed(() => {
 watch(targetQuery, () => {
   targetMessage.value = ''
 })
+watch(
+  [selectedStarObjectId, () => controls.cultureId, locale],
+  () => { void loadSelectedStarNames() },
+  { flush: 'sync' },
+)
 watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
 watch(() => [...controls.enabledFeaturedPatternIds], requestCalculation, { flush: 'sync' })
 watch(() => [controls.cultureId, locale.value] as const, () => {
@@ -227,6 +241,7 @@ async function initialize(): Promise<void> {
       applyCalculationResult,
       fail,
     )
+    void loadSelectedStarNames()
     requestCalculation()
   } catch (error) {
     if (client !== workerClient) return
@@ -456,6 +471,28 @@ function closeCatalogCard(): void {
   catalogCardError.value = false
 }
 
+async function loadSelectedStarNames(): Promise<void> {
+  const objectId = selectedStarObjectId.value
+  const client = workerClient
+  const sequence = ++starNameSequence
+  if (!objectId || !client) {
+    selectedStarNames.value = null
+    return
+  }
+  try {
+    const result = await client.resolveStarNames({
+      objectId,
+      cultureId: controls.cultureId,
+      interfaceLanguage: locale.value,
+    })
+    if (sequence === starNameSequence && objectId === selectedStarObjectId.value) {
+      selectedStarNames.value = result
+    }
+  } catch {
+    if (sequence === starNameSequence) selectedStarNames.value = null
+  }
+}
+
 function fail(error: unknown): void {
   errorMessage.value = error instanceof Error ? error.message : String(error)
   status.value = 'error'
@@ -476,10 +513,13 @@ function formatSelectedObject(selection = selectedObject.value): string {
   if (selection.kind === 'solarSystemBody') return t(`skyMap.solarSystemBodies.${selection.object.id}`)
   if (selection.kind === 'cultureFigure') return selection.object.name
   if (selection.kind === 'featuredPattern') return selection.object.name
+  if (selectedStarNames.value?.objectId === selection.object.id) {
+    return selectedStarNames.value.primaryName
+  }
   const cultureName = frame.value?.starLabels.find(
     (label) => label.objectId === selection.object.id,
   )?.name
-  return cultureName ? `${cultureName} · HIP ${selection.object.hipId}` : `HIP ${selection.object.hipId}`
+  return cultureName ?? `HIP ${selection.object.hipId}`
 }
 
 function resolveSelectionInFrame(
@@ -760,6 +800,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
           :object-type="catalogCardIdentity.objectType"
           :object-key="catalogCardIdentity.objectKey"
           :object-name="formatSelectedObject(selectedObject)"
+          :aliases="catalogCardAliases"
           :facts="catalogCardFacts"
           :loading="catalogCardLoading"
           :error="catalogCardError"

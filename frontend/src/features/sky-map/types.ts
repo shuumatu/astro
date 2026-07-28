@@ -51,7 +51,14 @@ export interface SkyCatalog {
   stars: StarRecord[]
 }
 
-export type SkyNameType = 'native' | 'official' | 'translation' | 'transliteration' | 'alias'
+export type SkyNameType =
+  | 'native'
+  | 'official'
+  | 'translation'
+  | 'transliteration'
+  | 'alias'
+  | 'bayer'
+  | 'flamsteed'
 
 export interface SkyName {
   language: string
@@ -204,6 +211,18 @@ export interface SkySearchResult {
   query: string
   normalizedQuery: string
   suggestions: SkySearchSuggestion[]
+}
+
+export interface StarNamePresentationParameters {
+  objectId: string
+  cultureId: string
+  interfaceLanguage: string
+}
+
+export interface StarNamePresentation {
+  objectId: string
+  primaryName: string
+  aliases: string[]
 }
 
 export interface FeaturedPatternRecord {
@@ -366,11 +385,13 @@ export type SkyWorkerRequest =
   }
   | { type: 'calculate'; requestId: string; parameters: SkyCalculationParameters }
   | { type: 'search'; requestId: string; parameters: SkySearchParameters }
+  | { type: 'star-names'; requestId: string; parameters: StarNamePresentationParameters }
 
 export type SkyWorkerResponse =
   | { type: 'ready'; requestId: string; catalog: CatalogSummary }
   | { type: 'frame'; requestId: string; frame: SkyFrame; calculationDurationMs: number }
   | { type: 'search-results'; requestId: string; result: SkySearchResult }
+  | { type: 'star-names'; requestId: string; result: StarNamePresentation }
   | { type: 'error'; requestId: string; code: SkyMapErrorCode; message: string }
 
 export type SkyMapErrorCode =

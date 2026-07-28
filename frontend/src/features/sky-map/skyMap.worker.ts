@@ -2,6 +2,7 @@ import { loadSkyCatalog } from './catalog'
 import { SkyFrameCalculator } from './coordinates'
 import { loadSkyContentAsset, loadSkyContentManifest } from './skyContent'
 import { searchSkyNames } from './targetSearch'
+import { resolveStarNamePresentation } from './starNamePresentation'
 import type {
   FeaturedPatternPack,
   SkyCulturePack,
@@ -66,6 +67,14 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
         type: 'search-results',
         requestId: request.requestId,
         result: searchSkyNames(initialized.searchIndex, request.parameters, initialized.catalogObjectIds, culture),
+      })
+      return
+    }
+    if (request.type === 'star-names') {
+      post({
+        type: 'star-names',
+        requestId: request.requestId,
+        result: resolveStarNamePresentation(initialized.searchIndex, request.parameters),
       })
       return
     }

@@ -24,8 +24,8 @@ const NAKED_EYE_PATH = join(
   "backend/services/astronomy-service/src/main/resources/catalogs/naked-eye/catalog.json.gz",
 );
 
-const VERSION = "2026.07.5";
-const PUBLISHED_AT = "2026-07-25T00:00:00Z";
+const VERSION = "2026.07.6";
+const PUBLISHED_AT = "2026-07-28T00:00:00Z";
 const WESTERN_STARS_WITHOUT_CHINESE_NAMES = new Set([
   "HIP:24003",
   "HIP:33719",
@@ -199,10 +199,12 @@ function assertCultureLanguageCoverage(culture, language) {
 }
 
 function assertWesternStarLanguageCoverage(culture) {
-  const missingZhCn = new Set(culture.starNames
+  const officialNameRecords = culture.starNames.filter((record) =>
+    record.names.some((name) => name.type === "official"));
+  const missingZhCn = new Set(officialNameRecords
     .filter((record) => !record.names.some((name) => name.language === "zh-CN"))
     .map((record) => record.objectId));
-  const missingZhTw = new Set(culture.starNames
+  const missingZhTw = new Set(officialNameRecords
     .filter((record) => !record.names.some((name) => name.language === "zh-TW"))
     .map((record) => record.objectId));
   assertSetsEqual(

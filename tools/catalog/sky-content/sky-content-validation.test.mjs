@@ -4,10 +4,17 @@ import test from "node:test";
 
 import {
   buildSearchIndex,
+  latinizeBayerDesignation,
   validateCulturePack,
   validateFeaturedPatternPack,
   verifyEncodedAsset,
 } from "./sky-content-lib.mjs";
+
+test("latinizes Greek Bayer designations for keyboard search", () => {
+  assert.equal(latinizeBayerDesignation("α CMa"), "Alpha CMa");
+  assert.equal(latinizeBayerDesignation("γ1 And"), "Gamma1 And");
+  assert.equal(latinizeBayerDesignation("61 Cyg"), null);
+});
 
 test("canonical schemas and source packs parse and validate", async () => {
   const [cultureSchema, featuredSchema, chinese, western, featured, supplemental] = await Promise.all([

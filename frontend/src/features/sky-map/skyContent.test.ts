@@ -64,7 +64,14 @@ describe('sky-content resources', () => {
     expect(loadedManifest.defaultCultureId).toBe('western-iau')
     expect(chinese.figures).toHaveLength(312)
     expect(western.regions).toHaveLength(88)
-    expect(searchIndex.entries).toHaveLength(14_042)
+    expect(western.starNames).toHaveLength(3_364)
+    expect(searchIndex.entries).toHaveLength(23_294)
+    expect(western.starNames.find((record) => record.objectId === 'HIP:32349')?.names)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ value: 'Sirius', type: 'official' }),
+        expect.objectContaining({ value: 'α CMa', type: 'bayer' }),
+        expect.objectContaining({ value: '9 CMa', type: 'flamsteed' }),
+      ]))
     expect(featuredPatterns.patterns.map((pattern) => pattern.id)).toEqual([
       'summer-triangle',
       'winter-triangle',

@@ -6,22 +6,27 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { renderRestrictedMarkdown } from './markdown'
 import CatalogMediaGallery from './CatalogMediaGallery.vue'
+import ObjectNameBlock from './ObjectNameBlock.vue'
 import type { CatalogEntry, CatalogObjectType } from './types'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   entry: CatalogEntry | null
   objectType: CatalogObjectType
   objectKey: string
   objectName: string
+  aliases?: string[]
   facts: Array<{ label: string; value: string }>
   loading: boolean
   error: boolean
-}>()
+}>(), { aliases: () => [] })
 
 defineEmits<{ close: [] }>()
 
 const { t } = useI18n()
 const renderedBody = computed(() => props.entry ? renderRestrictedMarkdown(props.entry.bodyMarkdown) : '')
+const displayName = computed(() => props.objectType === 'star'
+  ? props.objectName
+  : props.entry?.title || props.objectName)
 const card = ref<HTMLElement | null>(null)
 const mediaGallery = ref<InstanceType<typeof CatalogMediaGallery> | null>(null)
 const position = reactive({ x: 12, y: 12 })
@@ -167,8 +172,15 @@ function openMediaReference(event: MouseEvent): void {
     >
       <GripHorizontal class="drag-handle" :size="17" aria-hidden="true" />
       <div>
-        <p>{{ t(`catalog.types.${objectType}`) }}</p>
-        <h2 id="catalog-card-title">{{ entry?.title || objectName }}</h2>
+        <p>
+          {{ t(`catalog.types.${objectType}`) }}
+          <span v-if="objectType === 'star'"> · {{ objectKey.replace(':', ' ') }}</span>
+        </p>
+        <ObjectNameBlock
+          heading-id="catalog-card-title"
+          :primary-name="displayName"
+          :aliases="objectType === 'star' ? aliases : []"
+        />
       </div>
       <button type="button" class="icon-button" :aria-label="t('catalog.close')" :title="t('catalog.close')" @pointerdown.stop @click="$emit('close')">
         <X :size="18" aria-hidden="true" />
@@ -239,7 +251,6 @@ function openMediaReference(event: MouseEvent): void {
 .dragging .card-header { cursor: grabbing; }
 .drag-handle { margin-top: 3px; color: #607c81; }
 .card-header p { margin: 0 0 4px; color: #72c9bd; font-size: 11px; text-transform: uppercase; }
-.card-header h2 { margin: 0; overflow-wrap: anywhere; font-size: 20px; line-height: 1.2; }
 .icon-button { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #31494f; border-radius: 4px; color: #b9caca; background: transparent; cursor: pointer; }
 .card-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; }
 .live-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0 0 18px; background: #263a3e; }

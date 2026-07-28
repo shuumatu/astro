@@ -25,7 +25,7 @@ import type {
   SkyFrame,
   StarRecord,
 } from './types'
-import { selectInterfaceLanguageName, selectLocalizedName } from './localizedName'
+import { selectLocalizedName, selectStarLabelName } from './localizedName'
 import { SkyMapError, SOLAR_SYSTEM_BODY_IDS } from './types'
 
 const DEG_TO_RAD = Math.PI / 180
@@ -175,7 +175,7 @@ function localizedSkyCulture(
       selectLocalizedName(region.names, interfaceLanguage, culture.defaultLanguage),
     ),
     starNames: culture.starNames.map((record) =>
-      selectInterfaceLanguageName(record.names, interfaceLanguage) ?? null,
+      selectStarLabelName(record.names, interfaceLanguage) ?? null,
     ),
   }
   preparedCulture.localizedByLanguage.set(interfaceLanguage, localized)

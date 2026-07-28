@@ -12,7 +12,7 @@ import {
 } from 'astronomy-engine'
 import { describe, expect, it } from 'vitest'
 import { calculateSkyFrame, propagateIcrs, SkyFrameCalculator } from './coordinates'
-import { selectInterfaceLanguageName, selectLocalizedName } from './localizedName'
+import { selectInterfaceLanguageName, selectLocalizedName, selectStarLabelName } from './localizedName'
 import type {
   FeaturedPatternPack,
   SkyCalculationParameters,
@@ -222,6 +222,17 @@ describe('sky culture calculation', () => {
 
     expect(selectInterfaceLanguageName(names, 'zh-CN')).toBeUndefined()
     expect(selectInterfaceLanguageName(names, 'en')).toBe('Fang')
+  })
+
+  it('uses Bayer and then Flamsteed designations when a localized star label is unavailable', () => {
+    const names = [
+      sampleName('en', 'Sirius'),
+      { ...sampleName('und', 'α CMa'), type: 'bayer' as const },
+      { ...sampleName('und', '9 CMa'), type: 'flamsteed' as const },
+    ]
+
+    expect(selectStarLabelName(names, 'zh-CN')).toBe('α CMa')
+    expect(selectStarLabelName(names.slice(0, 1), 'zh-CN')).toBeUndefined()
   })
 
   it('resolves culture paths through physical HIP stars without bridging missing records', () => {

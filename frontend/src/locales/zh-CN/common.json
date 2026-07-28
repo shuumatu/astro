@@ -147,6 +147,7 @@
     "retry": "重新加载",
     "noResults": "没有找到符合条件的内容",
     "cardTitle": "天体图鉴卡片",
+    "alsoKnownAs": "也称为",
     "dragCard": "拖动图鉴卡片；也可使用方向键移动",
     "close": "关闭图鉴卡片",
     "preparing": "内容筹备中",

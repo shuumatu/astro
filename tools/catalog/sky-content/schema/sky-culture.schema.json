@@ -88,7 +88,7 @@
         "language": { "$ref": "#/$defs/language" },
         "value": { "type": "string", "minLength": 1 },
         "type": {
-          "enum": ["native", "official", "translation", "transliteration", "alias"]
+          "enum": ["native", "official", "translation", "transliteration", "alias", "bayer", "flamsteed"]
         },
         "preferred": { "type": "boolean" },
         "searchable": { "type": "boolean" },

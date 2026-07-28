@@ -1,11 +1,17 @@
 {
   "schemaVersion": 1,
-  "importedAt": "2026-07-24",
+  "importedAt": "2026-07-28",
   "upstreams": [
     {
       "id": "stellarium-skycultures",
       "version": "014fbb5e59233d133c22f9811af96b67d05a95c9",
       "url": "https://github.com/Stellarium/stellarium-skycultures/tree/014fbb5e59233d133c22f9811af96b67d05a95c9"
+    },
+    {
+      "id": "stellarium-star-designations",
+      "version": "3abb0f6eedf4e71540d05860a9a67c74144a0bdf",
+      "url": "https://raw.githubusercontent.com/Stellarium/stellarium/3abb0f6eedf4e71540d05860a9a67c74144a0bdf/stars/hip_gaia3/name.fab",
+      "snapshotSha256": "71cb5350aeef358b32792eb8c9ad68a258ec105a1bc869d48c6d8b24f97a3777"
     },
     {
       "id": "d3-celestial-boundaries",
@@ -14,31 +20,31 @@
     },
     {
       "id": "iau-wgsn",
-      "version": "retrieved-2026-07-24",
+      "version": "retrieved-2026-07-28",
       "url": "https://iauarchive.eso.org/public/themes/naming_stars/",
       "snapshotSha256": "67392808893e0d45fc7e5ded7cdb4eb12987fed62b0d03e8d89d631181f7646d"
     },
     {
       "id": "hkspm-western-constellations-zh-cn",
-      "version": "retrieved-2026-07-24",
+      "version": "retrieved-2026-07-28",
       "url": "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html",
       "snapshotSha256": "fa2679790efdeee8edbaaa803cac1301c40fc3bef3fd5b71920bae80b8b27e4b"
     },
     {
       "id": "hkspm-western-constellations-zh-tw",
-      "version": "retrieved-2026-07-24",
+      "version": "retrieved-2026-07-28",
       "url": "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-western-constellations.html",
       "snapshotSha256": "a5e949789bf44b7271e6bc1a4ad00d86128eadf3bf9fed9aaa2de1c0422320ca"
     },
     {
       "id": "hkspm-bright-stars-zh-cn",
-      "version": "retrieved-2026-07-24",
+      "version": "retrieved-2026-07-28",
       "url": "https://hk.space.museum/sc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html",
       "snapshotSha256": "720d6e714ac21790958035ad929375ef5ede173c48ea05bc76c3d5934695ba0f"
     },
     {
       "id": "hkspm-bright-stars-zh-tw",
-      "version": "retrieved-2026-07-24",
+      "version": "retrieved-2026-07-28",
       "url": "https://hk.space.museum/tc/web/spm/resources/teachers-corner/constellations-and-myths/glossary-of-bright-stars.html",
       "snapshotSha256": "02b47f1727bb19b26d0e4bb33c9b6f3aed535e06d503b7f1dc87312a98091d15"
     }
@@ -52,12 +58,14 @@
       "omittedFiguresWithoutHipPaths": 6
     },
     "western": {
-      "starNameRecords": 338,
+      "starNameRecords": 3364,
       "officialIauNames": 338,
+      "bayerDesignations": 2011,
+      "flamsteedDesignations": 2662,
       "unmatchedIauNames": 110,
       "localizedIauStars": 326,
       "chineseCultureFallbackStars": 87,
-      "unlocalizedIauStars": 12,
+      "unlocalizedIauStars": 3038,
       "figures": 88,
       "groups": 1,
       "regions": 88,
@@ -73,6 +81,7 @@
     "Omitted Chinese figures with no HIP path; their count is recorded above.",
     "Merged the two D3-Celestial Serpens polygons into one ICRS MultiPolygon.",
     "Matched IAU WGSN coordinates to the physical catalogue and omitted names without a safe match.",
+    "Imported Bayer and Flamsteed designations for physical HIP stars from Stellarium name.fab.",
     "Added explicit simplified and traditional Chinese names for Western constellations and safely matched IAU stars from Hong Kong Space Museum glossaries.",
     "Filled missing Western IAU Chinese star labels from source-backed Chinese sky-culture names sharing the same HIP identifier.",
     "Recorded source-backed HIP references outside the physical catalogue in a pinned supplemental whitelist."

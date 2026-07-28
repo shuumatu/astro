@@ -32,3 +32,16 @@ export function selectInterfaceLanguageName(
   }
   return undefined
 }
+
+export function selectStarLabelName(
+  names: SkyName[],
+  interfaceLanguage: string,
+): string | undefined {
+  const localizedName = selectInterfaceLanguageName(names, interfaceLanguage)
+  if (localizedName) return localizedName
+  for (const type of ['bayer', 'flamsteed'] as const) {
+    const candidates = names.filter((name) => name.type === type)
+    if (candidates.length > 0) return (candidates.find((name) => name.preferred) ?? candidates[0]).value
+  }
+  return undefined
+}

@@ -147,6 +147,7 @@
     "retry": "Reload",
     "noResults": "No matching content was found",
     "cardTitle": "Object catalog card",
+    "alsoKnownAs": "Also known as",
     "dragCard": "Move catalog card; arrow keys also move it",
     "close": "Close catalog card",
     "preparing": "Content in preparation",

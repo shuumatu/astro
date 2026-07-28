@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "supplemental-hipparcos-ids",
-  "version": "2026.07.5",
+  "version": "2026.07.6",
   "sourceId": "stellarium-skycultures",
   "sourceVersion": "014fbb5e59233d133c22f9811af96b67d05a95c9",
   "objectIds": [

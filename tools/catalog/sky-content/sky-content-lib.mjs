@@ -2,7 +2,9 @@ const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const VERSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 const LANGUAGE_PATTERN = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 const HIP_PATTERN = /^HIP:([1-9][0-9]*)$/;
-const NAME_TYPES = new Set(["native", "official", "translation", "transliteration", "alias"]);
+const NAME_TYPES = new Set([
+  "native", "official", "translation", "transliteration", "alias", "bayer", "flamsteed",
+]);
 const MAX_HIP_ID = 120_404;
 
 export function normalizeSearchTerm(value) {
@@ -10,6 +12,20 @@ export function normalizeSearchTerm(value) {
     .normalize("NFKC")
     .toLocaleLowerCase("und")
     .replace(/[\p{P}\p{S}\s]+/gu, "");
+}
+
+const GREEK_LETTER_NAMES = new Map([
+  ["α", "Alpha"], ["β", "Beta"], ["γ", "Gamma"], ["δ", "Delta"], ["ε", "Epsilon"],
+  ["ζ", "Zeta"], ["η", "Eta"], ["θ", "Theta"], ["ι", "Iota"], ["κ", "Kappa"],
+  ["λ", "Lambda"], ["μ", "Mu"], ["ν", "Nu"], ["ξ", "Xi"], ["ο", "Omicron"],
+  ["π", "Pi"], ["ρ", "Rho"], ["σ", "Sigma"], ["τ", "Tau"], ["υ", "Upsilon"],
+  ["φ", "Phi"], ["χ", "Chi"], ["ψ", "Psi"], ["ω", "Omega"],
+]);
+
+export function latinizeBayerDesignation(value) {
+  const match = /^([α-ω])(\d?)(\s.+)$/u.exec(value);
+  if (!match) return null;
+  return `${GREEK_LETTER_NAMES.get(match[1])}${match[2]}${match[3]}`;
 }
 
 export function validateCulturePack(pack, { knownObjectIds } = {}) {
@@ -213,6 +229,22 @@ export function buildSearchIndex(culturePacks, version) {
           labelPriority: record.labelPriority,
           sourceId: name.sourceId,
         });
+        if (name.type === "bayer") {
+          const latinTerm = latinizeBayerDesignation(name.value);
+          if (latinTerm) {
+            entries.push({
+              term: latinTerm,
+              normalizedTerm: normalizeSearchTerm(latinTerm),
+              objectId: record.objectId,
+              cultureId: culture.id,
+              language: "en",
+              nameType: "identifier",
+              preferred: false,
+              labelPriority: record.labelPriority,
+              sourceId: name.sourceId,
+            });
+          }
+        }
       }
       const hipTerm = record.objectId.replace(":", " ");
       entries.push({
