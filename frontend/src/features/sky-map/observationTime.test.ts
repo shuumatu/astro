@@ -136,6 +136,30 @@ describe('ObservationTimeWheelBatcher', () => {
     expect(onMinutes).toHaveBeenCalledWith(12)
   })
 
+  it('limits updates to about 30 fps while retaining every wheel step', () => {
+    const scheduledFrames: FrameRequestCallback[] = []
+    const onMinutes = vi.fn()
+    const batcher = new ObservationTimeWheelBatcher(
+      onMinutes,
+      (callback) => {
+        scheduledFrames.push(callback)
+        return scheduledFrames.length
+      },
+      vi.fn(),
+    )
+
+    batcher.enqueue('nextMinute')
+    scheduledFrames.shift()!(0)
+    batcher.enqueue('nextMinute')
+    scheduledFrames.shift()!(16)
+    batcher.enqueue('nextMinute')
+
+    expect(onMinutes).toHaveBeenCalledOnce()
+    scheduledFrames.shift()!(33)
+    expect(onMinutes).toHaveBeenCalledTimes(2)
+    expect(onMinutes).toHaveBeenLastCalledWith(2)
+  })
+
   it('cancels a pending frame when reset', () => {
     const cancelFrame = vi.fn()
     const onMinutes = vi.fn()

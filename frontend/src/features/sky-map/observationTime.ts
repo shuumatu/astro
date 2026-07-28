@@ -18,10 +18,12 @@ export interface ObservationTimeWheelResult {
 
 type RequestFrame = (callback: FrameRequestCallback) => number
 type CancelFrame = (handle: number) => void
+const TIME_WHEEL_FRAME_INTERVAL_MS = 32
 
 export class ObservationTimeWheelBatcher {
   private pendingMinutes = 0
   private frameHandle: number | null = null
+  private lastFlushTime: number | null = null
 
   constructor(
     private readonly onMinutes: (minuteDelta: number) => void,
@@ -42,10 +44,19 @@ export class ObservationTimeWheelBatcher {
     if (this.frameHandle !== null) this.cancelFrame(this.frameHandle)
     this.frameHandle = null
     this.pendingMinutes = 0
+    this.lastFlushTime = null
   }
 
-  private readonly flush = (): void => {
+  private readonly flush = (timestamp: number): void => {
     this.frameHandle = null
+    if (
+      this.lastFlushTime !== null
+      && timestamp - this.lastFlushTime < TIME_WHEEL_FRAME_INTERVAL_MS
+    ) {
+      this.frameHandle = this.requestFrame(this.flush)
+      return
+    }
+    this.lastFlushTime = timestamp
     const minuteDelta = this.pendingMinutes
     this.pendingMinutes = 0
     if (minuteDelta !== 0) this.onMinutes(minuteDelta)

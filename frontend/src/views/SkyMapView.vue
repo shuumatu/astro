@@ -6,8 +6,14 @@ import { loadCatalogEntry } from '../features/catalog/api'
 import CatalogInfoCard from '../features/catalog/CatalogInfoCard.vue'
 import { catalogIdentityForSelection, catalogSelectionAction } from '../features/catalog/catalogIdentity'
 import type { CatalogEntry } from '../features/catalog/types'
+import { CalculationPreloader } from '../features/sky-map/calculationPreloader'
 import SkyMapCanvas from '../features/sky-map/SkyMapCanvas.vue'
 import SkyTargetSearch from '../features/sky-map/SkyTargetSearch.vue'
+import {
+  adjacentTimeCalculationParameters,
+  skyCalculationParametersKey,
+} from '../features/sky-map/framePreload'
+import type { TimeNavigationDirection } from '../features/sky-map/framePreload'
 import { LatestCalculationScheduler } from '../features/sky-map/latestCalculationScheduler'
 import { selectLocalizedName } from '../features/sky-map/localizedName'
 import {
@@ -85,10 +91,12 @@ let calculationScheduler: LatestCalculationScheduler<
   SkyCalculationParameters,
   SkyCalculationResult
 > | null = null
+let calculationPreloader: CalculationPreloader<SkyCalculationParameters, SkyCalculationResult> | null = null
 let calculationTimer: ReturnType<typeof setTimeout> | null = null
 let timeWheelResetTimer: ReturnType<typeof setTimeout> | null = null
 let accumulatedTimeWheelDelta = 0
 let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
+let timeNavigationDirection: TimeNavigationDirection = 1
 let catalogCardSequence = 0
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
@@ -184,6 +192,8 @@ onBeforeUnmount(() => {
   timeWheelBatcher = null
   calculationScheduler?.dispose()
   calculationScheduler = null
+  calculationPreloader?.dispose()
+  calculationPreloader = null
   const client = workerClient
   workerClient = null
   client?.dispose()
@@ -194,6 +204,8 @@ async function initialize(): Promise<void> {
   errorMessage.value = ''
   calculationScheduler?.dispose()
   calculationScheduler = null
+  calculationPreloader?.dispose()
+  calculationPreloader = null
   workerClient?.dispose()
   const client = new SkyMapWorkerClient()
   workerClient = client
@@ -204,8 +216,14 @@ async function initialize(): Promise<void> {
     if (!catalogSummary.cultureIds.includes(controls.cultureId)) {
       controls.cultureId = catalogSummary.defaultCultureId
     }
-    calculationScheduler = new LatestCalculationScheduler(
+    const preloader = new CalculationPreloader(
       (parameters) => client.calculate(parameters),
+      skyCalculationParametersKey,
+      { maximumEntries: 128, preloadDelayMs: 8 },
+    )
+    calculationPreloader = preloader
+    calculationScheduler = new LatestCalculationScheduler(
+      (parameters) => preloader.calculate(parameters),
       applyCalculationResult,
       fail,
     )
@@ -231,6 +249,10 @@ function applyCalculationResult(result: SkyCalculationResult): void {
     : null
   calculationDurationMs.value = result.calculationDurationMs
   status.value = 'ready'
+  const parameters = currentCalculationParameters()
+  if (parameters && parameters.observedAt === result.frame.observedAt) {
+    calculationPreloader?.preload(adjacentTimeCalculationParameters(parameters, timeNavigationDirection))
+  }
 }
 
 function currentCalculationParameters(): SkyCalculationParameters | null {
@@ -305,6 +327,7 @@ function handlePageWheel(event: WheelEvent): void {
 function applyObservationMinuteDelta(minuteDelta: number): void {
   const current = new Date(controls.observedAt)
   if (Number.isNaN(current.getTime())) return
+  timeNavigationDirection = minuteDelta < 0 ? -1 : 1
   current.setMinutes(current.getMinutes() + minuteDelta)
   activeTimePreset.value = 'custom'
   controls.observedAt = localDateTimeValue(current)
