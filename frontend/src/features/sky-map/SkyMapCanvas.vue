@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-vue-next'
+import { Maximize2, Minimize2, RotateCcw, Telescope, ZoomIn, ZoomOut } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -10,6 +10,11 @@ import {
 import type { ProjectedPoint } from './projection'
 import { layoutSolarSystemLabels } from './solarSystemLabels'
 import { starColor } from './starColor'
+import {
+  MAX_TELESCOPE_SKY_ZOOM,
+  TELESCOPE_MAGNIFICATION_PRESETS,
+  telescopeMagnificationToSkyScale,
+} from './telescopeMagnification'
 import {
   loadWesternCultureArtwork,
   westernCultureArtworkImage,
@@ -110,6 +115,7 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 const viewportSize = ref(0)
 const hoveredObject = ref<RenderedSkyObject | null>(null)
 const viewTransform = ref(defaultSkyViewTransform())
+const telescopeControlsExpanded = ref(false)
 const isDragging = ref(false)
 let renderedStars: RenderedSkyObject[] = []
 let renderedSolarSystemBodies: RenderedSkyObject[] = []
@@ -129,6 +135,11 @@ const geometry = computed(() => {
 })
 
 const zoomLabel = computed(() => `${Math.round(viewTransform.value.scale * 100)}%`)
+const telescopeMagnification = computed(() => viewTransform.value.scale)
+const telescopeMagnificationLabel = computed(() => `${formatMagnification(telescopeMagnification.value)}x`)
+const selectedTelescopePreset = computed(() => TELESCOPE_MAGNIFICATION_PRESETS.find(
+  (preset) => Math.abs(preset - telescopeMagnification.value) < 0.01,
+)?.toString() ?? '')
 
 const directionLabels = computed(() => {
   const { size, center, radius } = geometry.value
@@ -755,18 +766,22 @@ function onWheel(event: WheelEvent): void {
   const point = eventPoint(event)
   if (!point) return
   const factor = Math.exp(-event.deltaY * 0.0015)
-  setZoom(viewTransform.value.scale * factor, point)
+  setManualZoom(viewTransform.value.scale * factor, point)
 }
 
 function zoomIn(): void {
-  setZoom(viewTransform.value.scale * 1.4)
+  setManualZoom(viewTransform.value.scale * 1.4)
 }
 
 function zoomOut(): void {
-  setZoom(viewTransform.value.scale / 1.4)
+  setManualZoom(viewTransform.value.scale / 1.4)
 }
 
-function setZoom(requestedScale: number, anchor?: ProjectedPoint): void {
+function setManualZoom(requestedScale: number, anchor?: ProjectedPoint): void {
+  setZoom(requestedScale, Math.max(MAX_SKY_ZOOM, viewTransform.value.scale), anchor)
+}
+
+function setZoom(requestedScale: number, maximumScale: number, anchor?: ProjectedPoint): void {
   const { center, radius } = geometry.value
   viewTransform.value = zoomSkyViewAt(
     viewTransform.value,
@@ -774,6 +789,7 @@ function setZoom(requestedScale: number, anchor?: ProjectedPoint): void {
     anchor ?? { x: center, y: center },
     center,
     radius,
+    maximumScale,
   )
 }
 
@@ -781,7 +797,39 @@ function resetView(): void {
   viewTransform.value = defaultSkyViewTransform()
 }
 
+function onTelescopeMagnificationChange(event: Event): void {
+  const value = Number((event.target as HTMLSelectElement).value)
+  if (!value) return
+  const requestedScale = telescopeMagnificationToSkyScale(value)
+  if (props.selectedObject && centerObjectAtScale(
+    props.selectedObject,
+    requestedScale,
+    MAX_TELESCOPE_SKY_ZOOM,
+  )) return
+  setZoom(requestedScale, MAX_TELESCOPE_SKY_ZOOM)
+}
+
+function toggleTelescopeControls(): void {
+  telescopeControlsExpanded.value = !telescopeControlsExpanded.value
+}
+
+function formatMagnification(magnification: number): string {
+  return magnification >= 10 ? magnification.toFixed(0) : magnification.toFixed(1).replace(/\.0$/, '')
+}
+
 function focusObject(selection: SkyObjectSelection): boolean {
+  return centerObjectAtScale(
+    selection,
+    Math.max(2.25, viewTransform.value.scale),
+    Math.max(MAX_SKY_ZOOM, viewTransform.value.scale),
+  )
+}
+
+function centerObjectAtScale(
+  selection: SkyObjectSelection,
+  requestedScale: number,
+  maximumScale: number,
+): boolean {
   if (selection.kind === 'cultureFigure' || selection.kind === 'featuredPattern') {
     const object = selection.kind === 'cultureFigure'
       ? props.frame?.cultureFigures.find(({ id }) => id === selection.object.id)
@@ -790,9 +838,10 @@ function focusObject(selection: SkyObjectSelection): boolean {
     const { center, radius } = geometry.value
     viewTransform.value = centerSkyViewOn(
       projectHorizontal(object.labelPosition, radius, center),
-      Math.max(2.25, viewTransform.value.scale),
+      requestedScale,
       center,
       radius,
+      maximumScale,
     )
     return true
   }
@@ -802,9 +851,10 @@ function focusObject(selection: SkyObjectSelection): boolean {
   const point = projectHorizontal(object, radius, center)
   viewTransform.value = centerSkyViewOn(
     point,
-    Math.max(2.25, viewTransform.value.scale),
+    requestedScale,
     center,
     radius,
+    maximumScale,
   )
   return true
 }
@@ -1126,6 +1176,30 @@ function intersects(left: LabelBounds, right: LabelBounds): boolean {
       />
     </svg>
 
+    <div class="telescope-tools" @pointerdown.stop @click.stop>
+      <button
+        class="telescope-toggle"
+        type="button"
+        :aria-expanded="telescopeControlsExpanded"
+        :aria-label="t(telescopeControlsExpanded ? 'skyMap.hideTelescopeControls' : 'skyMap.showTelescopeControls')"
+        :title="t(telescopeControlsExpanded ? 'skyMap.hideTelescopeControls' : 'skyMap.showTelescopeControls')"
+        @click="toggleTelescopeControls"
+      ><Telescope :size="17" aria-hidden="true" /></button>
+      <div v-if="telescopeControlsExpanded" class="telescope-panel" :title="t('skyMap.telescopeMagnification')">
+        <output aria-live="polite">{{ telescopeMagnificationLabel }}</output>
+        <select
+          :aria-label="t('skyMap.telescopeMagnification')"
+          :value="selectedTelescopePreset"
+          @change="onTelescopeMagnificationChange"
+        >
+          <option value="" disabled>{{ t('skyMap.telescopePreset') }}</option>
+          <option v-for="magnification in TELESCOPE_MAGNIFICATION_PRESETS" :key="magnification" :value="magnification">
+            {{ magnification }}x
+          </option>
+        </select>
+      </div>
+    </div>
+
     <div class="navigation-tools" role="toolbar" :aria-label="t('skyMap.navigation')" @pointerdown.stop @click.stop>
       <button
         type="button"
@@ -1258,13 +1332,72 @@ text {
   right: 12px;
   z-index: 3;
   display: grid;
-  grid-template-columns: 34px 52px repeat(3, 34px);
+  grid-template-columns: 34px 58px repeat(3, 34px);
   align-items: center;
   overflow: hidden;
   border: 1px solid #3a4b51;
   border-radius: 4px;
   background: rgb(9 14 18 / 92%);
 }
+
+.telescope-tools {
+  position: absolute;
+  top: 12px;
+  right: 216px;
+  z-index: 4;
+}
+
+.telescope-toggle {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 36px;
+  border: 1px solid #3a4b51;
+  border-radius: 4px;
+  padding: 0;
+  color: #d2dddd;
+  background: rgb(9 14 18 / 92%);
+  cursor: pointer;
+}
+
+.telescope-toggle:hover { color: #07110f; background: #6fcbbb; }
+
+.telescope-panel {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  display: grid;
+  grid-template-columns: 56px 78px;
+  align-items: center;
+  overflow: hidden;
+  width: 134px;
+  height: 34px;
+  border: 1px solid #3a4b51;
+  border-radius: 4px;
+  background: rgb(9 14 18 / 94%);
+}
+
+.telescope-panel output {
+  color: #d2dddd;
+  font-size: .72rem;
+  text-align: center;
+}
+
+.telescope-panel select {
+  min-width: 0;
+  height: 32px;
+  border: 0;
+  border-left: 1px solid #303e44;
+  padding: 0 5px;
+  color: #d2dddd;
+  background: #090e12;
+  font: inherit;
+  font-size: .72rem;
+  cursor: pointer;
+}
+
+.telescope-toggle:focus-visible,
+.telescope-panel select:focus-visible { outline: 2px solid #6fcbbb; outline-offset: -2px; }
 
 .navigation-tools button {
   display: grid;

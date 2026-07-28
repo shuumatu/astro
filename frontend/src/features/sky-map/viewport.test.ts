@@ -30,9 +30,16 @@ describe('sky view transforms', () => {
   })
 
   it('allows detailed inspection up to the configured maximum zoom', () => {
-    const zoomed = zoomSkyViewAt(defaultSkyViewTransform(), 99, { x: 100, y: 100 }, 100, 90)
+    const zoomed = zoomSkyViewAt(defaultSkyViewTransform(), 999, { x: 100, y: 100 }, 100, 90)
 
+    expect(MAX_SKY_ZOOM).toBe(128)
     expect(zoomed.scale).toBe(MAX_SKY_ZOOM)
+  })
+
+  it('supports a higher explicit limit for telescope field simulation', () => {
+    const zoomed = zoomSkyViewAt(defaultSkyViewTransform(), 900, { x: 100, y: 100 }, 100, 90, 900)
+
+    expect(zoomed.scale).toBe(900)
   })
 
   it('centers an inner target and clamps a horizon target to the navigable edge', () => {

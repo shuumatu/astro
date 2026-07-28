@@ -1,7 +1,7 @@
 import type { ProjectedPoint } from './projection'
 
 export const MIN_SKY_ZOOM = 1
-export const MAX_SKY_ZOOM = 32
+export const MAX_SKY_ZOOM = 128
 
 export interface SkyViewTransform {
   scale: number
@@ -52,8 +52,9 @@ export function zoomSkyViewAt(
   anchor: ProjectedPoint,
   center: number,
   radius: number,
+  maximumScale = MAX_SKY_ZOOM,
 ): SkyViewTransform {
-  const scale = clamp(requestedScale, MIN_SKY_ZOOM, MAX_SKY_ZOOM)
+  const scale = clamp(requestedScale, MIN_SKY_ZOOM, maximumScale)
   if (scale === MIN_SKY_ZOOM) return defaultSkyViewTransform()
 
   const scaleRatio = scale / transform.scale
@@ -82,8 +83,9 @@ export function centerSkyViewOn(
   requestedScale: number,
   center: number,
   radius: number,
+  maximumScale = MAX_SKY_ZOOM,
 ): SkyViewTransform {
-  const scale = clamp(requestedScale, MIN_SKY_ZOOM, MAX_SKY_ZOOM)
+  const scale = clamp(requestedScale, MIN_SKY_ZOOM, maximumScale)
   return constrainSkyView({
     scale,
     offsetX: -(point.x - center) * scale,
