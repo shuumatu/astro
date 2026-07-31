@@ -110,6 +110,13 @@ function choose(suggestion: SkySearchSuggestion): void {
   emit('select', suggestion)
 }
 
+function catalogTypeKey(targetType: SkySearchSuggestion['targetType']): string {
+  if (targetType === 'solarSystemBody') return 'solar-system-body'
+  if (targetType === 'cultureFigure') return 'culture-figure'
+  if (targetType === 'featuredPattern') return 'featured-pattern'
+  return 'star'
+}
+
 function handleKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     open.value = false
@@ -159,7 +166,7 @@ function handleKeydown(event: KeyboardEvent): void {
           <span>{{ suggestion.term }}</span>
           <small>
             <template v-if="suggestion.targetType === 'star'">HIP {{ suggestion.hipId }} · </template>
-            {{ t(`catalog.types.${suggestion.targetType === 'solarSystemBody' ? 'solar-system-body' : suggestion.targetType === 'cultureFigure' ? 'culture-figure' : 'star'}`) }}
+            {{ t(`catalog.types.${catalogTypeKey(suggestion.targetType)}`) }}
           </small>
         </button>
       </li>

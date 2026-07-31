@@ -267,22 +267,7 @@ async function createEntry(): Promise<void> {
     createError.value = t('adminCatalog.invalidObjectKey', { example: createKeyPlaceholder.value })
     return
   }
-  if (!confirmDiscard()) return
-  createPending.value = true
-  try {
-    const created = await createAdminCatalogEntry(token.value, createType.value, objectKey)
-    createKey.value = ''
-    activeQuery.value = ''
-    queryInput.value = ''
-    filterType.value = ''
-    currentPage.value = 0
-    await refreshEntries({ selectId: created.id, loadSelection: true })
-    setFeedback(t('adminCatalog.created'))
-  } catch {
-    createError.value = t('adminCatalog.createFailed')
-  } finally {
-    createPending.value = false
-  }
+  await openOrCreateCatalogTarget(createType.value, objectKey)
 }
 
 async function save(): Promise<boolean> {
@@ -389,18 +374,46 @@ function removeMedia(index: number): void {
   }
 }
 
-function chooseCatalogSuggestion(suggestion: SkySearchSuggestion): void {
+async function chooseCatalogSuggestion(suggestion: SkySearchSuggestion): Promise<void> {
   const type: CatalogObjectType = suggestion.targetType === 'solarSystemBody'
     ? 'solar-system-body'
-    : suggestion.targetType === 'cultureFigure' ? 'culture-figure' : 'star'
-  chooseCatalogTarget(type, suggestion.objectId)
+    : suggestion.targetType === 'cultureFigure'
+      ? 'culture-figure'
+      : suggestion.targetType === 'featuredPattern' ? 'featured-pattern' : 'star'
+  await openOrCreateCatalogTarget(type, suggestion.objectId)
 }
 
-function chooseCatalogTarget(type: CatalogObjectType, objectKey: string): void {
+async function openOrCreateCatalogTarget(type: CatalogObjectType, objectKey: string): Promise<void> {
+  if (!confirmDiscard()) return
   createType.value = type
-  createKey.value = objectKey
   createError.value = ''
-  targetQuery.value = ''
+  createPending.value = true
+  try {
+    const result = await loadAdminCatalog(token.value, {
+      objectType: type,
+      query: objectKey,
+      page: 0,
+      size: PAGE_SIZE,
+    })
+    const existing = result.items.find((entry) => (
+      entry.objectType === type && entry.objectKey === objectKey
+    ))
+    const entry = existing ?? await createAdminCatalogEntry(token.value, type, objectKey)
+
+    targetQuery.value = ''
+    createKey.value = ''
+    queryInput.value = objectKey
+    activeQuery.value = objectKey
+    filterType.value = type
+    currentPage.value = 0
+    editorMode.value = 'edit'
+    await refreshEntries({ selectId: entry.id, loadSelection: true })
+    setFeedback(t(existing ? 'adminCatalog.openedExisting' : 'adminCatalog.created'))
+  } catch {
+    createError.value = t('adminCatalog.createFailed')
+  } finally {
+    createPending.value = false
+  }
 }
 
 async function cleanupRemovedMedia(mediaIds: string[]): Promise<boolean> {
@@ -625,6 +638,7 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
               :interface-language="locale"
               :placeholder="t('adminCatalog.findSkyObjectHint')"
               :input-aria-label="t('adminCatalog.findSkyObject')"
+              :disabled="createPending"
               @select="chooseCatalogSuggestion"
             />
           </div>

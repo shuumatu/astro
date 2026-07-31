@@ -66,7 +66,13 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
       post({
         type: 'search-results',
         requestId: request.requestId,
-        result: searchSkyNames(initialized.searchIndex, request.parameters, initialized.catalogObjectIds, culture),
+        result: searchSkyNames(
+          initialized.searchIndex,
+          request.parameters,
+          initialized.catalogObjectIds,
+          culture,
+          initialized.featuredPatterns,
+        ),
       })
       return
     }

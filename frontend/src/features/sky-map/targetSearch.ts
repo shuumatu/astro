@@ -1,5 +1,6 @@
 import { SOLAR_SYSTEM_BODY_IDS } from './types'
 import type {
+  FeaturedPatternPack,
   SkySearchIndex,
   SkySearchIndexEntry,
   SkySearchMatchType,
@@ -41,6 +42,7 @@ export function searchSkyNames(
   parameters: SkySearchParameters,
   catalogObjectIds: ReadonlySet<string>,
   culture?: SkyCulturePack,
+  featuredPatterns?: FeaturedPatternPack,
 ): SkySearchResult {
   const normalizedQuery = normalizeSkyTargetSearchTerm(parameters.query)
   if (!normalizedQuery || parameters.limit <= 0) {
@@ -91,7 +93,7 @@ export function searchSkyNames(
     })
     if (suggestions.length >= parameters.limit) break
   }
-  const localSuggestions = searchLocalTargets(parameters, normalizedQuery, culture)
+  const localSuggestions = searchLocalTargets(parameters, normalizedQuery, culture, featuredPatterns)
   return {
     query: parameters.query,
     normalizedQuery,
@@ -106,6 +108,7 @@ function searchLocalTargets(
   parameters: SkySearchParameters,
   normalizedQuery: string,
   culture?: SkyCulturePack,
+  featuredPatterns?: FeaturedPatternPack,
 ): SkySearchSuggestion[] {
   const matches: SkySearchSuggestion[] = []
   for (const body of parameters.solarSystemBodies ?? []) {
@@ -133,6 +136,23 @@ function searchLocalTargets(
       objectId: `culture:${culture!.id}:${figure.id}`,
       term: match.term,
       cultureId: culture!.id,
+      language: matchedName?.language ?? 'und',
+      nameType: matchedName?.type ?? 'identifier',
+      matchType: match.matchType,
+      availableInCatalog: true,
+    })
+  }
+  for (const pattern of featuredPatterns?.patterns ?? []) {
+    const searchableNames = pattern.names.filter((name) => name.searchable)
+    const terms = [...searchableNames.map((name) => name.value), pattern.id]
+    const match = bestTermMatch(terms, normalizedQuery)
+    if (!match) continue
+    const matchedName = searchableNames.find((name) => name.value === match.term)
+    matches.push({
+      targetType: 'featuredPattern',
+      objectId: `featured-pattern:${pattern.id}`,
+      term: match.term,
+      cultureId: parameters.cultureId,
       language: matchedName?.language ?? 'und',
       nameType: matchedName?.type ?? 'identifier',
       matchType: match.matchType,

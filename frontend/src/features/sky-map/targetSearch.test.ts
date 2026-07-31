@@ -6,7 +6,7 @@ import {
   parseSkyTargetQuery,
   searchSkyNames,
 } from './targetSearch'
-import type { SkyCulturePack, SkySearchIndex, SolarSystemBodyId } from './types'
+import type { FeaturedPatternPack, SkyCulturePack, SkySearchIndex, SolarSystemBodyId } from './types'
 
 const CHINESE_NAMES: Record<SolarSystemBodyId, string> = {
   sun: '太阳',
@@ -162,6 +162,40 @@ describe('searchSkyNames', () => {
       matchType: 'exact',
     })
   })
+
+  it('searches featured patterns by localized and English names', () => {
+    const featuredPatterns: FeaturedPatternPack = {
+      schemaVersion: 1,
+      id: 'featured-patterns',
+      version: 'test',
+      sources: [],
+      patterns: [{
+        id: 'summer-triangle',
+        names: [
+          { language: 'zh-CN', value: '夏季大三角', type: 'translation', preferred: true, searchable: true, sourceId: 'test' },
+          { language: 'en', value: 'Summer Triangle', type: 'official', preferred: true, searchable: true, sourceId: 'test' },
+        ],
+        memberObjectIds: ['HIP:91262', 'HIP:102098', 'HIP:97649'],
+        paths: [['HIP:91262', 'HIP:102098', 'HIP:97649', 'HIP:91262']],
+        labelAnchor: { objectId: 'HIP:97649' },
+        cultureIds: ['western-iau'],
+        sourceIds: ['test'],
+      }],
+    }
+    const result = searchSkyNames(emptySearchIndex(), {
+      query: '夏季大三角',
+      cultureId: 'western-iau',
+      interfaceLanguage: 'zh-CN',
+      limit: 8,
+    }, new Set(), undefined, featuredPatterns)
+
+    expect(result.suggestions[0]).toMatchObject({
+      targetType: 'featuredPattern',
+      objectId: 'featured-pattern:summer-triangle',
+      term: '夏季大三角',
+      matchType: 'exact',
+    })
+  })
 })
 
 function parse(query: string) {
@@ -179,5 +213,16 @@ function searchEntry(term: string, objectId: string, cultureId: string) {
     preferred: true,
     labelPriority: 80,
     sourceId: 'test',
+  }
+}
+
+function emptySearchIndex(): SkySearchIndex {
+  return {
+    schemaVersion: 1,
+    id: 'sky-search-index',
+    version: 'test',
+    normalization: 'test',
+    collisions: [],
+    entries: [],
   }
 }

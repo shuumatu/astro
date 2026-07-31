@@ -101,6 +101,7 @@ let timeWheelBatcher: ObservationTimeWheelBatcher | null = null
 let timeNavigationDirection: TimeNavigationDirection = 1
 let catalogCardSequence = 0
 let starNameSequence = 0
+let pendingFeaturedPatternId = ''
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
@@ -264,6 +265,13 @@ function applyCalculationResult(result: SkyCalculationResult): void {
     : null
   calculationDurationMs.value = result.calculationDurationMs
   status.value = 'ready'
+  if (pendingFeaturedPatternId) {
+    const id = pendingFeaturedPatternId
+    pendingFeaturedPatternId = ''
+    const pattern = result.frame.featuredPatterns.find((candidate) => candidate.id === id)
+    if (pattern) locateTarget({ kind: 'featuredPattern', object: pattern })
+    else targetMessage.value = t('skyMap.targetNotVisible', { id })
+  }
   const parameters = currentCalculationParameters()
   if (parameters && parameters.observedAt === result.frame.observedAt) {
     calculationPreloader?.preload(adjacentTimeCalculationParameters(parameters, timeNavigationDirection))
@@ -405,6 +413,21 @@ function selectTargetSuggestion(suggestion: SkySearchSuggestion): void {
     const id = suggestion.objectId.split(':').at(-1)
     const figure = frame.value?.cultureFigures.find((candidate) => candidate.id === id)
     if (figure) locateTarget({ kind: 'cultureFigure', object: figure })
+    return
+  }
+  if (suggestion.targetType === 'featuredPattern') {
+    const id = suggestion.objectId.slice('featured-pattern:'.length)
+    const pattern = frame.value?.featuredPatterns.find((candidate) => candidate.id === id)
+    if (pattern) {
+      locateTarget({ kind: 'featuredPattern', object: pattern })
+      return
+    }
+    pendingFeaturedPatternId = id
+    if (!controls.enabledFeaturedPatternIds.includes(id)) {
+      controls.enabledFeaturedPatternIds.push(id)
+    } else {
+      requestCalculation()
+    }
     return
   }
   if (!suggestion.availableInCatalog) {

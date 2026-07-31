@@ -196,7 +196,7 @@ export interface SkySearchParameters {
 }
 
 export interface SkySearchSuggestion {
-  targetType: 'star' | 'solarSystemBody' | 'cultureFigure'
+  targetType: 'star' | 'solarSystemBody' | 'cultureFigure' | 'featuredPattern'
   objectId: string
   hipId?: number
   term: string
