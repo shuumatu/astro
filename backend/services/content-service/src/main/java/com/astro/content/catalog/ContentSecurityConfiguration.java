@@ -34,6 +34,7 @@ public class ContentSecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/content/catalog-entries/**").permitAll()
+                        .requestMatchers("/api/content/explore/**").permitAll()
                         .requestMatchers("/api/content/admin/**").authenticated()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(resource -> resource

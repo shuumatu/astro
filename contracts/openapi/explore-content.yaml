@@ -1,0 +1,282 @@
+openapi: 3.1.0
+info:
+  title: Astro Explore Content API
+  version: 0.1.0
+  description: Versioned multilingual astronomy articles with external HTTPS images.
+servers: [{ url: / }]
+paths:
+  /api/content/explore/categories:
+    get:
+      operationId: listExploreCategories
+      parameters:
+        - { name: locale, in: query, schema: { type: string, default: zh-CN } }
+      responses:
+        '200':
+          description: Categories in display order; clients hide disabled categories from new selections.
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/CategoryDefinition' } } } }
+  /api/content/explore/articles:
+    get:
+      operationId: listExploreArticles
+      parameters:
+        - { name: locale, in: query, schema: { type: string, default: zh-CN } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/Category' } }
+        - { name: query, in: query, schema: { type: string, maxLength: 120 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        '200':
+          description: Published articles.
+          content: { application/json: { schema: { $ref: '#/components/schemas/ArticlePage' } } }
+  /api/content/explore/articles/{slug}:
+    get:
+      operationId: getExploreArticle
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string, default: zh-CN } }
+      responses:
+        '200':
+          description: Published article and related articles.
+          headers: { ETag: { schema: { type: string } } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/Article' } } }
+        '304': { description: Cached revision is current. }
+        '404': { description: No published translation is available. }
+  /api/content/admin/explore/articles:
+    get:
+      operationId: listAdminExploreArticles
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/Category' } }
+        - { name: status, in: query, schema: { type: string, enum: ['', DRAFT, PUBLISHED, ARCHIVED] } }
+        - { name: query, in: query, schema: { type: string, maxLength: 120 } }
+      responses: { '200': { description: Articles including draft and publication status. } }
+    post:
+      operationId: createExploreArticle
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, category, difficulty]
+              properties:
+                slug: { type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
+                category: { $ref: '#/components/schemas/Category' }
+                difficulty: { $ref: '#/components/schemas/Difficulty' }
+      responses: { '200': { description: Article shell created. }, '409': { description: Slug already exists. } }
+  /api/content/admin/explore/articles/{articleId}:
+    put:
+      operationId: updateExploreMetadata
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: articleId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category, difficulty]
+              properties:
+                category: { $ref: '#/components/schemas/Category' }
+                difficulty: { $ref: '#/components/schemas/Difficulty' }
+      responses: { '200': { description: Metadata updated. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}:
+    put:
+      operationId: saveExploreDraft
+      security: [{ bearerAuth: [] }]
+      parameters: &translationParams
+        - { name: articleId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: locale, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Draft' } } }
+      responses: { '200': { description: Draft saved. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/preview:
+    get:
+      operationId: previewExploreDraft
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      responses: { '200': { description: Draft or current published revision. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/publish:
+    post:
+      operationId: publishExploreDraft
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      responses: { '200': { description: Draft atomically promoted to the public revision. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/unpublish:
+    post:
+      operationId: unpublishExploreTranslation
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      responses: { '200': { description: Translation removed from public view. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/revisions:
+    get:
+      operationId: listExploreRevisions
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      responses: { '200': { description: Revision history. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/revisions/{revisionId}/restore:
+    post:
+      operationId: restoreExploreRevision
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: articleId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: locale, in: path, required: true, schema: { type: string } }
+        - { name: revisionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses: { '200': { description: Selected revision copied into a new draft. } }
+  /api/content/admin/explore/articles/{articleId}/translations/{locale}/markdown:
+    get:
+      operationId: exportExploreMarkdown
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      responses:
+        '200': { description: UTF-8 Markdown file with YAML front matter., content: { text/markdown: { schema: { type: string } } } }
+    post:
+      operationId: importExploreMarkdown
+      security: [{ bearerAuth: [] }]
+      parameters: *translationParams
+      requestBody:
+        required: true
+        content: { text/markdown: { schema: { type: string, maxLength: 150000 } } }
+      responses: { '200': { description: Imported as a draft revision. } }
+  /api/content/admin/explore/categories:
+    get:
+      operationId: listAdminExploreCategories
+      security: [{ bearerAuth: [] }]
+      responses: { '200': { description: All categories including disabled ones. } }
+    post:
+      operationId: createExploreCategory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CategoryCreate' } } }
+      responses: { '200': { description: Category created. }, '409': { description: Code already exists. } }
+  /api/content/admin/explore/categories/{categoryId}:
+    put:
+      operationId: updateExploreCategory
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: categoryId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CategoryUpdate' } } }
+      responses: { '200': { description: Category updated. } }
+  /api/content/admin/explore/articles/{articleId}/archive:
+    post:
+      operationId: archiveExploreArticle
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: articleId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Article archived. } }
+  /api/content/admin/explore/articles/{articleId}/restore:
+    post:
+      operationId: restoreExploreArticle
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: articleId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Article restored. } }
+components:
+  securitySchemes: { bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } }
+  schemas:
+    Category: { type: string, pattern: '^[A-Z0-9]+(?:_[A-Z0-9]+)*$' }
+    CategoryTranslation:
+      type: object
+      required: [locale, name]
+      properties:
+        locale: { type: string, maxLength: 35 }
+        name: { type: string, maxLength: 120 }
+        description: { type: [string, 'null'], maxLength: 500 }
+    CategoryDefinition:
+      type: object
+      required: [id, code, name, sortOrder, enabled]
+      properties:
+        id: { type: string, format: uuid }
+        code: { $ref: '#/components/schemas/Category' }
+        name: { type: string }
+        description: { type: [string, 'null'] }
+        sortOrder: { type: integer }
+        enabled: { type: boolean }
+    CategoryCreate:
+      type: object
+      required: [code, sortOrder, translations]
+      properties:
+        code: { $ref: '#/components/schemas/Category' }
+        sortOrder: { type: integer, minimum: 0 }
+        translations: { type: array, minItems: 1, items: { $ref: '#/components/schemas/CategoryTranslation' } }
+    CategoryUpdate:
+      type: object
+      required: [sortOrder, enabled, translations]
+      properties:
+        sortOrder: { type: integer, minimum: 0 }
+        enabled: { type: boolean }
+        translations: { type: array, minItems: 1, items: { $ref: '#/components/schemas/CategoryTranslation' } }
+    Difficulty: { type: string, enum: [BEGINNER, INTERMEDIATE, ADVANCED] }
+    Source:
+      type: object
+      required: [title, url]
+      properties:
+        title: { type: string }
+        url: { type: string, format: uri }
+        author: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }
+    ImageCredit:
+      type: object
+      required: [imageUrl, sourcePageUrl]
+      properties:
+        imageUrl: { type: string, format: uri, pattern: '^https://' }
+        sourcePageUrl: { type: string, format: uri }
+        author: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }
+    Summary:
+      type: object
+      required: [id, slug, category, difficulty, contentLocale, title, summary, tags, estimatedMinutes, publishedAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        category: { $ref: '#/components/schemas/Category' }
+        difficulty: { $ref: '#/components/schemas/Difficulty' }
+        contentLocale: { type: string }
+        title: { type: string }
+        summary: { type: string }
+        tags: { type: array, items: { type: string } }
+        estimatedMinutes: { type: integer }
+        coverImageUrl: { type: [string, 'null'], format: uri }
+        coverImageAlt: { type: [string, 'null'] }
+        publishedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Article:
+      allOf:
+        - { $ref: '#/components/schemas/Summary' }
+        - type: object
+          required: [requestedLocale, localeFallback, bodyMarkdown, sources, imageCredits, revision, status, relatedArticles]
+          properties:
+            requestedLocale: { type: string }
+            localeFallback: { type: boolean }
+            bodyMarkdown: { type: string }
+            coverImageCaption: { type: [string, 'null'] }
+            sources: { type: array, items: { $ref: '#/components/schemas/Source' } }
+            imageCredits: { type: array, items: { $ref: '#/components/schemas/ImageCredit' } }
+            revision: { type: integer }
+            status: { type: string, enum: [DRAFT, PUBLISHED, SUPERSEDED] }
+            relatedArticles: { type: array, maxItems: 3, items: { $ref: '#/components/schemas/Summary' } }
+    ArticlePage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Summary' } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer }
+        totalPages: { type: integer }
+    Draft:
+      type: object
+      required: [title, summary, bodyMarkdown, tags, estimatedMinutes, sources, imageCredits]
+      properties:
+        title: { type: string, maxLength: 160 }
+        summary: { type: string, maxLength: 600 }
+        bodyMarkdown: { type: string, maxLength: 100000 }
+        tags: { type: array, maxItems: 12, items: { type: string, maxLength: 50 } }
+        estimatedMinutes: { type: integer, minimum: 1, maximum: 60 }
+        coverImageUrl: { type: [string, 'null'], maxLength: 2048 }
+        coverImageAlt: { type: [string, 'null'], maxLength: 500 }
+        coverImageCaption: { type: [string, 'null'], maxLength: 500 }
+        sources: { type: array, maxItems: 30, items: { $ref: '#/components/schemas/Source' } }
+        imageCredits: { type: array, maxItems: 31, items: { $ref: '#/components/schemas/ImageCredit' } }

@@ -23,6 +23,7 @@ function switchLocale(localeCode: string) {
     <RouterLink class="brand" to="/">Astro Learning</RouterLink>
     <nav class="nav-links" aria-label="Primary navigation">
       <RouterLink to="/catalog">{{ t('nav.catalog') }}</RouterLink>
+      <RouterLink to="/explore">{{ t('nav.explore') }}</RouterLink>
       <RouterLink to="/missions">{{ t('nav.missions') }}</RouterLink>
       <RouterLink to="/sky-map">{{ t('nav.skyMap') }}</RouterLink>
     </nav>
