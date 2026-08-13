@@ -292,11 +292,6 @@
       "OBSERVATION": "Observation & tools",
       "FUNDAMENTALS": "Fundamentals",
       "GUIDES": "Observing guides"
-    },
-    "difficulties": {
-      "BEGINNER": "Beginner",
-      "INTERMEDIATE": "Intermediate",
-      "ADVANCED": "Advanced"
     }
   },
   "adminExplore": {
@@ -305,6 +300,10 @@
     "create": "New article",
     "created": "Article created",
     "createFailed": "Article could not be created",
+    "newArticleTitle": "Title",
+    "newArticleTitlePlaceholder": "For example: Why meteor showers return",
+    "slug": "URL slug",
+    "slugHint": "Used in the article URL. Use lowercase letters, numbers, and hyphens, for example meteor-showers. English titles generate it automatically.",
     "search": "Search articles",
     "allStatuses": "All statuses",
     "draft": "Draft",
@@ -330,7 +329,6 @@
     "actionFailed": "The action could not be completed",
     "revisionRestored": "Revision restored as a new draft",
     "category": "Category",
-    "difficulty": "Difficulty",
     "minutes": "Reading time (minutes)",
     "articleTitle": "Title",
     "summary": "Summary",

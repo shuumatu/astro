@@ -58,11 +58,12 @@ paths:
           application/json:
             schema:
               type: object
-              required: [slug, category, difficulty]
+              required: [slug, category, locale, title]
               properties:
                 slug: { type: string, pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$' }
                 category: { $ref: '#/components/schemas/Category' }
-                difficulty: { $ref: '#/components/schemas/Difficulty' }
+                locale: { type: string, maxLength: 35 }
+                title: { type: string, maxLength: 160 }
       responses: { '200': { description: Article shell created. }, '409': { description: Slug already exists. } }
   /api/content/admin/explore/articles/{articleId}:
     put:
@@ -75,10 +76,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [category, difficulty]
+              required: [category]
               properties:
                 category: { $ref: '#/components/schemas/Category' }
-                difficulty: { $ref: '#/components/schemas/Difficulty' }
       responses: { '200': { description: Metadata updated. } }
   /api/content/admin/explore/articles/{articleId}/translations/{locale}:
     put:
@@ -207,7 +207,6 @@ components:
         sortOrder: { type: integer, minimum: 0 }
         enabled: { type: boolean }
         translations: { type: array, minItems: 1, items: { $ref: '#/components/schemas/CategoryTranslation' } }
-    Difficulty: { type: string, enum: [BEGINNER, INTERMEDIATE, ADVANCED] }
     Source:
       type: object
       required: [title, url]
@@ -228,12 +227,11 @@ components:
         attribution: { type: [string, 'null'] }
     Summary:
       type: object
-      required: [id, slug, category, difficulty, contentLocale, title, summary, tags, estimatedMinutes, publishedAt, updatedAt]
+      required: [id, slug, category, contentLocale, title, summary, tags, estimatedMinutes, publishedAt, updatedAt]
       properties:
         id: { type: string, format: uuid }
         slug: { type: string }
         category: { $ref: '#/components/schemas/Category' }
-        difficulty: { $ref: '#/components/schemas/Difficulty' }
         contentLocale: { type: string }
         title: { type: string }
         summary: { type: string }

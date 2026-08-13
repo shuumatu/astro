@@ -82,7 +82,6 @@ function categoryName(code: string): string { return categories.value.find(item 
         <div class="explore-card-copy">
           <div class="article-meta">
             <span>{{ categoryName(article.category) }}</span>
-            <span>{{ t(`explore.difficulties.${article.difficulty}`) }}</span>
             <span>{{ t('explore.minutes', { count: article.estimatedMinutes }) }}</span>
           </div>
           <h2>{{ article.title }}</h2>

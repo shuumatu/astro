@@ -12,12 +12,11 @@ import {
 import { emptyExploreDraft, insertMarkdownImage, reconcileImageCredits } from '../features/explore/draft'
 import { handleExploreImageError, renderExploreMarkdown } from '../features/explore/markdown'
 import type {
-  AdminExploreCategory, AdminExplorePage, AdminExploreSummary, ExploreArticle, ExploreCategory, ExploreDifficulty, ExploreDraft, ExploreRevisionSummary,
+  AdminExploreCategory, AdminExplorePage, AdminExploreSummary, ExploreArticle, ExploreCategory, ExploreDraft, ExploreRevisionSummary,
 } from '../features/explore/types'
 
 const TOKEN_KEY = 'astro-content-admin-token'
 const locales = ['zh-CN', 'en'] as const
-const difficulties: ExploreDifficulty[] = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED']
 const { t } = useI18n()
 
 const token = ref(sessionStorage.getItem(TOKEN_KEY) || '')
@@ -45,7 +44,8 @@ const revisions = ref<ExploreRevisionSummary[]>([])
 const saving = ref(false)
 const publishing = ref(false)
 const feedback = reactive({ message: '', error: false })
-const createForm = reactive<{ slug: string, category: ExploreCategory, difficulty: ExploreDifficulty }>({ slug: '', category: '', difficulty: 'BEGINNER' })
+const createForm = reactive<{ title: string, slug: string, category: ExploreCategory }>({ title: '', slug: '', category: '' })
+const slugEdited = ref(false)
 const createPending = ref(false)
 const showImageForm = ref(false)
 const imageForm = reactive({ url: '', alt: '', caption: '', sourcePageUrl: '', author: '', license: '', attribution: '' })
@@ -66,12 +66,15 @@ watch([filterCategory, filterStatus], () => void refresh(false))
 watch(activeLocale, () => { if (confirmDiscard()) void loadSelection() })
 watch(() => draft.bodyMarkdown, () => reconcileImageCredits(draft))
 watch(() => draft.coverImageUrl, () => reconcileImageCredits(draft))
+watch(() => createForm.title, value => {
+  if (!slugEdited.value) createForm.slug = slugifyTitle(value)
+})
 watch(dirty, value => value ? window.addEventListener('beforeunload', preventUnload) : window.removeEventListener('beforeunload', preventUnload))
 onBeforeUnmount(() => window.removeEventListener('beforeunload', preventUnload))
 onBeforeRouteLeave(() => confirmDiscard())
 
 function preventUnload(event: BeforeUnloadEvent): void { event.preventDefault(); event.returnValue = true }
-function fingerprint(): string { return JSON.stringify({ draft, tags: tagText.value, category: selected.value?.category, difficulty: selected.value?.difficulty }) }
+function fingerprint(): string { return JSON.stringify({ draft, tags: tagText.value, category: selected.value?.category }) }
 function confirmDiscard(): boolean { return !dirty.value || window.confirm(t('adminExplore.discardChanges')) }
 function setDraft(value: ExploreDraft): void {
   Object.assign(draft, value)
@@ -141,8 +144,11 @@ async function loadSelection(): Promise<void> {
 async function createArticle(): Promise<void> {
   createPending.value = true
   try {
-    const created = await createExploreArticle(token.value, { ...createForm, slug: createForm.slug.trim() })
-    createForm.slug = ''; await refresh(false); selectedId.value = created.id; await loadSelection(); showFeedback(t('adminExplore.created'))
+    const created = await createExploreArticle(token.value, {
+      title: createForm.title.trim(), slug: createForm.slug.trim(), category: createForm.category, locale: activeLocale.value,
+    })
+    createForm.title = ''; createForm.slug = ''; slugEdited.value = false
+    await refresh(false); selectedId.value = created.id; await loadSelection(); showFeedback(t('adminExplore.created'))
   } catch { showFeedback(t('adminExplore.createFailed'), true) }
   finally { createPending.value = false }
 }
@@ -153,11 +159,19 @@ async function save(): Promise<boolean> {
   try {
     draft.tags = tagText.value.split(/[,，]/).map(item => item.trim()).filter(Boolean).slice(0, 12)
     reconcileImageCredits(draft)
-    await updateExploreMetadata(token.value, selected.value.id, { category: selected.value.category, difficulty: selected.value.difficulty })
+    await updateExploreMetadata(token.value, selected.value.id, { category: selected.value.category })
     const saved = await saveExploreDraft(token.value, selected.value.id, activeLocale.value, cleanDraft())
     setDraft(draftFromArticle(saved)); await refresh(false); await loadHistory(); showFeedback(t('adminExplore.saved')); return true
   } catch { showFeedback(t('adminExplore.saveFailed'), true); return false }
   finally { saving.value = false }
+}
+
+function slugifyTitle(value: string): string {
+  return value.normalize('NFKD').toLowerCase()
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120)
 }
 
 async function publish(): Promise<void> {
@@ -292,9 +306,10 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
       <div class="admin-layout">
         <aside class="article-list">
           <form class="create-form" @submit.prevent="createArticle">
-            <input v-model="createForm.slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="stellar-spectra">
-            <div><select v-model="createForm.category" required><option v-for="item in selectableCategories()" :key="item.id" :value="item.code">{{ categoryName(item.code) }}</option></select>
-              <select v-model="createForm.difficulty"><option v-for="item in difficulties" :key="item" :value="item">{{ t(`explore.difficulties.${item}`) }}</option></select></div>
+            <label><span>{{ t('adminExplore.newArticleTitle') }}</span><input v-model="createForm.title" required maxlength="160" :placeholder="t('adminExplore.newArticleTitlePlaceholder')"></label>
+            <label><span>{{ t('adminExplore.slug') }}</span><input v-model="createForm.slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="meteor-showers" @input="slugEdited = true"></label>
+            <small>{{ t('adminExplore.slugHint') }}</small>
+            <label><span>{{ t('adminExplore.category') }}</span><select v-model="createForm.category" required><option v-for="item in selectableCategories()" :key="item.id" :value="item.code">{{ categoryName(item.code) }}</option></select></label>
             <button type="submit" :disabled="createPending"><FilePlus2 :size="16" />{{ t('adminExplore.create') }}</button>
           </form>
           <form class="list-search" @submit.prevent="refresh(false)"><Search :size="16" /><input v-model="query" :placeholder="t('adminExplore.search')"></form>
@@ -325,7 +340,6 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
           <div v-if="editorLoading" class="editor-state">{{ t('explore.loading') }}</div>
           <form v-else-if="editorMode === 'edit'" class="editor-form" @submit.prevent="save">
             <div class="metadata-row"><label><span>{{ t('adminExplore.category') }}</span><select v-model="selected.category"><option v-for="item in selectableCategories(selected.category)" :key="item.id" :value="item.code">{{ categoryName(item.code) }}</option></select></label>
-              <label><span>{{ t('adminExplore.difficulty') }}</span><select v-model="selected.difficulty"><option v-for="item in difficulties" :key="item" :value="item">{{ t(`explore.difficulties.${item}`) }}</option></select></label>
               <label><span>{{ t('adminExplore.minutes') }}</span><input v-model.number="draft.estimatedMinutes" type="number" min="1" max="60"></label></div>
             <label><span>{{ t('adminExplore.articleTitle') }}</span><input v-model="draft.title" maxlength="160"></label>
             <label><span>{{ t('adminExplore.summary') }}</span><textarea v-model="draft.summary" rows="3" maxlength="600"></textarea></label>
@@ -393,8 +407,8 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
 .explore-admin { padding: 24px 0 60px; }.admin-header { display: flex; align-items: end; justify-content: space-between; margin-bottom: 18px; }.admin-header p { margin: 0; color: #d9a15b; font-size: 12px; }.admin-header h1 { margin: 5px 0 0; font-size: 30px; }
 .icon-button, button { cursor: pointer; }.header-actions { display: flex; gap: 7px; }.icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid #304753; border-radius: 4px; color: #aabcc1; background: transparent; }
 .login-panel { display: grid; gap: 14px; width: min(390px, 100%); margin: 80px auto; border: 1px solid #2a414c; padding: 28px; background: #0a1821; }.login-panel h1 { margin: 0; font-size: 24px; }.login-panel label, .editor-form label, .image-dialog label { display: grid; gap: 6px; color: #90a4ab; font-size: 12px; }.login-panel input, .editor-form input, .editor-form textarea, .editor-form select, .image-dialog input, .list-search input, .list-filters select, .create-form input, .create-form select { min-width: 0; border: 1px solid #314954; border-radius: 3px; padding: 9px 10px; color: #e8efed; background: #08151c; }.login-panel > button { min-height: 40px; border: 0; border-radius: 4px; color: #15100a; background: #dfa75f; }
-.admin-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 720px; border: 1px solid #253b45; background: #0a1720; }.article-list { border-right: 1px solid #253b45; background: #08141b; }.create-form { display: grid; gap: 7px; padding: 12px; border-bottom: 1px solid #253b45; }.create-form > div, .metadata-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.create-form button, .body-label button, .form-section header button, .command, .publication-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; border: 1px solid #45616a; border-radius: 4px; color: #c4d2d2; background: transparent; }.list-search { display: flex; align-items: center; gap: 7px; margin: 12px; border: 1px solid #304752; padding: 0 9px; color: #71878e; }.list-search input { flex: 1; border: 0; }.list-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 12px 12px; }.article-row { display: grid; width: 100%; gap: 5px; border: 0; border-top: 1px solid #1d3039; padding: 12px; color: #dbe4e2; background: transparent; text-align: left; }.article-row:hover, .article-row.active { background: #11242c; }.article-row span { display: flex; justify-content: space-between; color: #bf8e52; font-size: 10px; }.article-row small { color: #d6927b; }.article-row code { color: #738991; font-size: 10px; }.list-state { padding: 24px; color: #82969d; text-align: center; }.list-state.error { color: #dc9a80; }
-.editor-panel { min-width: 0; }.editor-toolbar { display: flex; align-items: center; gap: 7px; min-height: 54px; border-bottom: 1px solid #253b45; padding: 8px 12px; }.locale-tabs, .mode-tabs { display: flex; }.locale-tabs button, .mode-tabs button { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; border: 1px solid #304751; padding: 0 9px; color: #899da4; background: transparent; }.locale-tabs button.active, .mode-tabs button.active { color: #e9efed; background: #1a3037; }.mode-tabs { margin-left: 8px; }.dirty { margin-left: auto; color: #d6a05d; font-size: 11px; }.hidden-file { display: none; }.icon-command { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border: 1px solid #45616a; border-radius: 4px; color: #c4d2d2; background: transparent; }.command.primary, .image-dialog .primary, .category-dialog .primary { border-color: #b17b3b; color: #171108; background: #dda55e; }.editor-form { display: grid; gap: 14px; padding: 18px; }.metadata-row { grid-template-columns: 1fr 1fr 120px; }.body-label { display: flex; align-items: center; justify-content: space-between; color: #90a4ab; font-size: 12px; }.body-label button { padding: 0 10px; }.body-editor { min-height: 390px; resize: vertical; font-family: ui-monospace, monospace; line-height: 1.6; }.form-section { display: grid; gap: 8px; border-top: 1px solid #253b45; padding-top: 16px; }.form-section header { display: flex; align-items: center; justify-content: space-between; }.form-section h2 { margin: 0; font-size: 14px; }.form-section header button { width: 32px; }.repeat-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr 34px; gap: 6px; }.repeat-row button { border: 1px solid #3c5158; color: #b7c6c6; background: transparent; }.credit-row { display: grid; grid-template-columns: 1.3fr 1.3fr .8fr .7fr 1fr; gap: 6px; }.credit-row code { overflow: hidden; padding: 9px; color: #82989e; background: #0b1a21; text-overflow: ellipsis; white-space: nowrap; }
+.admin-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 720px; border: 1px solid #253b45; background: #0a1720; }.article-list { border-right: 1px solid #253b45; background: #08141b; }.create-form { display: grid; gap: 8px; padding: 12px; border-bottom: 1px solid #253b45; }.create-form label { display: grid; gap: 5px; color: #8fa2a8; font-size: 11px; }.create-form small { color: #6f858d; font-size: 10px; line-height: 1.45; }.create-form button, .body-label button, .form-section header button, .command, .publication-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; border: 1px solid #45616a; border-radius: 4px; color: #c4d2d2; background: transparent; }.list-search { display: flex; align-items: center; gap: 7px; margin: 12px; border: 1px solid #304752; padding: 0 9px; color: #71878e; }.list-search input { flex: 1; border: 0; }.list-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 12px 12px; }.article-row { display: grid; width: 100%; gap: 5px; border: 0; border-top: 1px solid #1d3039; padding: 12px; color: #dbe4e2; background: transparent; text-align: left; }.article-row:hover, .article-row.active { background: #11242c; }.article-row span { display: flex; justify-content: space-between; color: #bf8e52; font-size: 10px; }.article-row small { color: #d6927b; }.article-row code { color: #738991; font-size: 10px; }.list-state { padding: 24px; color: #82969d; text-align: center; }.list-state.error { color: #dc9a80; }
+.editor-panel { min-width: 0; }.editor-toolbar { display: flex; align-items: center; gap: 7px; min-height: 54px; border-bottom: 1px solid #253b45; padding: 8px 12px; }.locale-tabs, .mode-tabs { display: flex; }.locale-tabs button, .mode-tabs button { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; border: 1px solid #304751; padding: 0 9px; color: #899da4; background: transparent; }.locale-tabs button.active, .mode-tabs button.active { color: #e9efed; background: #1a3037; }.mode-tabs { margin-left: 8px; }.dirty { margin-left: auto; color: #d6a05d; font-size: 11px; }.hidden-file { display: none; }.icon-command { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border: 1px solid #45616a; border-radius: 4px; color: #c4d2d2; background: transparent; }.command.primary, .image-dialog .primary, .category-dialog .primary { border-color: #b17b3b; color: #171108; background: #dda55e; }.editor-form { display: grid; gap: 14px; padding: 18px; }.metadata-row { grid-template-columns: minmax(0, 1fr) 160px; }.body-label { display: flex; align-items: center; justify-content: space-between; color: #90a4ab; font-size: 12px; }.body-label button { padding: 0 10px; }.body-editor { min-height: 390px; resize: vertical; font-family: ui-monospace, monospace; line-height: 1.6; }.form-section { display: grid; gap: 8px; border-top: 1px solid #253b45; padding-top: 16px; }.form-section header { display: flex; align-items: center; justify-content: space-between; }.form-section h2 { margin: 0; font-size: 14px; }.form-section header button { width: 32px; }.repeat-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr 34px; gap: 6px; }.repeat-row button { border: 1px solid #3c5158; color: #b7c6c6; background: transparent; }.credit-row { display: grid; grid-template-columns: 1.3fr 1.3fr .8fr .7fr 1fr; gap: 6px; }.credit-row code { overflow: hidden; padding: 9px; color: #82989e; background: #0b1a21; text-overflow: ellipsis; white-space: nowrap; }
 .editor-toolbar > .hidden-file + .icon-command { margin-left: auto; }
 .article-preview { max-width: 760px; padding: 30px 32px 50px; }.article-preview > span { color: #d9a15b; font-size: 12px; }.article-preview h1 { margin: 8px 0 12px; font-size: 38px; }.article-preview > p { color: #a4b5b8; line-height: 1.65; }.preview-cover { width: 100%; max-height: 420px; margin-top: 20px; border-radius: 5px; object-fit: cover; }.preview-body { margin-top: 28px; color: #c1cdcc; font-size: 16px; line-height: 1.8; }.preview-body :deep(img) { width: 100%; max-height: 70vh; object-fit: contain; }.preview-body :deep(.explore-image-fallback[hidden]) { display: none; }
 .preview-body :deep(.explore-figure.is-failed figcaption) { display: none; }

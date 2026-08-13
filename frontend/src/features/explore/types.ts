@@ -1,5 +1,4 @@
 export type ExploreCategory = string
-export type ExploreDifficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type ExploreRevisionStatus = 'DRAFT' | 'PUBLISHED' | 'SUPERSEDED'
 
 export interface ExploreCategoryDefinition {
@@ -46,7 +45,6 @@ export interface ExploreSummary {
   id: string
   slug: string
   category: ExploreCategory
-  difficulty: ExploreDifficulty
   contentLocale: string
   title: string
   summary: string
@@ -89,7 +87,6 @@ export interface AdminExploreSummary {
   id: string
   slug: string
   category: ExploreCategory
-  difficulty: ExploreDifficulty
   archived: boolean
   updatedAt: string
   translations: AdminExploreTranslation[]

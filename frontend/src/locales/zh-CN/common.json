@@ -292,11 +292,6 @@
       "OBSERVATION": "观测与工具",
       "FUNDAMENTALS": "基础概念",
       "GUIDES": "观星指南"
-    },
-    "difficulties": {
-      "BEGINNER": "入门",
-      "INTERMEDIATE": "进阶",
-      "ADVANCED": "深入"
     }
   },
   "adminExplore": {
@@ -305,6 +300,10 @@
     "create": "新建文章",
     "created": "文章已创建",
     "createFailed": "文章创建失败",
+    "newArticleTitle": "标题",
+    "newArticleTitlePlaceholder": "例如：流星雨为什么会周期性出现",
+    "slug": "网址标识",
+    "slugHint": "用于文章链接，只能填写小写英文字母、数字和连字符，例如 meteor-showers。英文标题会自动生成。",
     "search": "搜索文章",
     "allStatuses": "全部状态",
     "draft": "草稿",
@@ -330,7 +329,6 @@
     "actionFailed": "操作失败",
     "revisionRestored": "旧版本已恢复为新草稿",
     "category": "分类",
-    "difficulty": "难度",
     "minutes": "阅读时间（分钟）",
     "articleTitle": "标题",
     "summary": "摘要",

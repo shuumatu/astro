@@ -81,13 +81,16 @@ public class ExploreService {
         if (!SLUG.matcher(slug).matches()) throw new ExploreValidationException("Slug must use lowercase kebab-case");
         if (repository.existsBySlug(slug)) throw new ExploreConflictException("Explore article already exists: " + slug);
         ExploreCategoryEntity category = requireCategory(request.category(), true);
-        return adminSummary(repository.save(new ExploreArticle(slug, category, request.difficulty())));
+        ExploreArticle article = new ExploreArticle(slug, category);
+        ExploreRevision draft = article.upsertTranslation(normalizeLocale(request.locale())).newDraft();
+        draft.initializeTitle(request.title());
+        return adminSummary(repository.save(article));
     }
 
     @Transactional
     public ExploreResponses.AdminSummary updateMetadata(UUID id, ExploreRequests.UpdateMetadata request) {
         ExploreArticle article = findById(id);
-        article.updateMetadata(requireCategory(request.category(), true), request.difficulty());
+        article.updateMetadata(requireCategory(request.category(), true));
         return adminSummary(repository.save(article));
     }
 
@@ -301,7 +304,7 @@ public class ExploreService {
         List<ExploreResponses.ImageCredit> credits = revision.getImageCredits().stream().sorted(Comparator.comparingInt(ExploreImageCredit::getSortOrder))
                 .map(item -> new ExploreResponses.ImageCredit(item.getImageUrl(), item.getSourcePageUrl(), item.getAuthor(), item.getLicense(), item.getAttribution())).toList();
         String contentLocale = revision.getTranslation().getLocale();
-        return new ExploreResponses.Article(article.getId(), article.getSlug(), article.getCategory().getCode(), article.getDifficulty(),
+        return new ExploreResponses.Article(article.getId(), article.getSlug(), article.getCategory().getCode(),
                 requestedLocale, contentLocale, !contentLocale.equalsIgnoreCase(requestedLocale), revision.getTitle(), revision.getSummary(),
                 revision.getBodyMarkdown(), readTags(revision.getTags()), revision.getEstimatedMinutes(), revision.getCoverImageUrl(),
                 revision.getCoverImageAlt(), revision.getCoverImageCaption(), sources, credits, revision.getRevisionNumber(),
@@ -310,7 +313,7 @@ public class ExploreService {
 
     private ExploreResponses.Summary summary(ExploreArticle article, ExploreRevision revision) {
         if (revision == null) return null;
-        return new ExploreResponses.Summary(article.getId(), article.getSlug(), article.getCategory().getCode(), article.getDifficulty(),
+        return new ExploreResponses.Summary(article.getId(), article.getSlug(), article.getCategory().getCode(),
                 revision.getTranslation().getLocale(), revision.getTitle(), revision.getSummary(), readTags(revision.getTags()),
                 revision.getEstimatedMinutes(), revision.getCoverImageUrl(), revision.getCoverImageAlt(), revision.getPublishedAt(), revision.getUpdatedAt());
     }
@@ -323,7 +326,7 @@ public class ExploreService {
                     return new ExploreResponses.AdminTranslation(item.getLocale(), draft == null ? null : draft.getRevisionNumber(),
                             published == null ? null : published.getRevisionNumber(), display == null ? "" : display.getTitle());
                 }).toList();
-        return new ExploreResponses.AdminSummary(article.getId(), article.getSlug(), article.getCategory().getCode(), article.getDifficulty(),
+        return new ExploreResponses.AdminSummary(article.getId(), article.getSlug(), article.getCategory().getCode(),
                 article.getArchivedAt() != null, article.getUpdatedAt(), translations);
     }
 

@@ -89,6 +89,11 @@ public class ExploreRevision {
         updatedAt = Instant.now();
     }
 
+    void initializeTitle(String title) {
+        this.title = title.trim();
+        this.updatedAt = Instant.now();
+    }
+
     void publish() { status = ExploreRevisionStatus.PUBLISHED; publishedAt = Instant.now(); updatedAt = publishedAt; }
     void supersede() { status = ExploreRevisionStatus.SUPERSEDED; updatedAt = Instant.now(); }
 

@@ -2,8 +2,6 @@ package com.astro.content.explore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -20,7 +18,6 @@ public class ExploreArticle {
     private String slug;
     @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY, optional = false)
     @jakarta.persistence.JoinColumn(name = "category_id") private ExploreCategoryEntity category;
-    @Enumerated(EnumType.STRING) private ExploreDifficulty difficulty;
     private Instant archivedAt;
     private Instant lastPublishedAt;
     private Instant createdAt;
@@ -31,11 +28,10 @@ public class ExploreArticle {
 
     protected ExploreArticle() { }
 
-    ExploreArticle(String slug, ExploreCategoryEntity category, ExploreDifficulty difficulty) {
+    ExploreArticle(String slug, ExploreCategoryEntity category) {
         this.id = UUID.randomUUID();
         this.slug = slug;
         this.category = category;
-        this.difficulty = difficulty;
         this.createdAt = Instant.now();
         this.updatedAt = createdAt;
     }
@@ -52,9 +48,8 @@ public class ExploreArticle {
         return created;
     }
 
-    void updateMetadata(ExploreCategoryEntity category, ExploreDifficulty difficulty) {
+    void updateMetadata(ExploreCategoryEntity category) {
         this.category = category;
-        this.difficulty = difficulty;
         touch();
     }
 
@@ -66,7 +61,6 @@ public class ExploreArticle {
     public UUID getId() { return id; }
     public String getSlug() { return slug; }
     public ExploreCategoryEntity getCategory() { return category; }
-    public ExploreDifficulty getDifficulty() { return difficulty; }
     public Instant getArchivedAt() { return archivedAt; }
     public Instant getLastPublishedAt() { return lastPublishedAt; }
     public Instant getCreatedAt() { return createdAt; }

@@ -15,12 +15,12 @@ public final class ExploreRequests {
     public record CreateArticle(
             @NotBlank @Size(min = 3, max = 120) String slug,
             @NotBlank @Size(max = 64) String category,
-            @NotNull ExploreDifficulty difficulty
+            @NotBlank @Size(max = 35) String locale,
+            @NotBlank @Size(max = 160) String title
     ) { }
 
     public record UpdateMetadata(
-            @NotBlank @Size(max = 64) String category,
-            @NotNull ExploreDifficulty difficulty
+            @NotBlank @Size(max = 64) String category
     ) { }
 
     public record CategoryTranslation(

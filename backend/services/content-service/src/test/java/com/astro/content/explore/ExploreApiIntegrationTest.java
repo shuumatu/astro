@@ -166,8 +166,9 @@ class ExploreApiIntegrationTest {
 
         MvcResult article = mockMvc.perform(post("/api/content/admin/explore/articles").with(adminJwt())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"slug\":\"instrument-category-test\",\"category\":\"INSTRUMENTS\",\"difficulty\":\"BEGINNER\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.category").value("INSTRUMENTS")).andReturn();
+                        .content("{\"slug\":\"instrument-category-test\",\"category\":\"INSTRUMENTS\",\"locale\":\"zh-CN\",\"title\":\"观测仪器\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.category").value("INSTRUMENTS"))
+                .andExpect(jsonPath("$.translations[0].title").value("观测仪器")).andReturn();
 
         String disabledPayload = objectMapper.writeValueAsString(Map.of(
                 "sortOrder", 25, "enabled", false,
@@ -183,7 +184,7 @@ class ExploreApiIntegrationTest {
 
         mockMvc.perform(post("/api/content/admin/explore/articles").with(adminJwt())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"slug\":\"disabled-category-test\",\"category\":\"INSTRUMENTS\",\"difficulty\":\"BEGINNER\"}"))
+                        .content("{\"slug\":\"disabled-category-test\",\"category\":\"INSTRUMENTS\",\"locale\":\"en\",\"title\":\"Disabled\"}"))
                 .andExpect(status().isBadRequest());
         String articleId = objectMapper.readTree(article.getResponse().getContentAsByteArray()).path("id").asText();
         mockMvc.perform(get("/api/content/admin/explore/articles").with(adminJwt()).queryParam("category", "INSTRUMENTS"))
@@ -214,7 +215,7 @@ class ExploreApiIntegrationTest {
     private String create(String slug) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/content/admin/explore/articles").with(adminJwt())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"slug\":\"%s\",\"category\":\"UNIVERSE\",\"difficulty\":\"BEGINNER\"}"
+                        .content("{\"slug\":\"%s\",\"category\":\"UNIVERSE\",\"locale\":\"zh-CN\",\"title\":\"New article\"}"
                                 .formatted(slug)))
                 .andExpect(status().isOk()).andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsByteArray()).path("id").asText();

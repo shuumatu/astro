@@ -7,7 +7,6 @@ import type {
   ExploreCategory,
   ExploreCategoryDefinition,
   ExploreCategoryTranslation,
-  ExploreDifficulty,
   ExploreDraft,
   ExplorePage,
   ExploreRevisionSummary,
@@ -37,11 +36,11 @@ export function loadAdminExplore(token: string, options: { category?: ExploreCat
   return adminRequest<AdminExplorePage>(`/content/admin/explore/articles?${params}`, token)
 }
 
-export function createExploreArticle(token: string, payload: { slug: string, category: ExploreCategory, difficulty: ExploreDifficulty }): Promise<AdminExploreSummary> {
+export function createExploreArticle(token: string, payload: { slug: string, category: ExploreCategory, locale: string, title: string }): Promise<AdminExploreSummary> {
   return adminRequest<AdminExploreSummary>('/content/admin/explore/articles', token, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
 }
 
-export function updateExploreMetadata(token: string, id: string, payload: { category: ExploreCategory, difficulty: ExploreDifficulty }): Promise<AdminExploreSummary> {
+export function updateExploreMetadata(token: string, id: string, payload: { category: ExploreCategory }): Promise<AdminExploreSummary> {
   return adminRequest<AdminExploreSummary>(`/content/admin/explore/articles/${id}`, token, { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(payload) })
 }
 

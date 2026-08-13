@@ -15,13 +15,13 @@ public final class ExploreResponses {
                                 List<CategoryTranslation> translations, Instant updatedAt) { }
 
     public record Summary(
-            UUID id, String slug, String category, ExploreDifficulty difficulty,
+            UUID id, String slug, String category,
             String contentLocale, String title, String summary, List<String> tags, int estimatedMinutes,
             String coverImageUrl, String coverImageAlt, Instant publishedAt, Instant updatedAt
     ) { }
 
     public record Article(
-            UUID id, String slug, String category, ExploreDifficulty difficulty,
+            UUID id, String slug, String category,
             String requestedLocale, String contentLocale, boolean localeFallback,
             String title, String summary, String bodyMarkdown, List<String> tags, int estimatedMinutes,
             String coverImageUrl, String coverImageAlt, String coverImageCaption,
@@ -32,7 +32,7 @@ public final class ExploreResponses {
 
     public record Page(List<Summary> items, int page, int size, long totalElements, int totalPages) { }
     public record AdminTranslation(String locale, Integer draftRevision, Integer publishedRevision, String title) { }
-    public record AdminSummary(UUID id, String slug, String category, ExploreDifficulty difficulty,
+    public record AdminSummary(UUID id, String slug, String category,
                                boolean archived, Instant updatedAt, List<AdminTranslation> translations) { }
     public record AdminPage(List<AdminSummary> items, int page, int size, long totalElements, int totalPages) { }
     public record Revision(UUID id, int revision, ExploreRevisionStatus status, String title, Instant updatedAt, Instant publishedAt) { }

@@ -66,7 +66,6 @@ function categoryName(code: string): string { return categories.value.find(item 
         <h1>{{ article.title }}</h1>
         <p>{{ article.summary }}</p>
         <div class="article-meta">
-          <span>{{ t(`explore.difficulties.${article.difficulty}`) }}</span>
           <span>{{ t('explore.minutes', { count: article.estimatedMinutes }) }}</span>
           <span>{{ t('explore.updated', { date: formatDate(article.updatedAt) }) }}</span>
         </div>
