@@ -1,3 +1,5 @@
+import { invalidateAdminSession } from '../features/adminSession'
+
 const gatewayBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class HttpError extends Error {
@@ -30,6 +32,9 @@ export async function requestRaw(path: string, init: RequestInit = {}): Promise<
       payload = await response.json()
     } catch {
       payload = null
+    }
+    if (response.status === 401 && new Headers(init.headers).has('Authorization')) {
+      invalidateAdminSession('unauthorized')
     }
     throw new HttpError(response.status, payload)
   }

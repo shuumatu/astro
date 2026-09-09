@@ -250,8 +250,8 @@ public class ExploreService {
     }
 
     private void validatePublishable(ExploreRevision revision) {
-        if (revision.getTitle().isBlank() || revision.getSummary().isBlank() || revision.getBodyMarkdown().isBlank()) {
-            throw new ExploreValidationException("Title, summary and body are required for publishing");
+        if (revision.getTitle().isBlank() || revision.getBodyMarkdown().isBlank()) {
+            throw new ExploreValidationException("Title and body are required for publishing");
         }
         ExploreMarkdownAnalyzer.Analysis analysis = markdownAnalyzer.analyze(revision.getBodyMarkdown());
         Set<String> requiredCredits = new LinkedHashSet<>();

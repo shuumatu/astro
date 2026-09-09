@@ -3,6 +3,7 @@ import { Archive, BookOpen, Download, Eye, FilePlus2, FolderCog, History, ImageP
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave } from 'vue-router'
+import { ADMIN_SESSION_EXPIRED_EVENT, clearAdminSession, invalidateAdminSession, loadAdminSession, saveAdminSession, scheduleAdminSessionExpiry } from '../features/adminSession'
 import { loginAdmin } from '../features/catalog/api'
 import {
   createExploreArticle, createExploreCategory, exportExploreMarkdown, importExploreMarkdown,
@@ -10,16 +11,20 @@ import {
   restoreExploreRevision, saveExploreDraft, setExploreArchived, unpublishExplore, updateExploreCategory, updateExploreMetadata,
 } from '../features/explore/api'
 import { emptyExploreDraft, insertMarkdownImage, reconcileImageCredits } from '../features/explore/draft'
+import ExploreMarkdownEditor from '../features/explore/ExploreMarkdownEditor.vue'
 import { handleExploreImageError, renderExploreMarkdown } from '../features/explore/markdown'
 import type {
   AdminExploreCategory, AdminExplorePage, AdminExploreSummary, ExploreArticle, ExploreCategory, ExploreDraft, ExploreRevisionSummary,
 } from '../features/explore/types'
 
-const TOKEN_KEY = 'astro-content-admin-token'
 const locales = ['zh-CN', 'en'] as const
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
-const token = ref(sessionStorage.getItem(TOKEN_KEY) || '')
+const storedSession = loadAdminSession()
+const token = ref(storedSession.token)
+const sessionExpiresAt = ref(storedSession.expiresAt)
+const sessionExpired = ref(storedSession.expired)
+const reauthenticating = ref(false)
 const username = ref('admin')
 const password = ref('')
 const loginPending = ref(false)
@@ -35,7 +40,7 @@ const listLoading = ref(false)
 const editorLoading = ref(false)
 const failed = ref(false)
 const editorMode = ref<'edit' | 'preview'>('edit')
-const bodyEditor = ref<HTMLTextAreaElement | null>(null)
+const bodyEditor = ref<InstanceType<typeof ExploreMarkdownEditor> | null>(null)
 const markdownInput = ref<HTMLInputElement | null>(null)
 const draft = reactive<ExploreDraft>(emptyExploreDraft())
 const tagText = ref('')
@@ -52,6 +57,7 @@ const imageForm = reactive({ url: '', alt: '', caption: '', sourcePageUrl: '', a
 const showCategoryManager = ref(false)
 const categorySaving = ref(false)
 const categoryForm = reactive({ id: '', code: '', sortOrder: 10, enabled: true, zhName: '', zhDescription: '', enName: '', enDescription: '' })
+let sessionExpiryTimer: number | undefined
 
 const entries = computed(() => page.value?.items || [])
 const selected = computed(() => entries.value.find(item => item.id === selectedId.value) || null)
@@ -61,7 +67,11 @@ const hasDraft = computed(() => Boolean(translation.value?.draftRevision))
 const preview = computed(() => renderExploreMarkdown(draft.bodyMarkdown, draft.imageCredits))
 const dirty = computed(() => fingerprint() !== baseline.value)
 
-onMounted(() => { if (token.value) void initialize() })
+onMounted(() => {
+  window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired)
+  scheduleSessionExpiry()
+  if (token.value) void initialize()
+})
 watch([filterCategory, filterStatus], () => void refresh(false))
 watch(activeLocale, () => { if (confirmDiscard()) void loadSelection() })
 watch(() => draft.bodyMarkdown, () => reconcileImageCredits(draft))
@@ -70,7 +80,11 @@ watch(() => createForm.title, value => {
   if (!slugEdited.value) createForm.slug = slugifyTitle(value)
 })
 watch(dirty, value => value ? window.addEventListener('beforeunload', preventUnload) : window.removeEventListener('beforeunload', preventUnload))
-onBeforeUnmount(() => window.removeEventListener('beforeunload', preventUnload))
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', preventUnload)
+  window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired)
+  clearSessionExpiryTimer()
+})
 onBeforeRouteLeave(() => confirmDiscard())
 
 function preventUnload(event: BeforeUnloadEvent): void { event.preventDefault(); event.returnValue = true }
@@ -106,11 +120,38 @@ async function refreshCategories(): Promise<void> {
 
 async function login(): Promise<void> {
   loginPending.value = true; loginError.value = false
-  try { const session = await loginAdmin(username.value, password.value); token.value = session.accessToken; sessionStorage.setItem(TOKEN_KEY, token.value); password.value = ''; await initialize() }
+  try {
+    const session = await loginAdmin(username.value, password.value)
+    token.value = session.accessToken; sessionExpiresAt.value = session.expiresAt
+    saveAdminSession(session.accessToken, session.expiresAt); scheduleSessionExpiry()
+    password.value = ''; sessionExpired.value = false
+    if (reauthenticating.value) reauthenticating.value = false
+    else await initialize()
+  }
   catch { loginError.value = true }
   finally { loginPending.value = false }
 }
-function logout(): void { if (!confirmDiscard()) return; token.value = ''; page.value = null; selectedId.value = ''; sessionStorage.removeItem(TOKEN_KEY) }
+function logout(): void {
+  if (!confirmDiscard()) return
+  clearAdminSession(); clearSessionExpiryTimer(); token.value = ''; sessionExpiresAt.value = null
+  sessionExpired.value = false; reauthenticating.value = false; page.value = null; selectedId.value = ''
+}
+
+function handleSessionExpired(): void {
+  reauthenticating.value = page.value !== null
+  token.value = ''; sessionExpiresAt.value = null; sessionExpired.value = true
+  clearSessionExpiryTimer()
+}
+
+function scheduleSessionExpiry(): void {
+  clearSessionExpiryTimer()
+  sessionExpiryTimer = scheduleAdminSessionExpiry(sessionExpiresAt.value, () => invalidateAdminSession('expired'))
+}
+
+function clearSessionExpiryTimer(): void {
+  if (sessionExpiryTimer) window.clearTimeout(sessionExpiryTimer)
+  sessionExpiryTimer = undefined
+}
 
 async function refresh(loadSelected: boolean): Promise<void> {
   listLoading.value = true; failed.value = false
@@ -253,14 +294,14 @@ function addSource(): void { draft.sources.push({ title: '', url: '', author: nu
 function openImageForm(): void { Object.assign(imageForm, { url: '', alt: '', caption: '', sourcePageUrl: '', author: '', license: '', attribution: '' }); showImageForm.value = true }
 async function insertImage(): Promise<void> {
   if (!/^https:\/\//i.test(imageForm.url) || !imageForm.alt.trim()) { showFeedback(t('adminExplore.imageInvalid'), true); return }
-  const position = bodyEditor.value?.selectionStart ?? draft.bodyMarkdown.length
-  const result = insertMarkdownImage(draft.bodyMarkdown, position, imageForm)
-  draft.bodyMarkdown = result.markdown
+  const markdown = insertMarkdownImage('', 0, imageForm).markdown.trim()
+  if (bodyEditor.value) bodyEditor.value.insertMarkdown(`\n\n${markdown}\n\n`)
+  else draft.bodyMarkdown = `${draft.bodyMarkdown}\n\n${markdown}`.trim()
   reconcileImageCredits(draft)
   const credit = draft.imageCredits.find(item => item.imageUrl === imageForm.url.trim())
   if (credit) Object.assign(credit, { sourcePageUrl: imageForm.sourcePageUrl.trim(), author: imageForm.author || null, license: imageForm.license || null, attribution: imageForm.attribution || null })
   showImageForm.value = false
-  await nextTick(); bodyEditor.value?.focus(); bodyEditor.value?.setSelectionRange(result.caret, result.caret)
+  await nextTick()
 }
 function cleanDraft(): ExploreDraft {
   return {
@@ -291,6 +332,7 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
       <label><span>{{ t('adminCatalog.username') }}</span><input v-model="username" autocomplete="username"></label>
       <label><span>{{ t('adminCatalog.password') }}</span><input v-model="password" type="password" autocomplete="current-password"></label>
       <button :disabled="loginPending" type="submit">{{ t('adminCatalog.login') }}</button>
+      <p v-if="sessionExpired" role="alert">{{ t('adminCatalog.sessionExpired') }}</p>
       <p v-if="loginError" role="alert">{{ t('adminCatalog.loginFailed') }}</p>
     </form>
 
@@ -345,7 +387,13 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
             <label><span>{{ t('adminExplore.summary') }}</span><textarea v-model="draft.summary" rows="3" maxlength="600"></textarea></label>
             <label><span>{{ t('adminExplore.tags') }}</span><input v-model="tagText" :placeholder="t('adminExplore.tagsHint')"></label>
             <div class="body-label"><span>{{ t('adminExplore.body') }}</span><button type="button" @click="openImageForm"><ImagePlus :size="15" />{{ t('adminExplore.insertImage') }}</button></div>
-            <textarea ref="bodyEditor" v-model="draft.bodyMarkdown" class="body-editor" rows="20" maxlength="100000"></textarea>
+            <ExploreMarkdownEditor
+              :key="locale"
+              ref="bodyEditor"
+              v-model="draft.bodyMarkdown"
+              :interface-language="locale"
+              :placeholder="t('adminExplore.bodyPlaceholder')"
+            />
 
             <section class="form-section"><header><h2>{{ t('adminExplore.cover') }}</h2></header>
               <input v-model="draft.coverImageUrl" type="url" placeholder="https://"><input v-model="draft.coverImageAlt" :placeholder="t('adminExplore.altText')"><input v-model="draft.coverImageCaption" :placeholder="t('adminExplore.caption')"></section>

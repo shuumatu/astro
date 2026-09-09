@@ -122,6 +122,29 @@ class ExploreApiIntegrationTest {
     }
 
     @Test
+    void publishesWithoutSummaryButStillRequiresTitleAndBody() throws Exception {
+        String id = create("optional-summary-test");
+        save(id, "zh-CN", draft("Meteor showers", "", "## Origins\n\nComets leave streams of debris.", false));
+
+        mockMvc.perform(post("/api/content/admin/explore/articles/{id}/translations/zh-CN/publish", id).with(adminJwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PUBLISHED"))
+                .andExpect(jsonPath("$.summary").value(""));
+
+        String missingTitleId = create("missing-title-test");
+        save(missingTitleId, "zh-CN", draft("", "", "## Body\n\nPresent.", false));
+        mockMvc.perform(post("/api/content/admin/explore/articles/{id}/translations/zh-CN/publish", missingTitleId).with(adminJwt()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Title and body are required for publishing"));
+
+        String missingBodyId = create("missing-body-test");
+        save(missingBodyId, "zh-CN", draft("Title", "", "", false));
+        mockMvc.perform(post("/api/content/admin/explore/articles/{id}/translations/zh-CN/publish", missingBodyId).with(adminJwt()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Title and body are required for publishing"));
+    }
+
+    @Test
     void listsFiltersFallsBackAndArchivesArticles() throws Exception {
         String id = create("telescope-basics");
         save(id, "en", draft("Telescope basics", "How telescopes collect light",

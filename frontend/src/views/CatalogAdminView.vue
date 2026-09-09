@@ -17,6 +17,7 @@ import {
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave } from 'vue-router'
+import { ADMIN_SESSION_EXPIRED_EVENT, clearAdminSession, invalidateAdminSession, loadAdminSession, saveAdminSession, scheduleAdminSessionExpiry } from '../features/adminSession'
 import {
   createAdminCatalogEntry,
   deleteAdminCatalogEntry,
@@ -56,11 +57,14 @@ import type {
   TranslationDraft,
 } from '../features/catalog/types'
 
-const TOKEN_KEY = 'astro-content-admin-token'
 const PAGE_SIZE = 50
 const { t, locale } = useI18n()
 
-const token = ref(sessionStorage.getItem(TOKEN_KEY) || '')
+const storedSession = loadAdminSession()
+const token = ref(storedSession.token)
+const sessionExpiresAt = ref(storedSession.expiresAt)
+const sessionExpired = ref(storedSession.expired)
+const reauthenticating = ref(false)
 const username = ref('admin')
 const password = ref('')
 const loginPending = ref(false)
@@ -103,6 +107,7 @@ const pendingMediaCleanup = ref<string[]>([])
 let listSequence = 0
 let translationSequence = 0
 let feedbackTimer: number | undefined
+let sessionExpiryTimer: number | undefined
 
 const entries = computed(() => page.value?.items ?? [])
 const selectedEntry = computed(() => entries.value.find((entry) => entry.id === selectedEntryId.value) ?? null)
@@ -128,6 +133,8 @@ const generatedUploadAlt = computed(() => {
 const canUpload = computed(() => Boolean(uploadFile.value && !uploadError.value && !uploadPending.value))
 
 onMounted(() => {
+  window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired)
+  scheduleSessionExpiry()
   if (token.value) void refreshEntries({ loadSelection: true })
 })
 
@@ -138,6 +145,8 @@ watch(isDirty, (dirty) => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', preventUnsavedUnload)
+  window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired)
+  clearSessionExpiryTimer()
   if (feedbackTimer) window.clearTimeout(feedbackTimer)
   revokeUploadPreview()
 })
@@ -154,9 +163,13 @@ async function login(): Promise<void> {
   try {
     const session = await loginAdmin(username.value, password.value)
     token.value = session.accessToken
-    sessionStorage.setItem(TOKEN_KEY, session.accessToken)
+    sessionExpiresAt.value = session.expiresAt
+    saveAdminSession(session.accessToken, session.expiresAt)
+    scheduleSessionExpiry()
     password.value = ''
-    await refreshEntries({ loadSelection: true })
+    sessionExpired.value = false
+    if (reauthenticating.value) reauthenticating.value = false
+    else await refreshEntries({ loadSelection: true })
   } catch {
     loginError.value = true
   } finally {
@@ -167,10 +180,32 @@ async function login(): Promise<void> {
 function logout(): void {
   if (!confirmDiscard()) return
   token.value = ''
+  sessionExpiresAt.value = null
+  sessionExpired.value = false
+  reauthenticating.value = false
   page.value = null
   selectedEntryId.value = ''
   setDraft(emptyTranslationDraft())
-  sessionStorage.removeItem(TOKEN_KEY)
+  clearAdminSession()
+  clearSessionExpiryTimer()
+}
+
+function handleSessionExpired(): void {
+  reauthenticating.value = page.value !== null
+  token.value = ''
+  sessionExpiresAt.value = null
+  sessionExpired.value = true
+  clearSessionExpiryTimer()
+}
+
+function scheduleSessionExpiry(): void {
+  clearSessionExpiryTimer()
+  sessionExpiryTimer = scheduleAdminSessionExpiry(sessionExpiresAt.value, () => invalidateAdminSession('expired'))
+}
+
+function clearSessionExpiryTimer(): void {
+  if (sessionExpiryTimer) window.clearTimeout(sessionExpiryTimer)
+  sessionExpiryTimer = undefined
 }
 
 async function refreshEntries(options: { selectId?: string; loadSelection?: boolean } = {}): Promise<void> {
@@ -605,6 +640,7 @@ function translationFor(entry: AdminCatalogSummary, contentLocale: string) {
       <label><span>{{ t('adminCatalog.username') }}</span><input v-model="username" autocomplete="username" required></label>
       <label><span>{{ t('adminCatalog.password') }}</span><input v-model="password" type="password" autocomplete="current-password" required></label>
       <button type="submit" :disabled="loginPending">{{ t('adminCatalog.login') }}</button>
+      <span v-if="sessionExpired" class="form-error" role="alert">{{ t('adminCatalog.sessionExpired') }}</span>
       <span v-if="loginError" class="form-error" role="alert">{{ t('adminCatalog.loginFailed') }}</span>
     </form>
   </section>
