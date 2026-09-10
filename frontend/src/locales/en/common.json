@@ -17,6 +17,51 @@
     "demos": "Interactive demos are being built.",
     "skyMap": "The sky calculation service is being connected."
   },
+  "demos": {
+    "kicker": "Interactive demos",
+    "title": "Interactive demos",
+    "intro": "Drag to orbit the camera, scroll to zoom, and watch how the bodies move in three dimensions. Every demo can be played, paused, and sped up.",
+    "open": "Open demo",
+    "backToList": "Back to demos",
+    "notFound": "Demo not found",
+    "notFoundHint": "We could not find that demo. Return to the demo list.",
+    "unsupported": "This browser could not create a WebGL context, so the three-dimensional demo cannot run.",
+    "canvasAria": "Interactive three-dimensional demo",
+    "loading": "Loading demo…",
+    "items": {
+      "meteorShower": {
+        "title": "How meteor showers form",
+        "summary": "A comet keeps shedding dust along its orbit, gradually building a dust trail. When the Earth crosses that trail, the dust burns up in the atmosphere as a meteor shower."
+      }
+    },
+    "scene": {
+      "sun": "Sun",
+      "earth": "Earth",
+      "comet": "Comet",
+      "dustBand": "Dust trail",
+      "meteorShowerPoint": "Meteor shower point"
+    },
+    "controls": {
+      "playback": "Playback",
+      "play": "Play",
+      "pause": "Pause",
+      "speed": "Time speed",
+      "speedValue": "{value} years/s",
+      "orbits": "Orbit paths",
+      "labels": "Labels",
+      "resetView": "Reset view",
+      "fullscreen": "Full screen",
+      "exitFullscreen": "Exit full screen",
+      "hint": "Drag to rotate · scroll to zoom · click the amber marker for the ground view"
+    },
+    "cinematic": {
+      "entering": "Travelling to the meteor shower point…"
+    },
+    "surface": {
+      "caption": "The Earth is crossing the dust trail left by the comet; every grain burns up along a path that traces back to the radiant",
+      "exit": "Back to orbit"
+    }
+  },
   "skyMap": {
     "kicker": "Horizon coordinates · Local sky",
     "title": "Live all-sky chart",

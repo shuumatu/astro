@@ -17,6 +17,51 @@
     "demos": "互动演示正在建设中。",
     "skyMap": "星图计算服务正在接入中。"
   },
+  "demos": {
+    "kicker": "互动演示",
+    "title": "互动演示",
+    "intro": "拖动旋转视角，滚轮缩放，观察天体在三维空间中的运动。每个演示都可以播放、暂停和调整时间速度。",
+    "open": "打开演示",
+    "backToList": "返回演示列表",
+    "notFound": "演示不存在",
+    "notFoundHint": "没有找到这个演示，请返回演示列表。",
+    "unsupported": "当前浏览器无法创建 WebGL 上下文，暂时不能运行三维演示。",
+    "canvasAria": "互动三维演示",
+    "loading": "正在加载演示…",
+    "items": {
+      "meteorShower": {
+        "title": "流星雨是怎么形成的",
+        "summary": "彗星沿轨道不断留下尘埃，逐渐形成一条尘埃带。当地球穿过这条尘埃带时，尘埃冲入大气燃烧，形成流星雨。"
+      }
+    },
+    "scene": {
+      "sun": "太阳",
+      "earth": "地球",
+      "comet": "彗星",
+      "dustBand": "尘埃带",
+      "meteorShowerPoint": "流星雨发生点"
+    },
+    "controls": {
+      "playback": "播放控制",
+      "play": "播放",
+      "pause": "暂停",
+      "speed": "时间速度",
+      "speedValue": "{value} 年/秒",
+      "orbits": "轨道线",
+      "labels": "标签",
+      "resetView": "重置视角",
+      "fullscreen": "全屏",
+      "exitFullscreen": "退出全屏",
+      "hint": "拖动旋转视角 · 滚轮缩放 · 点击橙色标记进入地面视角"
+    },
+    "cinematic": {
+      "entering": "正在前往流星雨发生点…"
+    },
+    "surface": {
+      "caption": "地球正穿过彗星留下的尘埃带，尘埃冲入大气燃烧成流星；所有流星都从辐射点向外发散",
+      "exit": "返回轨道视角"
+    }
+  },
   "skyMap": {
     "kicker": "地平坐标 · 本地星空",
     "title": "实时全天星图",

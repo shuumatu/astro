@@ -8,6 +8,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: #07111f; }
+#app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
 button, a { font: inherit; }
 a { color: inherit; text-decoration: none; }
 .site-header { display: flex; align-items: center; gap: 2rem; min-height: 68px; padding: 0 5vw; border-bottom: 1px solid #1c2d43; background: #0a1728; }
@@ -19,6 +20,16 @@ a { color: inherit; text-decoration: none; }
 .locale-switcher button.active { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
 .page-shell { width: min(1360px, 92vw); margin: 0 auto; }
 .page-shell.sky-map-shell { width: calc(100vw - 24px); max-width: none; }
+/* The demo page is the canvas: it fills everything below the site header. */
+.page-shell.demo-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+}
 .hero { min-height: calc(100vh - 68px); display: grid; align-content: center; max-width: 720px; padding: 5rem 0; }
 .eyebrow { color: #72d4d8; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; }
 h1 { margin: .4rem 0 1rem; font-size: 4.5rem; line-height: .98; }

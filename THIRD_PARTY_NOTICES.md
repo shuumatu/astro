@@ -164,3 +164,15 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+## NASA Blue Marble Earth texture
+
+`frontend/public/demos/meteor-shower/earth-day.jpg` is derived from the NASA Visible Earth
+"Blue Marble" land surface, shallow water and shaded topography image, downsampled to
+2048x1024 for the interactive meteor shower demo.
+
+- Source: https://visibleearth.nasa.gov/images/57752/blue-marble-land-surface-shallow-water-and-shaded-topography
+- Credit: NASA Goddard Space Flight Center, Reto Stockli (NASA/GSFC) with data from the
+  MODIS instrument on NASA's Terra satellite
+- Terms: NASA imagery is generally not subject to copyright in the United States; the NASA
+  name and logo remain protected.
