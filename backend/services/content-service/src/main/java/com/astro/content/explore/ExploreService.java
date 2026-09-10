@@ -90,7 +90,12 @@ public class ExploreService {
     @Transactional
     public ExploreResponses.AdminSummary updateMetadata(UUID id, ExploreRequests.UpdateMetadata request) {
         ExploreArticle article = findById(id);
-        article.updateMetadata(requireCategory(request.category(), true));
+        String slug = request.slug().trim();
+        if (!SLUG.matcher(slug).matches()) throw new ExploreValidationException("Slug must use lowercase kebab-case");
+        if (repository.existsBySlugAndIdNot(slug, id)) {
+            throw new ExploreConflictException("Explore article already exists: " + slug);
+        }
+        article.updateMetadata(slug, requireCategory(request.category(), true));
         return adminSummary(repository.save(article));
     }
 

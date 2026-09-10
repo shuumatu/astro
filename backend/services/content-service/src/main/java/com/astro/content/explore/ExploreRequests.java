@@ -20,6 +20,7 @@ public final class ExploreRequests {
     ) { }
 
     public record UpdateMetadata(
+            @NotBlank @Size(min = 3, max = 120) String slug,
             @NotBlank @Size(max = 64) String category
     ) { }
 

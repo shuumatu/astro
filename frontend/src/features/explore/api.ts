@@ -40,7 +40,7 @@ export function createExploreArticle(token: string, payload: { slug: string, cat
   return adminRequest<AdminExploreSummary>('/content/admin/explore/articles', token, { method: 'POST', headers: jsonHeaders, body: JSON.stringify(payload) })
 }
 
-export function updateExploreMetadata(token: string, id: string, payload: { category: ExploreCategory }): Promise<AdminExploreSummary> {
+export function updateExploreMetadata(token: string, id: string, payload: { slug: string, category: ExploreCategory }): Promise<AdminExploreSummary> {
   return adminRequest<AdminExploreSummary>(`/content/admin/explore/articles/${id}`, token, { method: 'PUT', headers: jsonHeaders, body: JSON.stringify(payload) })
 }
 

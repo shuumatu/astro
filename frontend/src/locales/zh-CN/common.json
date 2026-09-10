@@ -305,6 +305,7 @@
     "newArticleTitlePlaceholder": "例如：流星雨为什么会周期性出现",
     "slug": "网址标识",
     "slugHint": "用于文章链接，只能填写小写英文字母、数字和连字符，例如 meteor-showers。英文标题会自动生成。",
+    "slugInvalid": "网址标识只能使用 3-120 位小写英文字母、数字和连字符。",
     "search": "搜索文章",
     "allStatuses": "全部状态",
     "draft": "草稿",

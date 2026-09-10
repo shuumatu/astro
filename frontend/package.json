@@ -16,11 +16,13 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@types/three": "^0.185.4",
     "astronomy-engine": "2.1.19",
     "dompurify": "^3.2.6",
     "lucide-vue-next": "1.0.0",
     "marked": "^15.0.12",
     "pinia": "^2.3.0",
+    "three": "^0.186.0",
     "vditor": "^3.11.3",
     "vue": "^3.5.13",
     "vue-i18n": "^10.0.5",

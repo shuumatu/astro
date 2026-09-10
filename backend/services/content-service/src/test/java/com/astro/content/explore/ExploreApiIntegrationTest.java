@@ -215,6 +215,27 @@ class ExploreApiIntegrationTest {
     }
 
     @Test
+    void updatesArticleSlugAndRejectsDuplicateSlugs() throws Exception {
+        String firstId = create("slug-edit-first");
+        String secondId = create("slug-edit-second");
+
+        mockMvc.perform(put("/api/content/admin/explore/articles/{id}", firstId).with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slug\":\"stellar-spectra\",\"category\":\"UNIVERSE\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slug").value("stellar-spectra"));
+
+        mockMvc.perform(get("/api/content/admin/explore/articles").with(adminJwt()).queryParam("query", "stellar-spectra"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].slug").value("stellar-spectra"));
+
+        mockMvc.perform(put("/api/content/admin/explore/articles/{id}", secondId).with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slug\":\"stellar-spectra\",\"category\":\"UNIVERSE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("EXPLORE_ARTICLE_CONFLICT"));
+    }
+
+    @Test
     void importsExportedMarkdownAsDraftWithoutChangingPublishedRevision() throws Exception {
         String id = create("markdown-round-trip");
         save(id, "en", draft("Round trip", "Published summary", "## Original\n\nPublished body.", false));

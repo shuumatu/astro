@@ -44,6 +44,7 @@ const bodyEditor = ref<InstanceType<typeof ExploreMarkdownEditor> | null>(null)
 const markdownInput = ref<HTMLInputElement | null>(null)
 const draft = reactive<ExploreDraft>(emptyExploreDraft())
 const tagText = ref('')
+const slugDraft = ref('')
 const baseline = ref('')
 const revisions = ref<ExploreRevisionSummary[]>([])
 const saving = ref(false)
@@ -88,7 +89,7 @@ onBeforeUnmount(() => {
 onBeforeRouteLeave(() => confirmDiscard())
 
 function preventUnload(event: BeforeUnloadEvent): void { event.preventDefault(); event.returnValue = true }
-function fingerprint(): string { return JSON.stringify({ draft, tags: tagText.value, category: selected.value?.category }) }
+function fingerprint(): string { return JSON.stringify({ draft, tags: tagText.value, slug: slugDraft.value, category: selected.value?.category }) }
 function confirmDiscard(): boolean { return !dirty.value || window.confirm(t('adminExplore.discardChanges')) }
 function setDraft(value: ExploreDraft): void {
   Object.assign(draft, value)
@@ -169,7 +170,7 @@ async function selectEntry(entry: AdminExploreSummary): Promise<void> {
 }
 
 async function loadSelection(): Promise<void> {
-  if (!selectedId.value) { setDraft(emptyExploreDraft()); revisions.value = []; return }
+  if (!selectedId.value) { setDraft(emptyExploreDraft()); slugDraft.value = ''; revisions.value = []; return }
   editorLoading.value = true; feedback.message = ''
   try {
     const [article, history] = await Promise.all([
@@ -177,6 +178,7 @@ async function loadSelection(): Promise<void> {
       loadExploreRevisions(token.value, selectedId.value, activeLocale.value),
     ])
     setDraft(article ? draftFromArticle(article) : emptyExploreDraft())
+    slugDraft.value = article?.slug || selected.value?.slug || ''
     revisions.value = history
   } catch { showFeedback(t('adminExplore.loadFailed'), true) }
   finally { editorLoading.value = false }
@@ -200,7 +202,12 @@ async function save(): Promise<boolean> {
   try {
     draft.tags = tagText.value.split(/[,，]/).map(item => item.trim()).filter(Boolean).slice(0, 12)
     reconcileImageCredits(draft)
-    await updateExploreMetadata(token.value, selected.value.id, { category: selected.value.category })
+    const normalizedSlug = slugDraft.value.trim()
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)) {
+      showFeedback(t('adminExplore.slugInvalid'), true)
+      return false
+    }
+    await updateExploreMetadata(token.value, selected.value.id, { slug: normalizedSlug, category: selected.value.category })
     const saved = await saveExploreDraft(token.value, selected.value.id, activeLocale.value, cleanDraft())
     setDraft(draftFromArticle(saved)); await refresh(false); await loadHistory(); showFeedback(t('adminExplore.saved')); return true
   } catch { showFeedback(t('adminExplore.saveFailed'), true); return false }
@@ -381,7 +388,8 @@ function draftFromArticle(article: ExploreArticle): ExploreDraft {
 
           <div v-if="editorLoading" class="editor-state">{{ t('explore.loading') }}</div>
           <form v-else-if="editorMode === 'edit'" class="editor-form" @submit.prevent="save">
-            <div class="metadata-row"><label><span>{{ t('adminExplore.category') }}</span><select v-model="selected.category"><option v-for="item in selectableCategories(selected.category)" :key="item.id" :value="item.code">{{ categoryName(item.code) }}</option></select></label>
+            <div class="metadata-row"><label><span>{{ t('adminExplore.slug') }}</span><input v-model="slugDraft" required minlength="3" maxlength="120" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="meteor-showers"><small>{{ t('adminExplore.slugHint') }}</small></label>
+              <label><span>{{ t('adminExplore.category') }}</span><select v-model="selected.category"><option v-for="item in selectableCategories(selected.category)" :key="item.id" :value="item.code">{{ categoryName(item.code) }}</option></select></label>
               <label><span>{{ t('adminExplore.minutes') }}</span><input v-model.number="draft.estimatedMinutes" type="number" min="1" max="60"></label></div>
             <label><span>{{ t('adminExplore.articleTitle') }}</span><input v-model="draft.title" maxlength="160"></label>
             <label><span>{{ t('adminExplore.summary') }}</span><textarea v-model="draft.summary" rows="3" maxlength="600"></textarea></label>

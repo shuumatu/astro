@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface ExploreArticleRepository extends JpaRepository<ExploreArticle, UUID> {
     Optional<ExploreArticle> findBySlug(String slug);
     boolean existsBySlug(String slug);
+    boolean existsBySlugAndIdNot(String slug, UUID id);
 
     @Query(value = """
             select distinct a from ExploreArticle a

@@ -306,6 +306,7 @@
     "newArticleTitlePlaceholder": "For example: Why meteor showers return",
     "slug": "URL slug",
     "slugHint": "Used in the article URL. Use lowercase letters, numbers, and hyphens, for example meteor-showers. English titles generate it automatically.",
+    "slugInvalid": "The URL slug must be 3–120 lowercase letters, numbers, or hyphens.",
     "search": "Search articles",
     "allStatuses": "All statuses",
     "draft": "Draft",

@@ -48,7 +48,8 @@ public class ExploreArticle {
         return created;
     }
 
-    void updateMetadata(ExploreCategoryEntity category) {
+    void updateMetadata(String slug, ExploreCategoryEntity category) {
+        this.slug = slug;
         this.category = category;
         touch();
     }
