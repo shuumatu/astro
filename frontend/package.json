@@ -16,7 +16,6 @@
     "test:run": "vitest run"
   },
   "dependencies": {
-    "@types/three": "^0.185.4",
     "astronomy-engine": "2.1.19",
     "dompurify": "^3.2.6",
     "lucide-vue-next": "1.0.0",
@@ -31,6 +30,7 @@
   "devDependencies": {
     "@intlify/devtools-types": "10.0.7",
     "@types/node": "22.15.30",
+    "@types/three": "^0.185.4",
     "@vitejs/plugin-vue": "^5.2.1",
     "jsdom": "26.1.0",
     "typescript": "^5.7.2",

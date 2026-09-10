@@ -14,7 +14,7 @@ const router = createRouter({
     },
     { path: '/admin/catalog', name: 'catalog-admin', component: () => import('../views/CatalogAdminView.vue') },
     { path: '/admin/explore', name: 'explore-admin', component: () => import('../views/ExploreAdminView.vue') },
-    { path: '/missions', component: () => import('../views/MissionView.vue') },
+    { path: '/demos', name: 'demos', component: () => import('../views/DemosView.vue') },
     { path: '/sky-map', component: () => import('../views/SkyMapView.vue') }
   ]
 })

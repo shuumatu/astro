@@ -24,7 +24,7 @@ function switchLocale(localeCode: string) {
     <nav class="nav-links" aria-label="Primary navigation">
       <RouterLink to="/catalog">{{ t('nav.catalog') }}</RouterLink>
       <RouterLink to="/explore">{{ t('nav.explore') }}</RouterLink>
-      <RouterLink to="/missions">{{ t('nav.missions') }}</RouterLink>
+      <RouterLink to="/demos">{{ t('nav.demos') }}</RouterLink>
       <RouterLink to="/sky-map">{{ t('nav.skyMap') }}</RouterLink>
     </nav>
     <div class="locale-switcher" aria-label="Language">

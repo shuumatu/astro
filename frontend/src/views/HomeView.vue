@@ -11,7 +11,7 @@ const { t } = useI18n()
     <h1>{{ t('home.title') }}</h1>
     <p class="hero-copy">{{ t('home.description') }}</p>
     <div class="hero-actions">
-      <RouterLink class="button primary" to="/missions">{{ t('home.start') }}</RouterLink>
+      <RouterLink class="button primary" to="/demos">{{ t('home.start') }}</RouterLink>
       <RouterLink class="button secondary" to="/catalog">{{ t('home.catalog') }}</RouterLink>
     </div>
   </section>

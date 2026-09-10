@@ -2,19 +2,19 @@
   "nav": {
     "catalog": "Catalog",
     "explore": "Explore",
-    "missions": "Missions",
+    "demos": "Demos",
     "skyMap": "Sky map"
   },
   "home": {
     "eyebrow": "Astronomy learning platform",
     "title": "Start with one star",
-    "description": "Build your map of the universe with a catalog, missions, and a live sky map.",
+    "description": "Build your map of the universe with a catalog, demos, and a live sky map.",
     "start": "Start exploring",
     "catalog": "Browse catalog"
   },
   "placeholder": {
     "catalog": "The astronomy catalog is being built.",
-    "missions": "Progressive learning missions are being built.",
+    "demos": "Interactive demos are being built.",
     "skyMap": "The sky calculation service is being connected."
   },
   "skyMap": {

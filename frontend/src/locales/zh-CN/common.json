@@ -2,19 +2,19 @@
   "nav": {
     "catalog": "天体图鉴",
     "explore": "探索",
-    "missions": "学习任务",
+    "demos": "互动演示",
     "skyMap": "星图"
   },
   "home": {
     "eyebrow": "天文科普学习平台",
     "title": "从认识一颗星开始",
-    "description": "用图鉴、任务和星图建立自己的宇宙知识地图。",
+    "description": "用图鉴、演示和星图建立自己的宇宙知识地图。",
     "start": "开始探索",
     "catalog": "浏览图鉴"
   },
   "placeholder": {
     "catalog": "天体图鉴正在建设中。",
-    "missions": "分级学习任务正在建设中。",
+    "demos": "互动演示正在建设中。",
     "skyMap": "星图计算服务正在接入中。"
   },
   "skyMap": {

@@ -5,7 +5,7 @@ const { t } = useI18n()
 
 <template>
   <section class="placeholder">
-    <h1>{{ t('nav.missions') }}</h1>
-    <p>{{ t('placeholder.missions') }}</p>
+    <h1>{{ t('nav.demos') }}</h1>
+    <p>{{ t('placeholder.demos') }}</p>
   </section>
 </template>
