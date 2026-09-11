@@ -7,11 +7,19 @@ export interface StageOptions {
   cameraPosition?: THREE.Vector3
   target?: THREE.Vector3
   fov?: number
+  /**
+   * Near and far planes. Scenes that let the camera nearly touch a body have to pull the near
+   * plane in, otherwise the surface they are approaching is clipped away before they arrive.
+   */
+  near?: number
+  far?: number
   minDistance?: number
   maxDistance?: number
   minPolarAngle?: number
   maxPolarAngle?: number
   background?: number
+  /** Caps fill-rate on high-density displays; the default remains two device pixels per CSS pixel. */
+  maxPixelRatio?: number
   /** Called whenever the viewport shape changes, so scenes can re-frame themselves. */
   onResize?: (aspect: number) => void
 }
@@ -35,7 +43,12 @@ const MAX_FRAME_DELTA_SECONDS = 0.1
 export function createStage(container: HTMLElement, options: StageOptions = {}): Stage {
   const scene = new THREE.Scene()
   const homeFieldOfView = options.fov ?? 45
-  const camera = new THREE.PerspectiveCamera(homeFieldOfView, 1, 0.1, 4000)
+  const camera = new THREE.PerspectiveCamera(
+    homeFieldOfView,
+    1,
+    options.near ?? 0.1,
+    options.far ?? 4000,
+  )
   const homePosition = (options.cameraPosition ?? new THREE.Vector3(0, 18, 26)).clone()
   const homeTarget = (options.target ?? new THREE.Vector3(0, 0, 0)).clone()
   camera.position.copy(homePosition)
@@ -73,7 +86,10 @@ export function createStage(container: HTMLElement, options: StageOptions = {}):
   function resize(): void {
     const width = Math.max(1, container.clientWidth)
     const height = Math.max(1, container.clientHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO))
+    renderer.setPixelRatio(Math.min(
+      window.devicePixelRatio || 1,
+      options.maxPixelRatio ?? MAX_PIXEL_RATIO,
+    ))
     renderer.setSize(width, height, false)
     camera.aspect = width / height
     camera.updateProjectionMatrix()

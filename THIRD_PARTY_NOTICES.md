@@ -176,3 +176,32 @@ DEALINGS IN THE SOFTWARE.
   MODIS instrument on NASA's Terra satellite
 - Terms: NASA imagery is generally not subject to copyright in the United States; the NASA
   name and logo remain protected.
+
+## NASA LRO lunar surface imagery and LOLA elevation
+
+The Moon demo in `frontend/public/demos/moon` renders the lunar surface from NASA's Lunar
+Reconnaissance Orbiter data, prepared by the Scientific Visualization Studio.
+
+- Colour mosaic: LROC wide-angle camera Hapke-normalised natural colour mosaic (the 2019
+  "CGI Moon Kit" colour map), downsampled to 8192x4096 and 4096x2048 WebP.
+  Source: https://svs.gsfc.nasa.gov/4720/
+- Elevation: LOLA gridded laser altimetry (`ldem_16_uint.tif`, 16 pixels per degree), linearly
+  remapped to an 8-bit height map used for relief shading.
+- Hotspot crops: LROC wide-angle camera mosaic crops and LOLA elevation, served by NASA's Moon
+  Trek (`LRO_WAC_Mosaic_Global_303ppd_v02`, `LRO_LOLA_DEM_Global_256ppd_v06`), plus LROC narrow-angle
+  camera mosaics for the landing sites, served by the LROC Lunaserv WMS at https://wms.im-ldi.com/.
+  The WAC crops are deshaded with the LOLA elevation so the scene can light them; the elevation
+  is also shipped per crop as a bump map.
+- Polar caps: LROC wide-angle camera polar mosaics
+  (`LRO_WAC_Mosaic_SPole60_100m_v02`, `LRO_WAC_Mosaic_NPole60_100m_v02`) from Moon Trek, blended
+  into the atlas below 62 degrees of latitude to replace its smoother polar inserts.
+- Credits: NASA's Scientific Visualization Studio (Ernie Wright); NASA / Goddard Space Flight
+  Center / Arizona State University for LROC; NASA / Goddard Space Flight Center for LOLA.
+- Terms: NASA content, including media files used in the rendition of 3D models such as
+  texture maps and polygon data, is generally not subject to copyright in the United States
+  and may be used for educational and informational web pages, provided NASA is acknowledged
+  as the source and no endorsement is implied. The NASA name and logo remain protected.
+  See https://www.nasa.gov/nasa-brand-center/images-and-media/
+
+Lunar feature positions and diameters used by the demo come from the standard IAU
+selenographic catalogue values: https://planetarynames.wr.usgs.gov/

@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type Component } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import DemoTopBar from '../features/demos/components/DemoTopBar.vue'
 import DemoTransportBar from '../features/demos/components/DemoTransportBar.vue'
-import MeteorSurfaceView from '../features/demos/components/MeteorSurfaceView.vue'
-import { findDemo } from '../features/demos/registry'
+import { findDemo, type DemoControlId } from '../features/demos/registry'
 import {
   DEFAULT_DEMO_SETTINGS,
+  type DemoHotspot,
   type DemoLabelAnchor,
   type DemoPhase,
   type DemoRadiant,
+  type DemoReadout,
   type DemoScene,
   type DemoSceneSettings,
 } from '../features/demos/types'
 
+/**
+ * The shared shell every interactive demo runs in. It owns the stage, the overlay chrome and
+ * the demo-independent plumbing (labels, fullscreen, keyboard, visibility) and is driven
+ * entirely by the demo's entry in `registry.ts`, so adding a demo does not touch this file.
+ */
 const { t, locale } = useI18n()
 const route = useRoute()
 
@@ -25,12 +31,34 @@ const scene = shallowRef<DemoScene | null>(null)
 const settings = ref<DemoSceneSettings>({ ...DEFAULT_DEMO_SETTINGS })
 const phase = ref<DemoPhase>('orbit')
 const radiant = ref<DemoRadiant>({ altitudeDeg: 18 })
+const hotspot = ref<DemoHotspot | null>(null)
+const readout = ref<DemoReadout | null>(null)
 const unsupported = ref(false)
 const sceneLoading = ref(true)
 const isFullscreen = ref(false)
 const fullscreenSupported = ref(false)
-const labelIds = ['sun', 'earth', 'comet', 'dustBand', 'meteorShowerPoint']
-const nightSkyUrl = `${import.meta.env.BASE_URL}demos/meteor-shower/night-sky.jpg`
+const surfaceComponent = shallowRef<Component | null>(null)
+const panelComponent = shallowRef<Component | null>(null)
+
+const controls = computed<DemoControlId[]>(() => demo.value?.controls ?? ['orbits', 'labels'])
+const actions = computed(() => demo.value?.actions ?? [])
+const features = computed(() => demo.value?.features ?? [])
+const speedUnitKey = computed(() => demo.value?.speedUnitKey ?? 'demos.controls.speedValue')
+const speedRange = computed(() => demo.value?.speedRange ?? { min: 0.05, max: 1.2, step: 0.05 })
+const transport = computed(() => demo.value?.transport !== false)
+const brightnessRange = computed(() => demo.value?.brightnessRange ?? null)
+const lighting = computed(() => demo.value?.lighting ?? null)
+const hintKey = computed(() => demo.value?.hintKey ?? 'demos.controls.hint')
+const cinematicKey = computed(() => demo.value?.cinematicKey === undefined
+  ? 'demos.cinematic.entering'
+  : demo.value.cinematicKey)
+
+/**
+ * Labels arrive every frame from the scene. Their set is stable (a scene publishes all of its
+ * labels, visible or not), so the template only creates nodes when a new id shows up and the
+ * per-frame work stays an imperative style write rather than a re-render.
+ */
+const labelEntries = ref<{ id: string, textKey: string }[]>([])
 const labelElements = new Map<string, HTMLElement>()
 const labelWidths = new Map<string, number>()
 let disposed = false
@@ -43,12 +71,13 @@ function collectLabelElements(): void {
   if (!root) return
   for (const element of root.querySelectorAll<HTMLElement>('[data-demo-label]')) {
     const id = element.dataset.demoLabel
-    if (id) labelElements.set(id, element)
+    if (!id) continue
+    labelElements.set(id, element)
+    labelWidths.set(id, element.offsetWidth)
   }
-  for (const [id, element] of labelElements) labelWidths.set(id, element.offsetWidth)
 }
 
-function handleLabels(anchors: DemoLabelAnchor[]): void {
+function positionLabels(anchors: DemoLabelAnchor[]): void {
   const width = stageElement.value?.clientWidth ?? 0
   const byId = new Map(anchors.map((anchor) => [anchor.id, anchor]))
   for (const [id, element] of labelElements) {
@@ -69,6 +98,37 @@ function handleLabels(anchors: DemoLabelAnchor[]): void {
   }
 }
 
+function handleLabels(anchors: DemoLabelAnchor[]): void {
+  const known = new Set(labelEntries.value.map((entry) => entry.id))
+  const additions = anchors
+    .filter((anchor) => !known.has(anchor.id))
+    .map((anchor) => ({ id: anchor.id, textKey: anchor.textKey ?? `demos.scene.${anchor.id}` }))
+  if (additions.length > 0) {
+    labelEntries.value = [...labelEntries.value, ...additions]
+    void nextTick(() => {
+      collectLabelElements()
+      positionLabels(anchors)
+    })
+    return
+  }
+  positionLabels(anchors)
+}
+
+async function loadOverlays(): Promise<void> {
+  const definition = demo.value
+  if (!definition) return
+  surfaceComponent.value = null
+  panelComponent.value = null
+  if (definition.surfaceOverlay) {
+    const module = await definition.surfaceOverlay()
+    if (!disposed) surfaceComponent.value = module.default
+  }
+  if (definition.panel) {
+    const module = await definition.panel()
+    if (!disposed) panelComponent.value = module.default
+  }
+}
+
 async function mountScene(): Promise<void> {
   const definition = demo.value
   const container = stageElement.value
@@ -77,7 +137,9 @@ async function mountScene(): Promise<void> {
   try {
     const module = await definition.loadScene()
     if (disposed) return
-    collectLabelElements()
+    labelEntries.value = []
+    labelElements.clear()
+    labelWidths.clear()
     const created = module.createScene(container, {
       onLabels: handleLabels,
       onPhaseChange: (next) => {
@@ -85,6 +147,12 @@ async function mountScene(): Promise<void> {
       },
       onRadiantResolved: (resolved) => {
         radiant.value = resolved
+      },
+      onHotspot: (next) => {
+        hotspot.value = next
+      },
+      onReadout: (next) => {
+        readout.value = next
       },
     })
     scene.value = created
@@ -104,15 +172,42 @@ function unmountScene(): void {
   scene.value?.dispose()
   scene.value = null
   phase.value = 'orbit'
+  hotspot.value = null
+  readout.value = null
+  labelEntries.value = []
   labelElements.clear()
+  labelWidths.clear()
 }
 
 function leaveSurface(): void {
   scene.value?.leaveSurfaceView?.()
 }
 
-/** The overlays only belong to the free-look phase; the cinematic plays without chrome. */
+function selectFeature(id: string): void {
+  scene.value?.focusHotspot?.(id)
+}
+
+/** The overlays only belong to the free-look phase; a scripted move plays without chrome. */
 const overlaysVisible = computed(() => phase.value === 'orbit')
+
+const selectedFeature = computed(() =>
+  hotspot.value ? features.value.find((feature) => feature.id === hotspot.value?.id) ?? null : null)
+
+const readoutText = computed(() => {
+  const value = readout.value
+  if (!value) return ''
+  const params: Record<string, string | number> = { ...value.params }
+  if (value.timestampMs !== undefined) {
+    params.date = new Intl.DateTimeFormat(locale.value, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value.timestampMs))
+  }
+  return t(value.key, params)
+})
 
 function handleFullscreenChange(): void {
   isFullscreen.value = document.fullscreenElement === stageElement.value
@@ -139,10 +234,12 @@ function handleKeydown(event: KeyboardEvent): void {
   if (event.code === 'Space') {
     event.preventDefault()
     settings.value.playing = !settings.value.playing
-  } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+  } else if (transport.value && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
     event.preventDefault()
-    const step = event.key === 'ArrowRight' ? 0.05 : -0.05
-    settings.value.timeScale = Math.min(1.2, Math.max(0.05, Number((settings.value.timeScale + step).toFixed(2))))
+    const range = speedRange.value
+    const step = event.key === 'ArrowRight' ? range.step : -range.step
+    const next = settings.value.timeScale + step
+    settings.value.timeScale = Math.min(range.max, Math.max(range.min, Number(next.toFixed(3))))
   } else if (event.key === 'r' || event.key === 'R') {
     scene.value?.resetView()
   } else if (event.key === 'f' || event.key === 'F') {
@@ -161,6 +258,7 @@ onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   window.addEventListener('keydown', handleKeydown)
   document.addEventListener('visibilitychange', handleVisibilityChange)
+  void loadOverlays()
   void mountScene()
 })
 
@@ -176,43 +274,70 @@ watch(settings, (value) => {
   scene.value?.applySettings({ ...value })
 }, { deep: true })
 
+watch(demo, (definition) => {
+  settings.value = { ...DEFAULT_DEMO_SETTINGS, ...(definition?.defaultSettings ?? {}) }
+}, { immediate: true })
+
 watch(slug, async () => {
   unmountScene()
   unsupported.value = false
+  disposed = false
+  void loadOverlays()
   await mountScene()
 })
 
 watch(locale, async () => {
   await nextTick()
-  for (const [id, element] of labelElements) labelWidths.set(id, element.offsetWidth)
+  collectLabelElements()
 })
 </script>
 
 <template>
   <section class="demo-page">
     <div v-if="demo" ref="stageElement" class="demo-stage">
-      <div class="demo-label-layer" :class="{ hidden: phase !== 'orbit' }" aria-hidden="true">
+      <div class="demo-label-layer" aria-hidden="true">
         <span
-          v-for="id in labelIds"
-          :key="id"
+          v-for="entry in labelEntries"
+          :key="entry.id"
           class="demo-label"
-          :data-demo-label="id"
-        >{{ t(`demos.scene.${id}`) }}</span>
+          :data-demo-label="entry.id"
+        >{{ t(entry.textKey) }}</span>
       </div>
 
-      <div class="demo-surface" :class="{ visible: phase === 'surface' }">
-        <MeteorSurfaceView
-          :active="phase === 'surface'"
-          :image-url="nightSkyUrl"
-          :radiant-altitude-deg="radiant.altitudeDeg"
-        />
-        <div class="demo-surface-bar">
-          <p class="demo-surface-caption">{{ t('demos.surface.caption') }}</p>
-          <button type="button" class="demo-button" @click="leaveSurface">
-            {{ t('demos.surface.exit') }}
-          </button>
-        </div>
-      </div>
+      <component
+        v-if="surfaceComponent"
+        :is="surfaceComponent"
+        :active="phase === 'surface'"
+        :radiant-altitude-deg="radiant.altitudeDeg"
+        @exit="leaveSurface"
+      />
+
+      <component
+        v-if="panelComponent && features.length > 0"
+        :is="panelComponent"
+        class="overlay-hidden-aware"
+        :class="{ 'stage-hidden': !overlaysVisible }"
+        :title-key="demo.panelTitleKey ?? ''"
+        :items="features"
+        :selected="hotspot?.id ?? null"
+        @select="selectFeature"
+      />
+
+      <aside
+        v-if="hotspot && selectedFeature"
+        class="hotspot-card"
+        :class="{ 'stage-hidden': !overlaysVisible }"
+      >
+        <p class="hotspot-category">{{ t(selectedFeature.categoryKey) }}</p>
+        <h2>{{ t(selectedFeature.titleKey) }}</h2>
+        <p v-if="hotspot.facts.length" class="hotspot-facts">
+          <span v-for="fact in hotspot.facts" :key="fact">{{ fact }}</span>
+        </p>
+        <p class="hotspot-body">{{ t(`demos.items.${demo.slug}.hotspots.${hotspot.id}.body`) }}</p>
+        <button type="button" class="demo-button" @click="scene?.clearFocus?.()">
+          {{ t('demos.card.back') }}
+        </button>
+      </aside>
 
       <p v-if="unsupported" class="demo-fallback">{{ t('demos.unsupported') }}</p>
       <p v-else-if="sceneLoading" class="demo-loading" role="status">{{ t('demos.loading') }}</p>
@@ -224,27 +349,61 @@ watch(locale, async () => {
         :class="{ 'overlay-hidden': !overlaysVisible }"
         :title="t(demo.titleKey)"
         :summary="t(demo.summaryKey)"
+        :controls="controls"
         :show-orbits="settings.showOrbits"
         :show-labels="settings.showLabels"
+        :show-grid="settings.showGrid ?? false"
+        :actions="actions"
+        :brightness-range="brightnessRange"
+        :brightness="settings.brightness ?? 1"
+        :lighting="lighting"
+        :light-azimuth="settings.lightAzimuthDeg ?? 315"
+        :light-elevation="settings.lightElevationDeg ?? 28"
+        :full-bright="settings.fullBright ?? false"
         :fullscreen="isFullscreen"
         :fullscreen-supported="fullscreenSupported"
-        @update:show-orbits="settings.showOrbits = $event"
-        @update:show-labels="settings.showLabels = $event"
+        @toggle="(id, value) => {
+          if (id === 'orbits') settings.showOrbits = value
+          else if (id === 'labels') settings.showLabels = value
+          else settings.showGrid = value
+        }"
+        @action="(id) => scene?.runAction?.(id)"
+        @update:brightness="(value) => { settings.brightness = value }"
+        @update:light-azimuth="(value) => { settings.lightAzimuthDeg = value }"
+        @update:light-elevation="(value) => { settings.lightElevationDeg = value }"
+        @update:full-bright="(value) => { settings.fullBright = value }"
+        @reset="scene?.resetView()"
         @toggle-fullscreen="toggleFullscreen"
       />
 
-      <p class="demo-hint overlay" :class="{ 'overlay-hidden': !overlaysVisible }">
-        {{ t('demos.controls.hint') }}
+      <div class="overlay bottom-left" :class="{ 'overlay-hidden': !overlaysVisible }">
+        <p class="demo-hint">{{ t(hintKey) }}</p>
+        <p v-if="readoutText" class="demo-readout">{{ readoutText }}</p>
+      </div>
+
+      <p
+        v-if="demo.creditKey"
+        class="demo-credit overlay"
+        :class="{ 'overlay-hidden': !overlaysVisible }"
+      >{{ t(demo.creditKey) }}</p>
+
+      <p
+        v-if="cinematicKey"
+        class="demo-stage-message overlay"
+        :class="{ 'overlay-hidden': phase !== 'cinematic' }"
+        role="status"
+      >
+        {{ t(cinematicKey) }}
       </p>
 
-      <p class="demo-stage-message overlay" :class="{ 'overlay-hidden': phase !== 'cinematic' }" role="status">
-        {{ t('demos.cinematic.entering') }}
-      </p>
-
-      <div class="overlay bottom" :class="{ 'overlay-hidden': !overlaysVisible }">
+      <div v-if="transport" class="overlay bottom" :class="{ 'overlay-hidden': !overlaysVisible }">
         <DemoTransportBar
           v-model:playing="settings.playing"
           v-model:time-scale="settings.timeScale"
+          :unit-key="speedUnitKey"
+          :min="speedRange.min"
+          :max="speedRange.max"
+          :step="speedRange.step"
           @reset="scene?.resetView()"
         />
       </div>
@@ -285,17 +444,43 @@ watch(locale, async () => {
 
 .overlay-hidden { opacity: 0; pointer-events: none; }
 
+.stage-hidden { opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+
 .overlay.top { inset: max(12px, env(safe-area-inset-top)) clamp(12px, 2vw, 22px) auto; }
 .overlay.bottom { inset: auto 0 clamp(14px, 2.4vh, 26px); display: flex; justify-content: center; pointer-events: none; }
 .overlay.bottom > * { pointer-events: auto; }
 
-.demo-hint {
+.overlay.bottom-left {
   inset: auto auto clamp(14px, 2.4vh, 26px) clamp(12px, 2vw, 22px);
-  max-width: 240px;
+  max-width: 260px;
+  pointer-events: none;
+}
+
+.demo-hint {
   margin: 0;
   color: #8fa4bd;
   font-size: .78rem;
   line-height: 1.5;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 85%);
+}
+
+.demo-readout {
+  margin: .3rem 0 0;
+  color: #b9c9dd;
+  font-size: .74rem;
+  letter-spacing: .02em;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 85%);
+}
+
+.demo-credit {
+  /* Sits above the transport bar rather than behind it. */
+  inset: auto clamp(12px, 2vw, 22px) clamp(64px, 9vh, 88px) auto;
+  max-width: min(420px, 40vw);
+  margin: 0;
+  color: #6d86a3;
+  font-size: .64rem;
+  line-height: 1.45;
+  text-align: right;
   text-shadow: 0 1px 6px rgb(0 0 0 / 85%);
   pointer-events: none;
 }
@@ -334,51 +519,41 @@ watch(locale, async () => {
   will-change: transform;
 }
 
-.demo-label-layer.hidden { opacity: 0; transition: opacity .5s ease; }
-
-.demo-surface {
+.hotspot-card {
   position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: #03060d;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .5s ease;
+  z-index: 5;
+  left: clamp(12px, 2vw, 22px);
+  bottom: clamp(96px, 17vh, 156px);
+  width: min(320px, 74vw);
+  padding: .85rem .9rem .95rem;
+  border: 1px solid rgb(60 84 110 / 65%);
+  border-radius: 8px;
+  background: rgb(6 14 26 / 86%);
+  backdrop-filter: blur(8px);
+  transition: opacity .3s ease;
 }
 
-.demo-surface.visible { opacity: 1; pointer-events: auto; }
-
-/* Dip through black, then bring the ground view up once the 3D scene is hidden. */
-.demo-surface :deep(.meteor-surface-canvas) {
-  opacity: 0;
-  transition: opacity .8s ease .5s;
+.hotspot-category {
+  margin: 0 0 .2rem;
+  color: #72d4d8;
+  font-size: .68rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
 
-.demo-surface.visible :deep(.meteor-surface-canvas) { opacity: 1; }
+.hotspot-card h2 { margin: 0; color: #eaf2ff; font-size: 1.05rem; }
 
-.demo-surface-bar {
-  position: absolute;
-  inset: auto 0 0;
+.hotspot-facts {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.2rem 1rem .8rem;
-  background: linear-gradient(transparent, rgb(3 6 13 / 78%));
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: .35rem 0 .5rem;
+  color: #9fb4cf;
+  font-size: .76rem;
+  letter-spacing: .03em;
 }
 
-.demo-surface-caption {
-  margin: 0;
-  color: #d8e4f4;
-  font-size: .86rem;
-  text-shadow: 0 1px 6px rgb(0 0 0 / 90%);
-}
-
-.demo-surface-bar .demo-button {
-  min-height: 34px;
-  padding: 0 .9rem;
-  background: rgb(10 23 40 / 78%);
-}
+.hotspot-body { margin: 0 0 .7rem; color: #b9c9dd; font-size: .84rem; line-height: 1.6; }
 
 .demo-fallback {
   position: absolute;
@@ -403,6 +578,7 @@ watch(locale, async () => {
 
 .demo-button {
   min-height: 38px;
+  padding: 0 .9rem;
   border: 1px solid #35516e;
   border-radius: 4px;
   color: #c8d6e7;
@@ -413,7 +589,9 @@ watch(locale, async () => {
 .demo-button:hover { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
 
 @media (max-width: 900px) {
-  .demo-hint { display: none; }
   .overlay.bottom { inset: auto 0 max(12px, env(safe-area-inset-bottom)); }
+  .overlay.bottom-left { display: none; }
+  .demo-credit { display: none; }
+  .hotspot-card { bottom: 74px; }
 }
 </style>

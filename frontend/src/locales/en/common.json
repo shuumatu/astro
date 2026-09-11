@@ -31,7 +31,109 @@
     "items": {
       "meteorShower": {
         "title": "How meteor showers form",
-        "summary": "A comet keeps shedding dust along its orbit, gradually building a dust trail. When the Earth crosses that trail, the dust burns up in the atmosphere as a meteor shower."
+        "summary": "A comet keeps shedding dust along its orbit, gradually building a dust trail. When the Earth crosses that trail, the dust burns up in the atmosphere as a meteor shower.",
+        "credit": "Orbits and geometry computed with astronomy-engine; body sizes are exaggerated so the geometry stays legible"
+      },
+      "moon": {
+        "title": "Tour the Moon: craters, maria and landing sites",
+        "summary": "Roam the near and far side with NASA's LROC colour imagery and LOLA elevation data. Rotate, zoom, and use adjustable raking light to read the Moon's real terrain.",
+        "hint": "Drag to orbit · wheel/pinch to zoom · arrow keys refine a site view · click a feature to descend",
+        "entering": "Approaching the Moon…",
+        "credit": "Surface imagery and terrain: NASA / LRO / LROC and LOLA (CGI Moon Kit); LOLA elevation drives both mesh displacement and fine surface shading",
+        "readout": "Light azimuth {azimuth}° · elevation {elevation}° · viewpoint {altitude} km",
+        "readoutFull": "Full-bright mode · viewpoint {altitude} km",
+        "panelTitle": "Lunar features",
+        "actions": {
+          "new": "New moon",
+          "firstQuarter": "First quarter",
+          "full": "Full moon",
+          "lastQuarter": "Last quarter",
+          "live": "Back to now"
+        },
+        "categories": {
+          "mare": "Maria",
+          "basin": "Impact basins",
+          "crater": "Craters",
+          "landingSite": "Landing sites"
+        },
+        "hotspots": {
+          "oceanus-procellarum": {
+            "title": "Oceanus Procellarum",
+            "body": "The largest of the lunar maria, covering about four million square kilometres. It is not one crater but an ancient lowland flooded by basalt lava, which is why it counts as an ocean rather than a sea."
+          },
+          "mare-imbrium": {
+            "title": "Mare Imbrium",
+            "body": "An impact about 3.8 billion years ago excavated a basin some 1,145 km across, and lava later filled it. The ridges still visible around the edge are ejecta thrown out by that impact."
+          },
+          "mare-ser-enitatis": {
+            "title": "Mare Serenitatis",
+            "body": "The dark basalt of the Sea of Serenity is roughly a billion years younger than the surrounding highlands. Apollo 17 landed on its eastern edge, in the Taurus–Littrow valley."
+          },
+          "mare-tranquillitatis": {
+            "title": "Mare Tranquillitatis",
+            "body": "A basalt plain about 873 km wide, darker than the highlands because its iron- and titanium-rich lava reflects less light. It is also where humans first walked on the Moon."
+          },
+          "mare-crisium": {
+            "title": "Mare Crisium",
+            "body": "An isolated circular mare about 555 km across, ringed by mountains. Sitting near the eastern limb, it librates in and out of view from Earth."
+          },
+          "mare-orientale": {
+            "title": "Mare Orientale",
+            "body": "One of the youngest large multi-ring impact basins on the Moon, on the south-western limb where it is hard to see whole from Earth. Its concentric rings are a textbook impact-basin structure."
+          },
+          "south-pole-aitken": {
+            "title": "South Pole–Aitken basin",
+            "body": "One of the largest impact structures in the Solar System: about 2,500 km across and 13 km deep, mostly on the far side. Chang'e 4 landed inside it, in Von Kármán crater."
+          },
+          "tycho": {
+            "title": "Tycho",
+            "body": "Eighty-five kilometres across and relatively young at about 100 million years, Tycho has the Moon's most conspicuous ray system — binoculars will show it on any full moon."
+          },
+          "copernicus": {
+            "title": "Copernicus",
+            "body": "A 93 km complex crater with a central peak and terraced walls, formed about 800 million years ago. Its rays are fainter than Tycho's, which makes it a useful marker for dating lunar terrain."
+          },
+          "aristarchus": {
+            "title": "Aristarchus",
+            "body": "One of the brightest features on the near side, roughly twice as reflective as the surrounding mare. It sits on the Aristarchus plateau, next to the winding volcanic rille called Schröter's Valley."
+          },
+          "clavius": {
+            "title": "Clavius",
+            "body": "At 231 km across, Clavius is among the largest craters on the near side. It is very old: later impacts have flattened and pockmarked its floor, and a chain of younger craters overlaps its southern rim."
+          },
+          "tsiolkovskiy": {
+            "title": "Tsiolkovskiy",
+            "body": "A far-side crater whose floor is flooded with dark basalt, making it one of the most recognisable landmarks on the lunar far side. The far-side crust is thicker, so such dark floors are rare."
+          },
+          "shackleton": {
+            "title": "Shackleton",
+            "body": "Near the south pole, where crater floors never see sunlight and rank among the coldest places in the Solar System, possibly preserving water ice. It is a focus for lunar south-pole exploration."
+          },
+          "apollo-11": {
+            "title": "Apollo 11 landing site",
+            "body": "In July 1969 Eagle touched down at Tranquility Base, and Armstrong and Aldrin spent about 21 hours on the surface. The descent stage, instruments and footprints are still there."
+          },
+          "apollo-17": {
+            "title": "Apollo 17 landing site",
+            "body": "The last crewed landing, in December 1972, came down in the Taurus–Littrow valley. Geologist Harrison Schmitt found the famous orange soil there, erupted about 3.6 billion years ago."
+          },
+          "change-3": {
+            "title": "Chang'e 3 landing site",
+            "body": "In December 2013 Chang'e 3 made a soft landing in southern Sinus Iridum, and Yutu became the first rover to drive on the Moon since 1976."
+          },
+          "change-4": {
+            "title": "Chang'e 4 landing site",
+            "body": "In January 2019 Chang'e 4 landed in Von Kármán crater, inside the South Pole–Aitken basin — the first soft landing on the far side. Yutu-2 is still roving."
+          },
+          "change-5": {
+            "title": "Chang'e 5 landing site",
+            "body": "In December 2020 Chang'e 5 sampled and returned 1,731 grams of lunar material from near Mons Rümker — the first sample return in 44 years."
+          },
+          "luna-21": {
+            "title": "Luna 21 and Lunokhod 2",
+            "body": "Luna 21 landed inside Le Monnier crater on the eastern rim of Mare Serenitatis in January 1973 and deployed Lunokhod 2, which went on to drive about 39 kilometres — further than any other rover, and its wheel tracks are still visible from orbit."
+          }
+        }
       }
     },
     "scene": {
@@ -47,8 +149,14 @@
       "pause": "Pause",
       "speed": "Time speed",
       "speedValue": "{value} years/s",
+      "speedValueDays": "{value} days/s",
       "orbits": "Orbit paths",
       "labels": "Labels",
+      "grid": "Graticule",
+      "brightness": "Brightness",
+      "lightAzimuth": "Light azimuth",
+      "lightElevation": "Light elevation",
+      "fullBright": "Full bright",
       "resetView": "Reset view",
       "fullscreen": "Full screen",
       "exitFullscreen": "Exit full screen",
@@ -56,6 +164,9 @@
     },
     "cinematic": {
       "entering": "Travelling to the meteor shower point…"
+    },
+    "card": {
+      "back": "Back to the overview"
     },
     "surface": {
       "caption": "The Earth is crossing the dust trail left by the comet; every grain burns up along a path that traces back to the radiant",

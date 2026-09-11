@@ -5,6 +5,19 @@ import { useI18n } from 'vue-i18n'
 const playing = defineModel<boolean>('playing', { required: true })
 const timeScale = defineModel<number>('timeScale', { required: true })
 
+const props = withDefaults(defineProps<{
+  /** Locale key for the unit readout beside the slider, e.g. years or days per second. */
+  unitKey?: string
+  min?: number
+  max?: number
+  step?: number
+}>(), {
+  unitKey: 'demos.controls.speedValue',
+  min: 0.05,
+  max: 1.2,
+  step: 0.05,
+})
+
 const emit = defineEmits<{ reset: [] }>()
 
 const { t } = useI18n()
@@ -28,13 +41,13 @@ const { t } = useI18n()
       <input
         v-model.number="timeScale"
         type="range"
-        min="0.05"
-        max="1.2"
-        step="0.05"
+        :min="props.min"
+        :max="props.max"
+        :step="props.step"
         :aria-label="t('demos.controls.speed')"
       >
       <output class="transport-value">
-        {{ t('demos.controls.speedValue', { value: timeScale.toFixed(2) }) }}
+        {{ t(props.unitKey, { value: timeScale.toFixed(2) }) }}
       </output>
     </label>
 

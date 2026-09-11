@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Moon polar rendering regression</title>
+<style>html,body,#scene{margin:0;width:100%;height:100%;overflow:hidden}#result{position:absolute;top:0;left:0;color:white;background:#123;padding:10px;z-index:5;font:14px monospace}</style>
+</head><body><div id="scene"></div><div id="result">Loading lunar textures…</div>
+<script type="module">
+import * as THREE from 'three'
+import { MoonScene } from '/src/features/demos/scenes/moon/scene.ts'
+const params = new URLSearchParams(location.search)
+const hemisphere = params.get('pole') || 'north'
+const close = params.get('near') === '1'
+const scene = new MoonScene(document.querySelector('#scene'))
+scene.setSuspended(true)
+scene.flight = null
+scene.stage.controls.enabled = false
+scene.applySettings({fullBright: params.get('lit') !== '1', brightness: 1, labels: false})
+const camera = scene.stage.camera
+camera.position.set(0, (hemisphere === 'south' ? -1 : 1) * (close ? 1.45 : 3.05), 0)
+camera.up.set(0, 0, -1)
+camera.lookAt(0, 0, 0)
+camera.updateMatrixWorld()
+if (params.get('focus') === '1') {
+  scene.focusHotspot('shackleton')
+  scene.updateFlight(10)
+  scene.updateCameraClip()
+  camera.updateMatrixWorld()
+}
+// The scene starts downloads synchronously; manager completion includes both polar products,
+// the global colour ladder and DEM, so screenshots never count a grey loading sphere as a pass.
+THREE.DefaultLoadingManager.onLoad = () => {
+  try {
+    const renderer = scene.stage.renderer
+    const errors = []
+    renderer.debug.onShaderError = (gl, program, vs, fs) => {
+      errors.push(gl.getProgramInfoLog(program), gl.getShaderInfoLog(vs), gl.getShaderInfoLog(fs))
+    }
+    renderer.render(scene.stage.scene, camera)
+    const pixels = new Uint8Array(4 * 48 * 48)
+    const gl = renderer.getContext()
+    gl.readPixels(gl.drawingBufferWidth / 2 - 24, gl.drawingBufferHeight / 2 - 24,
+      48, 48, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+    const snapshot = document.createElement('img')
+    snapshot.src = renderer.domElement.toDataURL('image/png')
+    snapshot.style.cssText = 'position:absolute;inset:0;width:100%;height:100%'
+    document.querySelector('#scene').appendChild(snapshot)
+    const values = new Set(Array.from(pixels).filter((_, i) => i % 4 === 0))
+    document.querySelector('#result').textContent = JSON.stringify({
+      hemisphere, close, focus: scene.focusedId, shaderErrors: errors, centreGreyLevels: values.size,
+      meshes: scene.group.children.map(child => child.name),
+    })
+    document.body.dataset.ready = 'true'
+  } catch (error) { document.querySelector('#result').textContent = String(error) }
+}
+</script></body></html>
