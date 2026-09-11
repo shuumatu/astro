@@ -8,13 +8,14 @@ import { MoonScene } from '/src/features/demos/scenes/moon/scene.ts'
 const params = new URLSearchParams(location.search)
 const hemisphere = params.get('pole') || 'north'
 const close = params.get('near') === '1'
+const altitude = Number(params.get('altitude') || (close ? .45 : 2.05))
 const scene = new MoonScene(document.querySelector('#scene'))
 scene.setSuspended(true)
 scene.flight = null
 scene.stage.controls.enabled = false
 scene.applySettings({fullBright: params.get('lit') !== '1', brightness: 1, labels: false})
 const camera = scene.stage.camera
-camera.position.set(0, (hemisphere === 'south' ? -1 : 1) * (close ? 1.45 : 3.05), 0)
+camera.position.set(0, (hemisphere === 'south' ? -1 : 1) * (1 + altitude), 0)
 camera.up.set(0, 0, -1)
 camera.lookAt(0, 0, 0)
 camera.updateMatrixWorld()
@@ -29,6 +30,10 @@ if (params.get('focus') === '1') {
 THREE.DefaultLoadingManager.onLoad = () => {
   try {
     const renderer = scene.stage.renderer
+    // This harness suspends animation. Explicitly run the actual distance update
+    // before rendering; previous screenshots accidentally tested the default mix.
+    scene.updatePolarDetailMix()
+    if (params.has('mix')) scene.polarSurface.setDetailMix(Number(params.get('mix')))
     const errors = []
     renderer.debug.onShaderError = (gl, program, vs, fs) => {
       errors.push(gl.getProgramInfoLog(program), gl.getShaderInfoLog(vs), gl.getShaderInfoLog(fs))

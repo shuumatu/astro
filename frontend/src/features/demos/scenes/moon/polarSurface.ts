@@ -4,10 +4,14 @@ import type { Vector3Like } from './selenography'
 
 /** NASA Moon Trek exports are in metres, over this fixed square (6144 pixels per side). */
 export const POLAR_EXTENT_M = 1_126_000
+// rho = 2R*cos(lat)/(1+sin(|lat|)); UV divides rho by the full 2*extent
+// image width. Those factors of two cancel, leaving R/extent below.
 const PROJECTION_SCALE = MOON_RADIUS_KM * 1000 / POLAR_EXTENT_M
 const radians = Math.PI / 180
-const FADE_START = Math.sin(68 * radians)
-const FADE_END = Math.sin(78 * radians)
+// Both atlas and native LOD are now resampled from the same colour-matched
+// master. Start the detail handover inside the fully baked region (>=74 deg).
+const FADE_START = Math.sin(76 * radians)
+const FADE_END = Math.sin(82 * radians)
 
 /** Texture coordinates, with TextureLoader's default flipY; no longitude singularity. */
 export function polarTextureUv(point: Vector3Like): [number, number] {
@@ -44,8 +48,11 @@ export function configurePolarSurface(material: THREE.MeshStandardMaterial) {
     lunarNorthReady: { value: 0 },
     lunarSouthReady: { value: 0 },
     lunarPoleHeights: { value: new THREE.Vector2(0.5, 0.5) },
+    // Start disabled so the first overview frame cannot flash a polar circle
+    // before the camera-distance update has run.
+    lunarDetailMix: { value: 0 },
   }
-  material.customProgramCacheKey = () => 'lunar-polar-surface-v1'
+  material.customProgramCacheKey = () => 'lunar-polar-registered-v2'
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms)
     shader.vertexShader = shader.vertexShader
@@ -69,7 +76,8 @@ varying vec3 lunarSurfaceDirection;
 uniform sampler2D lunarNorthMap;
 uniform sampler2D lunarSouthMap;
 uniform float lunarNorthReady;
-uniform float lunarSouthReady;`)
+uniform float lunarSouthReady;
+uniform float lunarDetailMix;`)
       .replace('#include <map_fragment>', `
 vec3 lunarDirection = normalize(lunarSurfaceDirection);
 float lunarAbsY = abs(lunarDirection.y);
@@ -78,16 +86,24 @@ vec4 lunarColour = vec4(1.0);
   lunarColour = texture2D(map, vMapUv);
 #endif
 float lunarWeight = smoothstep(${FADE_START}, ${FADE_END}, lunarAbsY);
-if (lunarWeight > 0.0) {
+vec4 lunarPolarColour = lunarColour;
+float lunarPolarReady = 0.0;
+vec2 lunarUv = vec2(0.5);
+if (lunarWeight > 0.0 && lunarDetailMix > 0.0) {
   // x=cos(lat)cos(lon), z=-cos(lat)sin(lon). North stereographic Y points
   // away from lon=0; the south projection reverses Y. UV V points up (flipY=true).
-  vec2 lunarUv = vec2(0.5) + vec2(-lunarDirection.z, -sign(lunarDirection.y) * lunarDirection.x)
+  lunarUv = vec2(0.5) + vec2(-lunarDirection.z, -sign(lunarDirection.y) * lunarDirection.x)
     * (${PROJECTION_SCALE} / (1.0 + lunarAbsY));
   if (lunarDirection.y >= 0.0 && lunarNorthReady > 0.5) {
-    lunarColour = mix(lunarColour, texture2D(lunarNorthMap, lunarUv), lunarWeight);
+    lunarPolarColour = texture2D(lunarNorthMap, lunarUv);
+    lunarPolarReady = 1.0;
   } else if (lunarDirection.y < 0.0 && lunarSouthReady > 0.5) {
-    lunarColour = mix(lunarColour, texture2D(lunarSouthMap, lunarUv), lunarWeight);
+    lunarPolarColour = texture2D(lunarSouthMap, lunarUv);
+    lunarPolarReady = 1.0;
   }
+}
+if (lunarPolarReady > 0.5) {
+  lunarColour = mix(lunarColour, lunarPolarColour, lunarWeight * lunarDetailMix);
 }
 diffuseColor *= lunarColour;`)
       .replace('#include <normal_fragment_maps>', `
@@ -114,6 +130,9 @@ diffuseColor *= lunarColour;`)
     },
     setPoleHeights(north: number, south: number) {
       uniforms.lunarPoleHeights.value.set(north, south)
+    },
+    setDetailMix(value: number) {
+      uniforms.lunarDetailMix.value = THREE.MathUtils.clamp(value, 0, 1)
     },
     dispose() {
       uniforms.lunarNorthMap.value?.dispose()

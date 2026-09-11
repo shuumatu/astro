@@ -404,7 +404,7 @@ export class MoonScene implements DemoScene {
     const apply = (index: number): void => {
       const step = ladder[index]
       if (!step) return
-      const url = `${base}demos/moon/${step.file}`
+      const url = `${base}demos/moon/${step.file}?registered-poles=2`
       const texture = loader.load(
         url,
         () => {
@@ -481,7 +481,7 @@ export class MoonScene implements DemoScene {
   private loadPolarCaps(): void {
     const loader = new THREE.TextureLoader()
     for (const hemisphere of ['north', 'south'] as const) {
-      loader.load(`${import.meta.env.BASE_URL}demos/moon/polar-${hemisphere}.webp`, (texture) => {
+      loader.load(`${import.meta.env.BASE_URL}demos/moon/polar-${hemisphere}-matched.webp`, (texture) => {
         if (this.disposed) {
           texture.dispose()
           return
@@ -582,6 +582,7 @@ export class MoonScene implements DemoScene {
     this.updateFlight(deltaSeconds)
     if (!this.focusedId) this.clampCameraAltitude()
     this.updateCameraClip()
+    this.updatePolarDetailMix()
     this.scaleMarkersToCamera()
     this.updateDetail()
     this.labelElapsed += deltaSeconds
@@ -590,6 +591,20 @@ export class MoonScene implements DemoScene {
       this.publishLabels()
     }
     this.publishReadout(false, deltaSeconds)
+  }
+
+  /** Fade the high-resolution polar mosaic in only when it has enough screen size. */
+  private updatePolarDetailMix(): void {
+    const altitude = this.focusedId
+      ? this.focusDistance
+      : Math.max(this.stage.camera.position.length() - SCENE.radius, 0)
+    // Keep the polar mosaic out of the overview. Its native resolution is much
+    // higher than the global atlas, so even a colour-matched blend would expose
+    // a circular frequency boundary at lunar-disc scale.
+    // Keep the overview on one global-atlas representation. The polar mosaic
+    // fades in only after the camera is genuinely close to the surface.
+    const t = THREE.MathUtils.clamp((1.62 - altitude) / 0.48, 0, 1)
+    this.polarSurface.setDetailMix(t * t * (3 - 2 * t))
   }
 
   /**

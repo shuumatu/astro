@@ -141,12 +141,11 @@ collision and bounded-input controls:
 
 ## Polar caps
 
-Runtime correction (2026-09-12): `polar-north.webp` and `polar-south.webp` are 6144-square
-exports over projected bounds ±1,126,000 metres. `polarSurface.ts` samples these native images
-directly in the globe material, using a Moon radius of 1,737,400 metres and the north/south
-stereographic central-meridian orientations. TextureLoader's vertical flip is accounted for.
-There are no separate floating cap meshes or distance-based visibility switches. Colour blends
-from the global map between 68° and 78° absolute latitude and stays registered at every zoom.
+Runtime correction (2026-09-12): `polar-north-matched.webp` and `polar-south-matched.webp` are
+derived from the same native LRO mosaics used to bake the 8K/4K atlas polar rows. The native
+polar projection is sampled on one shared colour-matched master, so the near view changes only
+resolution. Runtime detail blends from the global map between 76° and 82° absolute latitude.
+There are no separate floating cap meshes or distance-based visibility switches.
 The underlying globe still uses LOLA displacement. Duplicate pole vertices converge to one
 mean elevation over the final 1.5°, and the singular equirectangular bump term fades between
 85° and 89°. The source WAC mosaics retain photographed shadows: full-bright scene lighting
