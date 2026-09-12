@@ -19,9 +19,17 @@ camera.position.set(0, (hemisphere === 'south' ? -1 : 1) * (1 + altitude), 0)
 camera.up.set(0, 0, -1)
 camera.lookAt(0, 0, 0)
 camera.updateMatrixWorld()
-if (params.get('focus') === '1') {
-  scene.focusHotspot('shackleton')
+const focusId = params.get('focus')
+if (focusId) {
+  scene.focusHotspot(focusId === '1' ? 'shackleton' : focusId)
   scene.updateFlight(10)
+  // Optional close-up: express the wish as an altitude in kilometres so a
+  // screenshot matches what the viewer sees after zooming in from the arrival.
+  const altKm = Number(params.get('altKm') || 0)
+  if (altKm > 0) {
+    scene.focusDistance = altKm / 1737.4
+    scene.applyFocusCamera()
+  }
   scene.updateCameraClip()
   camera.updateMatrixWorld()
 }
@@ -33,7 +41,29 @@ THREE.DefaultLoadingManager.onLoad = () => {
     // This harness suspends animation. Explicitly run the actual distance update
     // before rendering; previous screenshots accidentally tested the default mix.
     scene.updatePolarDetailMix()
+    scene.updateDetail()
     if (params.has('mix')) scene.polarSurface.setDetailMix(Number(params.get('mix')))
+    // A/B switches: hide the local crops entirely, or strip their relief, so the
+    // screenshot can attribute a flat patch to the right layer.
+    if (params.get('nodetail') === '1') scene.detailGroup.visible = false
+    // Lift the whole crop shell to test whether the globe is depth-occluding it.
+    if (params.has('lift')) scene.detailGroup.scale.setScalar(1 + Number(params.get('lift')))
+    if (params.get('norelief') === '1') {
+      for (const level of scene.detailLevels) {
+        const mat = level.mesh && level.mesh.material
+        if (!mat) continue
+        mat.displacementMap = null
+        mat.bumpMap = null
+        mat.needsUpdate = true
+      }
+    }
+    const levels = (scene.detailLevels || []).map((level) => ({
+      id: level.site.id,
+      requested: level.requested,
+      loaded: level.loaded,
+      opacity: level.mesh ? Number(level.mesh.material.opacity.toFixed(3)) : null,
+      visible: level.mesh ? level.mesh.visible : null,
+    }))
     const errors = []
     renderer.debug.onShaderError = (gl, program, vs, fs) => {
       errors.push(gl.getProgramInfoLog(program), gl.getShaderInfoLog(vs), gl.getShaderInfoLog(fs))
@@ -49,7 +79,9 @@ THREE.DefaultLoadingManager.onLoad = () => {
     document.querySelector('#scene').appendChild(snapshot)
     const values = new Set(Array.from(pixels).filter((_, i) => i % 4 === 0))
     document.querySelector('#result').textContent = JSON.stringify({
-      hemisphere, close, focus: scene.focusedId, shaderErrors: errors, centreGreyLevels: values.size,
+      hemisphere, close, focus: scene.focusedId, altitudeKm: Math.round(scene.focusDistance * 1737.4),
+      detailVisible: scene.detailVisible, levels,
+      shaderErrors: errors, centreGreyLevels: values.size,
       meshes: scene.group.children.map(child => child.name),
     })
     document.body.dataset.ready = 'true'

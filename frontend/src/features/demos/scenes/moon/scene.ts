@@ -310,8 +310,10 @@ export class MoonScene implements DemoScene {
     const normal = this.directionFrom(feature.lonDeg, feature.latDeg)
     const relief = siteRelief(feature.id)
       ?? siteLevels(feature.id).map((site) => siteRelief(site.id)).find((entry) => entry !== null)
+    // The crop rides `liftKm` above the globe so the coarse atlas sphere cannot poke through
+    // it, and the camera has to orbit that lifted ground rather than the raw LOLA value.
     this.focusGroundRadius = SCENE.radius + kilometresToRadii(
-      (relief?.centerKm ?? 0) * SCENE.terrainExaggeration,
+      ((relief?.centerKm ?? 0) + (relief?.liftKm ?? 0)) * SCENE.terrainExaggeration,
     )
     const north = UP.clone().addScaledVector(normal, -UP.dot(normal))
     if (north.lengthSq() < 1e-8) north.copy(perpendicular(normal))
@@ -772,8 +774,12 @@ export class MoonScene implements DemoScene {
         relief.rangeKm * SCENE.terrainExaggeration,
       )
       material.displacementBias = kilometresToRadii(
-        relief.minKm * SCENE.terrainExaggeration,
+        (relief.minKm + relief.liftKm) * SCENE.terrainExaggeration,
       )
+      // A constant lift leaves the terrain shape alone while clearing the globe's own
+      // displacement. Without it, the coarse atlas DEM reads up to a kilometre higher than the
+      // detailed crop DEM inside a large crater, and the globe surface rises through the crop,
+      // replacing the crisp crater floor with the blurry 8K atlas.
       // Relit albedo crops can use the complete high-frequency normal signal. WAC/NAC crops that
       // still contain photographed shadows get a restrained term: their vertices provide real
       // parallax while this smaller bump contribution stops fine ridges disappearing between
@@ -878,6 +884,13 @@ export class MoonScene implements DemoScene {
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      // The crop and the atlas describe the same ground at different resolutions. Their
+      // independently displaced vertices can cross by a few metres even after the crop's
+      // clearance lift, so depth-testing the overlay makes only the protruding triangles show
+      // through as a white polygon. Draw the feathered crop over the atlas instead; its alpha
+      // ramp still exposes the atlas at the boundary and the front-face culling keeps the patch
+      // from appearing on the far side of the Moon.
+      depthTest: false,
       alphaMap: this.siteFeather,
       polygonOffset: true,
       polygonOffsetFactor: -6,

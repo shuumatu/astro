@@ -12,6 +12,12 @@ const radians = Math.PI / 180
 // master. Start the detail handover inside the fully baked region (>=74 deg).
 const FADE_START = Math.sin(76 * radians)
 const FADE_END = Math.sin(82 * radians)
+/**
+ * Latitude band over which the equirectangular micro-normal is faded out: its screen-space
+ * derivative grows as 1/cos(lat), so the bump map stops describing the ground near either pole.
+ */
+const BUMP_FADE_START = Math.sin(85 * radians)
+const BUMP_FADE_END = Math.sin(89 * radians)
 
 /** Texture coordinates, with TextureLoader's default flipY; no longitude singularity. */
 export function polarTextureUv(point: Vector3Like): [number, number] {
@@ -108,12 +114,15 @@ if (lunarPolarReady > 0.5) {
 diffuseColor *= lunarColour;`)
       .replace('#include <normal_fragment_maps>', `
 #ifdef USE_BUMPMAP
-  // Equirectangular screen derivatives become singular at the pole. Keep LOLA displacement,
-  // but smoothly suppress this unreliable micro-normal signal over the last five degrees.
-  float lunarBumpWeight = 1.0 - smoothstep(${Math.sin(85 * radians)}, ${Math.sin(89 * radians)}, abs(normalize(lunarSurfaceDirection).y));
-  if (lunarBumpWeight > 0.0001) {
-    normal = perturbNormalArb(-vViewPosition, normal, dHdxy_fwd() * lunarBumpWeight, faceDirection);
-  }
+  // Equirectangular screen derivatives become singular at the pole, so LOLA displacement is kept
+  // while this unreliable micro-normal is faded out. The perturbation has to stay outside any
+  // per-pixel branch: screen-space derivatives are undefined inside divergent control flow, and
+  // guarding this call painted a thin near-black ring around the pole, on exactly the pixels
+  // whose quad straddled the cutoff. Lean towards the perturbed normal by the weight instead,
+  // which keeps the handover smooth even if the gradient itself is degenerate.
+  float lunarBumpWeight = 1.0 - smoothstep(${BUMP_FADE_START}, ${BUMP_FADE_END}, abs(normalize(lunarSurfaceDirection).y));
+  vec3 lunarBumpNormal = perturbNormalArb(-vViewPosition, normal, dHdxy_fwd(), faceDirection);
+  normal = normalize(mix(normal, lunarBumpNormal, lunarBumpWeight));
 #else
   #include <normal_fragment_maps>
 #endif`)

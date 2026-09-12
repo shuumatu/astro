@@ -71,6 +71,15 @@ WAC_GLOBAL = f"{TREK}/LRO_WAC_Mosaic_Global_303ppd_v02/ImageServer/exportImage"
 # image; a patch bump map has to use the same convention for `bumpScale` to mean the same thing.
 ATLAS_HEIGHT_RANGE_KM = 19.0
 ATLAS_HEIGHT_MIN_KM = -9.0
+ATLAS_HEIGHT = PUBLIC / "moon-height-4k.webp"
+# The globe sphere is displaced by the coarse atlas DEM, which smooths craters away. A crop
+# mesh only floats 17 m above that sphere, so wherever the coarse value reads higher than the
+# detailed DEM the sphere rises through the crop and its blurry atlas shows instead of the
+# crater floor. `relief` measures that disagreement and lifts each crop clear of it.
+ATLAS_LIFT_MARGIN_KM = 0.12
+# The globe's own tessellation; `relief` reconstructs the sphere's surface with it.
+GLOBE_WIDTH_SEGMENTS = 512
+GLOBE_HEIGHT_SEGMENTS = 256
 
 
 # --------------------------------------------------------------------------------------------
@@ -212,6 +221,18 @@ def linear_to_srgb(values: np.ndarray) -> np.ndarray:
 
 def to_grey8(values: np.ndarray) -> Image.Image:
     return Image.fromarray(np.clip(values * 255.0 + 0.5, 0, 255).astype(np.uint8), mode="L")
+
+
+def save_webp(image: Image.Image, path: Path, **options) -> None:
+    """Write a WebP, retrying while a file watcher or indexer holds the target open."""
+    for attempt in range(6):
+        try:
+            image.save(path, format="WEBP", **options)
+            return
+        except OSError:
+            if attempt == 5:
+                raise
+            time.sleep(0.4 * (attempt + 1))
 
 
 # --------------------------------------------------------------------------------------------
@@ -708,9 +729,7 @@ def process_atlas_wide(fetcher: Fetcher, site: dict, *, bump_scale: float) -> di
     encoded = (dem / 1000.0 - low_km) / max(high_km - low_km, 1e-6)
     bump_dir = PUBLIC / "bump"
     bump_dir.mkdir(parents=True, exist_ok=True)
-    to_grey8(encoded).save(
-        bump_dir / f"{site_id}.webp", format="WEBP", lossless=True, method=6,
-    )
+    save_webp(to_grey8(encoded), bump_dir / f"{site_id}.webp", lossless=True, method=6)
     return {
         "id": site_id,
         "atlasWide": True,
@@ -764,20 +783,76 @@ def process_relief(fetcher: Fetcher, site: dict, *, max_size: int) -> dict:
         )
         dem = load_dem(dem_path, dem_width, dem_height)
     dem = stabilise_polar_dem(dem, bbox)
+    lift_km = atlas_lift_for(dem, bbox)
     low_km, high_km = float(dem.min()) / 1000.0, float(dem.max()) / 1000.0
     rows, columns = dem.shape
     encoded = (dem / 1000.0 - low_km) / max(high_km - low_km, 1e-6)
     bump_dir = PUBLIC / "bump"
     bump_dir.mkdir(parents=True, exist_ok=True)
-    to_grey8(encoded).save(
-        bump_dir / f"{site_id}.webp", format="WEBP", lossless=True, method=6,
-    )
+    save_webp(to_grey8(encoded), bump_dir / f"{site_id}.webp", lossless=True, method=6)
     return {
         "id": site_id,
         "heightMinKm": round(low_km, 6),
         "heightRangeKm": round(high_km - low_km, 6),
         "centerHeightKm": round(float(dem[rows // 2, columns // 2]) / 1000.0, 6),
+        "liftKm": round(lift_km, 6),
     }
+
+
+def atlas_height_grid(shape: tuple[int, int], bbox) -> np.ndarray:
+    """Sample the *sphere's own surface* onto a crop's grid, in kilometres.
+
+    The globe is a 512x256 SphereGeometry whose vertices carry the atlas DEM and whose triangles
+    interpolate linearly between them. Sampling the smooth DEM would underestimate what the
+    sphere actually does between vertices, so this reconstructs the vertex lattice first and then
+    interpolates inside it exactly the way the renderer does.
+    """
+    atlas = np.asarray(Image.open(ATLAS_HEIGHT).convert("L"), dtype=np.float32) / 255.0
+    atlas = atlas * ATLAS_HEIGHT_RANGE_KM + ATLAS_HEIGHT_MIN_KM
+    atlas_rows, atlas_columns = atlas.shape
+    west, south, east, north = bbox
+    height, width = shape
+    latitudes = north - (np.arange(height, dtype=np.float32) + 0.5) * (north - south) / height
+    longitudes = west + (np.arange(width, dtype=np.float32) + 0.5) * (east - west) / width
+    # The atlas is centred on 0 degrees longitude with column 0 at 180 degrees west.
+    phi = ((longitudes + 180.0) % 360.0) / 360.0 * GLOBE_WIDTH_SEGMENTS
+    theta = (90.0 - latitudes) / 180.0 * GLOBE_HEIGHT_SEGMENTS
+    rings = np.zeros((GLOBE_HEIGHT_SEGMENTS + 1, GLOBE_WIDTH_SEGMENTS + 1), dtype=np.float32)
+    ring_u = np.arange(GLOBE_WIDTH_SEGMENTS + 1, dtype=np.float32) / GLOBE_WIDTH_SEGMENTS
+    x = ring_u * atlas_columns - 0.5
+    x0 = np.floor(x).astype(np.int32)
+    fx = x - x0
+    x0 %= atlas_columns
+    x1 = (x0 + 1) % atlas_columns
+    for ring in range(GLOBE_HEIGHT_SEGMENTS + 1):
+        lat = 90.0 - ring / GLOBE_HEIGHT_SEGMENTS * 180.0
+        y = np.clip((90.0 - lat) / 180.0 * atlas_rows - 0.5, 0, atlas_rows - 1)
+        y0 = int(np.floor(y))
+        fy = float(y - y0)
+        y1 = min(y0 + 1, atlas_rows - 1)
+        rings[ring] = atlas[y0, x0] * (1 - fx) + atlas[y0, x1] * fx
+        if fy:
+            rings[ring] = rings[ring] * (1 - fy) + (atlas[y1, x0] * (1 - fx) + atlas[y1, x1] * fx) * fy
+    column = phi[None, :]
+    row = np.clip(theta[:, None], 0, GLOBE_HEIGHT_SEGMENTS)
+    column_index = np.floor(column).astype(np.int32)
+    row_index = np.minimum(np.floor(row).astype(np.int32), GLOBE_HEIGHT_SEGMENTS - 1)
+    column_fraction = column - column_index
+    row_fraction = row - row_index
+    column_index %= GLOBE_WIDTH_SEGMENTS
+    column_next = (column_index + 1) % GLOBE_WIDTH_SEGMENTS
+    return (
+        rings[row_index, column_index] * (1 - column_fraction) * (1 - row_fraction)
+        + rings[row_index, column_next] * column_fraction * (1 - row_fraction)
+        + rings[row_index + 1, column_index] * (1 - column_fraction) * row_fraction
+        + rings[row_index + 1, column_next] * column_fraction * row_fraction
+    )
+
+
+def atlas_lift_for(dem: np.ndarray, bbox) -> float:
+    """How far a crop must float so the coarse atlas sphere never pokes through it."""
+    disagreement = atlas_height_grid(dem.shape, bbox) - dem / 1000.0
+    return max(0.0, float(disagreement.max())) + ATLAS_LIFT_MARGIN_KM
 
 
 def command_relief(args) -> int:
@@ -841,35 +916,52 @@ RELIEF_MODULE_HEADER = '''/**
  * Each lossless height texture spans `minKm .. minKm + rangeKm`, relative to the IAU lunar
  * reference sphere of radius 1737.4 km. `centerKm` lets the focused camera orbit the actual
  * ground instead of the mathematical sphere.
+ *
+ * `liftKm` raises the crop above the globe it floats on. The globe's own displacement comes
+ * from the coarse 16 pixel-per-degree atlas DEM, which smooths large craters away; inside one
+ * of those, the atlas sphere reads up to a kilometre higher than the detailed crop DEM and
+ * would rise through the crop, showing the blurry atlas in place of the crater floor. The
+ * generator measures that disagreement over each crop and stores the clearance here.
  */
 export interface SiteRelief {
   minKm: number
   rangeKm: number
   centerKm: number
+  liftKm: number
 }
 
 '''
 
 
 def emit_relief_module(report: list[dict], *, merge: bool = False) -> None:
-    relief = {
-        entry["id"]: (
-            entry["heightMinKm"], entry["heightRangeKm"], entry["centerHeightKm"],
-        )
-        for entry in report
-        if all(key in entry for key in ("heightMinKm", "heightRangeKm", "centerHeightKm"))
-    }
     target = REPO / "frontend" / "src" / "features" / "demos" / "scenes" / "moon" / "siteRelief.ts"
-    if merge and target.exists():
+    known: dict[str, tuple[float, float, float, float]] = {}
+    if target.exists():
+        existing = target.read_text(encoding="utf-8")
         pattern = re.compile(
-            r"'([^']+)': \{ minKm: (-?[0-9.]+), rangeKm: ([0-9.]+), centerKm: (-?[0-9.]+) \},"
+            r"'([^']+)': \{ minKm: (-?[0-9.]+), rangeKm: ([0-9.]+), centerKm: (-?[0-9.]+)"
+            r"(?:, liftKm: ([0-9.]+))? \},"
         )
-        for site_id, low, span, center in pattern.findall(target.read_text(encoding="utf-8")):
-            relief.setdefault(site_id, (float(low), float(span), float(center)))
+        for site_id, low, span, center, lift in pattern.findall(existing):
+            known[site_id] = (float(low), float(span), float(center), float(lift or 0))
+    relief: dict[str, tuple[float, float, float, float]] = {}
+    for entry in report:
+        if not all(key in entry for key in ("heightMinKm", "heightRangeKm", "centerHeightKm")):
+            continue
+        # Commands that rebuild a crop's colour without re-measuring its clearance keep the
+        # value already on disk instead of writing the datum offset back to zero.
+        lift = entry.get("liftKm", known.get(entry["id"], (0, 0, 0, 0))[3])
+        relief[entry["id"]] = (
+            entry["heightMinKm"], entry["heightRangeKm"], entry["centerHeightKm"], lift,
+        )
+    if merge:
+        for site_id, values in known.items():
+            relief.setdefault(site_id, values)
     lines = [RELIEF_MODULE_HEADER, "export const SITE_RELIEF: Record<string, SiteRelief> = {\n"]
-    for site_id, (low, span, center) in sorted(relief.items()):
+    for site_id, (low, span, center, lift) in sorted(relief.items()):
         lines.append(
-            f"  '{site_id}': {{ minKm: {low}, rangeKm: {span}, centerKm: {center} }},\n"
+            f"  '{site_id}': {{ minKm: {low}, rangeKm: {span}, centerKm: {center},"
+            f" liftKm: {round(lift, 6)} }},\n"
         )
     lines.append("}\n")
     target.write_text("".join(lines), encoding="utf-8")
