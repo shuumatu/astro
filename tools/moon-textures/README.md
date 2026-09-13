@@ -38,3 +38,65 @@ Check the result with `yarn test:run` (the crop tests assert that every colour t
 map, while only relit albedo tiers get strong micro-bump) and by flying the demo to a feature.
 Lowering the light-elevation slider should reveal long terrain shadows; full-bright should remove
 the terminator without removing the displaced horizon.
+
+## Panoramas
+
+The browsable surface panoramas are built by a second script in this directory:
+
+```bash
+python tools/moon-textures/moon_panoramas.py measure    # report sizes, sky bands, spans, fields of view
+python tools/moon-textures/moon_panoramas.py bake       # write the WebP assets and moonPanoramas.ts
+python tools/moon-textures/moon_panoramas.py all        # both
+```
+
+Its manifest is the source of truth for the catalogue: `id`, site, download URL, credit, licence and
+the azimuth span, with a `pending` note on any entry that cannot ship yet. Editing the manifest and
+re-running `bake` regenerates `moonPanoramas.ts`, which is generated and must not be hand-edited.
+
+Three things about the geometry are worth knowing before changing anything:
+
+* **The viewer draws a cylinder, not a sphere.** These are cylindrical projections, so a cylinder shows them
+  without distortion; on a sphere the vertical scale came from the geometry rather than from the photograph and
+  stretched the terrain by about a factor of two.
+* **The elevation range is measured, not derived.** A true cylindrical projection relates sweep and elevation by
+  `sweep ~ aspect * vertical_fov`, but these releases carry more vertical content per pixel than that allows, so
+  the strips are calibrated against flattened comparisons and `VERTICAL_EXTENT_SCALE` records the factor. It is
+  the one fitted number in the pipeline.
+* **A strip's own sweep cannot be recovered from the file.** Each entry states its sweep in the manifest and says
+  how it is known through `spanSource` (`documented`, `closes`, or `modelled`), and the viewer confines a partial
+  strip to its own arc. A strip's `headingDeg` is 0 until the source frames' headings are recovered from the
+  Apollo Image Atlas; the viewer treats 0 as unverified and says so.
+
+`docs/lunar-panorama-research/tools/flatten-view.py` reproduces the viewer's mapping on the CPU, so a
+candidate framing can be checked against the source pixels without a browser:
+
+```bash
+python docs/lunar-panorama-research/tools/flatten-view.py apollo-17-station-5 out.jpg --fov 62 --vertical-scale 1.75
+```
+
+`measure` without `bake` is the safe way to check a new entry: it downloads, reports, and writes
+nothing.
+
+### Checking the viewer's drag mapping
+
+The viewer's pitch sign cannot be reasoned about reliably - it was got wrong twice - so it is settled by
+measurement. With the dev server and a headless Chrome on a debugging port running:
+
+```bash
+node docs/lunar-panorama-research/tools/measure-drag.mjs 9222 http://localhost:5199/demos/moon apollo-11 m11
+```
+
+It opens the viewer, drags in each axis, screenshots before and after, and reports which way the picture
+moved. The shipping signs give "drag down -> picture down, drag right -> picture right", which is the
+convention every map and panorama viewer uses. Re-run it after touching `turnByPixels` in
+`DemoPanoramaOverlay.vue`.
+
+### `sites --only` and `--seed`
+
+Two behaviours of the crop builder that are easy to trip over:
+
+* `--only` builds just the named crops, and the generated `siteBumps.ts` / `siteRelief.ts` are
+  merged rather than replaced. Without that merge a narrow run silently empties every other crop's
+  entry; the bump module did exactly that until it was fixed.
+* A brand-new site has no shipped crop to use as the pipeline's input, so `sites` refuses to build
+  it unless `--seed` is passed, which fetches the WAC mosaic crop for that box first.

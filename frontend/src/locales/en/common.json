@@ -40,7 +40,7 @@
         "hint": "Drag to orbit · wheel/pinch to zoom · arrow keys refine a site view · click a feature to descend",
         "entering": "Approaching the Moon…",
         "credit": "Surface imagery and terrain: NASA / LRO / LROC and LOLA (CGI Moon Kit); LOLA elevation drives both mesh displacement and fine surface shading",
-        "readout": "Light azimuth {azimuth}° · elevation {elevation}° · viewpoint {altitude} km",
+        "readout": "Sub-solar longitude {sunLongitude}° · Sun {sunElevation}° above this point · viewpoint {altitude} km",
         "readoutFull": "Full-bright mode · viewpoint {altitude} km",
         "panelTitle": "Lunar features",
         "actions": {
@@ -113,6 +113,22 @@
             "title": "Apollo 11 landing site",
             "body": "In July 1969 Eagle touched down at Tranquility Base, and Armstrong and Aldrin spent about 21 hours on the surface. The descent stage, instruments and footprints are still there."
           },
+          "apollo-12": {
+            "title": "Apollo 12 landing site",
+            "body": "In November 1969 Intrepid landed within walking distance of Surveyor 3, which had been sitting on the Ocean of Storms since 1967. The crew brought parts of it home, so it is the only spacecraft ever visited on another world."
+          },
+          "apollo-14": {
+            "title": "Apollo 14 landing site",
+            "body": "In February 1971 Shepard and Mitchell came down in the Fra Mauro highlands, the terrain Apollo 13 had been aiming for. They climbed Cone crater on foot, hauling a hand cart of samples up the slope."
+          },
+          "apollo-15": {
+            "title": "Apollo 15 landing site",
+            "body": "In July 1971 Scott and Irwin landed at Hadley–Apennine, between the Apennine mountains and Hadley Rille, and drove the first Lunar Roving Vehicle. They returned the Genesis Rock, an anorthosite dating to the Moon's original crust."
+          },
+          "apollo-16": {
+            "title": "Apollo 16 landing site",
+            "body": "In April 1972 Young and Duke set down in the Descartes highlands, expecting to find volcanic terrain and finding impact breccia instead — a result that rewrote part of the lunar geologic map."
+          },
           "apollo-17": {
             "title": "Apollo 17 landing site",
             "body": "The last crewed landing, in December 1972, came down in the Taurus–Littrow valley. Geologist Harrison Schmitt found the famous orange soil there, erupted about 3.6 billion years ago."
@@ -132,6 +148,53 @@
           "luna-21": {
             "title": "Luna 21 and Lunokhod 2",
             "body": "Luna 21 landed inside Le Monnier crater on the eastern rim of Mare Serenitatis in January 1973 and deployed Lunokhod 2, which went on to drive about 39 kilometres — further than any other rover, and its wheel tracks are still visible from orbit."
+          }
+        },
+        "panorama": {
+          "open": "Browse the surface panorama",
+          "close": "Back to the globe",
+          "loading": "Loading the panorama…",
+          "failed": "That panorama could not be loaded.",
+          "none": "No surface panorama has been published for this place at a resolution worth showing.",
+          "label": "Surface panorama",
+          "canvasAria": "Interactive lunar surface panorama. Drag to look around, scroll to zoom.",
+          "hint": "Drag to look around · scroll to zoom · arrow keys to fine-tune · Esc to go back",
+          "sweepModelled": "This strip does not close end to end; turning stops at the edge of the photograph.",
+          "apollo-11-tranquility-base": {
+            "title": "Tranquility Base, looking south-west",
+            "caption": "Apollo 11, 20 July 1969. Photographed from about ten metres west of the Lunar Module Eagle's plus-Z footpad, looking toward the south-west at the crater rim Armstrong had spotted from the window during the descent."
+          },
+          "apollo-11-armstrong-crater": {
+            "title": "Armstrong's crater from Tranquility Base",
+            "caption": "Apollo 11, 20 July 1969. A crater Armstrong called out during the descent, with the Lunar Module and flag at the left edge and the photographer's own shadow at the right."
+          },
+          "apollo-12-surveyor-crater": {
+            "title": "Surveyor Crater from the rim",
+            "caption": "Apollo 12, November 1969. Taken from north-east of Intrepid, sweeping west past the flag and then round into Surveyor Crater, where Surveyor 3 had landed two and a half years earlier."
+          },
+          "apollo-14-fra-mauro": {
+            "title": "Toward the western horizon",
+            "caption": "Apollo 14, February 1971. A sweep across the Fra Mauro formation toward the western horizon, from the terrain Shepard and Mitchell crossed on foot."
+          },
+          "apollo-15-hadley-rille": {
+            "title": "Hadley Rille and the Lunar Roving Vehicle",
+            "caption": "Apollo 15, August 1971. David Scott at the Lunar Roving Vehicle on the edge of Hadley Rille, photographed by James Irwin south of Station 2."
+          },
+          "apollo-16-station-1": {
+            "title": "Station 1, Descartes highlands",
+            "caption": "Apollo 16, April 1972. Charles Duke collecting samples at Station 1 while John Young photographs him, on the first moonwalk of the mission."
+          },
+          "apollo-17-station-2": {
+            "title": "Station 2, Taurus–Littrow",
+            "caption": "Apollo 17, December 1972. The second moonwalk: the parked Lunar Roving Vehicle and astronaut footprints across the valley floor, with the South Massif ridge beyond."
+          },
+          "apollo-17-station-5": {
+            "title": "Station 5, on the edge of Camelot",
+            "caption": "Apollo 17, December 1972. Boulders and the shoulder of the North Massif at Station 5, looking toward the massif. The strip covers most of the horizon but its two ends do not meet, so turning stops at the edge of the photograph."
+          },
+          "change-4-farside-lander": {
+            "title": "The far side of the Moon, from Chang'e 4",
+            "caption": "Chang'e 4, January 2019. The first panorama taken from the lunar far side: the lander's solar panels and the Yutu-2 rover's tracks inside Von Kármán crater, in the South Pole–Aitken basin."
           }
         }
       }
@@ -154,8 +217,15 @@
       "labels": "Labels",
       "grid": "Graticule",
       "brightness": "Brightness",
-      "lightAzimuth": "Light azimuth",
-      "lightElevation": "Light elevation",
+      "sunLongitude": "Sun position",
+      "phaseNew": "New Moon",
+      "phaseWaxingCrescent": "Waxing crescent",
+      "phaseFirstQuarter": "First quarter",
+      "phaseWaxingGibbous": "Waxing gibbous",
+      "phaseFull": "Full Moon",
+      "phaseWaningGibbous": "Waning gibbous",
+      "phaseLastQuarter": "Last quarter",
+      "phaseWaningCrescent": "Waning crescent",
       "fullBright": "Full bright",
       "resetView": "Reset view",
       "fullscreen": "Full screen",

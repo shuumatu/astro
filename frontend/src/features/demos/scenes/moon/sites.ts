@@ -143,6 +143,39 @@ export const MOON_SITES: MoonSite[] = [
     height: 1536,
     tint: [1.0079, 1.0132, 0.9789],
   },
+  // The remaining Apollo landing sites, added so that every one of them has a panorama to open.
+  // Each is framed on its own landing point at roughly forty kilometres across, which is the same
+  // order as the other landing-site crops. They stop at the WAC tier: LROC has published no
+  // controlled NAC mosaic for any of these four. The tint is neutral because these were built by
+  // the tool's deshading path, which matches each crop to the atlas itself.
+  {
+    id: 'apollo-12',
+    bbox: [-24.0816, -3.6724, -22.7616, -2.3524],
+    width: 1536,
+    height: 1536,
+    tint: [1, 1, 1],
+  },
+  {
+    id: 'apollo-14',
+    bbox: [-18.1314, -4.3053, -16.8114, -2.9853],
+    width: 1536,
+    height: 1536,
+    tint: [1, 1, 1],
+  },
+  {
+    id: 'apollo-15',
+    bbox: [2.9739, 25.4722, 4.2939, 26.7922],
+    width: 1536,
+    height: 1536,
+    tint: [1, 1, 1],
+  },
+  {
+    id: 'apollo-16',
+    bbox: [14.8411, -9.6334, 16.1611, -8.3134],
+    width: 1536,
+    height: 1536,
+    tint: [1, 1, 1],
+  },
   {
     id: 'apollo-17',
     bbox: [24.83332, 14.25332, 36.70668, 26.12668],

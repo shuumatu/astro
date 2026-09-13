@@ -23,11 +23,6 @@ export interface DemoFeatureDefinition {
   categoryKey: string
 }
 
-export interface DemoLightingDefinition {
-  azimuthRange: { min: number, max: number, step: number }
-  elevationRange: { min: number, max: number, step: number }
-}
-
 export interface DemoDefinition {
   slug: string
   titleKey: string
@@ -47,8 +42,11 @@ export interface DemoDefinition {
   transport?: boolean
   /** Present when the demo exposes a brightness slider. */
   brightnessRange?: { min: number; max: number; step: number }
-  /** Present when a scene lets the viewer position its principal light directly. */
-  lighting?: DemoLightingDefinition
+  /**
+   * Present when the demo places its principal light by a single angle. The bounds are over the
+   * selenographic longitude the light stands above, so a full turn is 0-359 degrees.
+   */
+  sunLongitudeRange?: { min: number; max: number; step: number }
   /** Corner hint. Defaults to the meteor shower's wording about its amber marker. */
   hintKey?: string
   /** Message shown while a scripted camera move runs. Defaults to the meteor shower's wording. */
@@ -60,6 +58,16 @@ export interface DemoDefinition {
    * that publish one, `radiantAltitudeDeg`.
    */
   surfaceOverlay?: () => Promise<{ default: Component }>
+  /**
+   * Full-screen overlay for browsing a feature's surface panoramas, opened from the hotspot
+   * card. Unlike `surfaceOverlay` it is driven by the viewer rather than by the phase, so it
+   * receives `active`, the selected hotspot and a way to pause the scene behind it.
+   */
+  panoramaOverlay?: () => Promise<{ default: Component }>
+  /** Locale key for the label on the hotspot card's button that opens the panorama viewer. */
+  panoramaButtonKey?: string
+  /** Locale key for the note shown on the card when the feature has no panorama. */
+  panoramaNoneKey?: string
   /** Optional panel listing every feature the demo can focus, with its locale keys. */
   panel?: () => Promise<{ default: Component }>
   panelTitleKey?: string
@@ -90,20 +98,20 @@ export const demos: DemoDefinition[] = [
       showLabels: true,
       showGrid: false,
       brightness: 1,
-      lightAzimuthDeg: 315,
-      lightElevationDeg: 28,
       fullBright: false,
+      // `sunLongitudeDeg` is deliberately absent: the scene fills it in from the real Sun position
+      // for today's date, and a value here would overwrite that with a placeholder.
     },
     controls: ['labels', 'grid'],
-    // This is now a terrain inspection tool: direct hillshade controls replace calendar time.
+    // This is a terrain inspection tool: one Sun-longitude control replaces calendar time.
     transport: false,
     brightnessRange: { min: 0.4, max: 2.2, step: 0.1 },
-    lighting: {
-      azimuthRange: { min: 0, max: 359, step: 1 },
-      elevationRange: { min: 5, max: 90, step: 1 },
-    },
+    sunLongitudeRange: { min: 0, max: 359, step: 1 },
     panelTitleKey: 'demos.items.moon.panelTitle',
     panel: () => import('./components/DemoFeaturePanel.vue'),
+    panoramaOverlay: () => import('./components/DemoPanoramaOverlay.vue'),
+    panoramaButtonKey: 'demos.items.moon.panorama.open',
+    panoramaNoneKey: 'demos.items.moon.panorama.none',
     features: MOON_FEATURES.map((feature) => ({
       id: feature.id,
       titleKey: featureTitleKey(feature.id),

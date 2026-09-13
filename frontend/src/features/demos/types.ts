@@ -10,10 +10,15 @@ export interface DemoSceneSettings {
   showGrid?: boolean
   /** Multiplier on the scene's lighting, 1 being the modelled brightness. */
   brightness?: number
-  /** User-controlled light direction around the currently inspected surface point. */
-  lightAzimuthDeg?: number
-  /** Height of that light above the inspected point's local horizon. */
-  lightElevationDeg?: number
+  /**
+   * Selenographic longitude of the point the Sun is directly over, in degrees east.
+   *
+   * This is the one angle a real Sun position needs: it places the terminator, where the Sun sits
+   * on the surface, and it is what the moon's phase is measured against. Deliberately the *only*
+   * angle control - see `sunDirectionFor` in the Moon scene for what fixing the Sun's latitude
+   * costs and what it buys.
+   */
+  sunLongitudeDeg?: number
   /** Removes the terminator while retaining a small directional term for readable relief. */
   fullBright?: boolean
 }
@@ -57,6 +62,27 @@ export interface DemoHotspot {
   id: string
   /** Short facts that need no translation, such as coordinates and diameter. */
   facts: string[]
+  /**
+   * Surface panoramas published for this feature, in the order the viewer should offer them.
+   *
+   * Only the identifiers and locale keys travel here: the imagery itself is the demo's business,
+   * and the shell only has to decide whether to offer the button and which entry to open first.
+   * An empty list means the feature genuinely has no panorama, which the interface states rather
+   * than hiding, so a viewer is not left wondering whether they missed something.
+   */
+  panoramas?: DemoPanoramaReference[]
+}
+
+/** One browsable panorama, as the shell needs to see it. */
+export interface DemoPanoramaReference {
+  id: string
+  /** Locale key for the translated title. */
+  titleKey: string
+  /** Locale key for the translated caption. */
+  captionKey: string
+  /** Credit line for the imagery, shown beside the panorama itself. */
+  credit: string
+  licence: string
 }
 
 export interface DemoSceneOptions {
@@ -66,6 +92,13 @@ export interface DemoSceneOptions {
   /** Reports the feature the viewer drilled into, or null when they are back in the overview. */
   onHotspot?: (hotspot: DemoHotspot | null) => void
   onReadout?: (readout: DemoReadout | null) => void
+  /**
+   * Reports settings the scene resolved for itself, so the shell's controls show the values actually
+   * in use rather than the placeholders they were initialised with. A scene that derives a value from
+   * the world - the Moon's Sun position, which depends on the date the page was opened - cannot know
+   * it at registry-definition time, and without this the slider and the lighting disagree.
+   */
+  onSettingsResolved?: (settings: Partial<DemoSceneSettings>) => void
 }
 
 export interface DemoScene {

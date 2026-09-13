@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Compass, Maximize2, Minimize2, RotateCcw, Sun, Sunrise } from 'lucide-vue-next'
+import { ChevronDown, Compass, Maximize2, Minimize2, RotateCcw, Sun, SunDim } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -7,7 +7,6 @@ import {
   CONTROL_LABEL_KEYS,
   type DemoActionDefinition,
   type DemoControlId,
-  type DemoLightingDefinition,
 } from '../registry'
 
 const props = defineProps<{
@@ -23,9 +22,9 @@ const props = defineProps<{
   /** Brightness slider bounds, or null when the demo has no brightness control. */
   brightnessRange: { min: number; max: number; step: number } | null
   brightness: number
-  lighting: DemoLightingDefinition | null
-  lightAzimuth: number
-  lightElevation: number
+  /** Sun-longitude slider bounds, or null when the demo places its light another way. */
+  sunLongitudeRange: { min: number; max: number; step: number } | null
+  sunLongitude: number
   fullBright: boolean
   fullscreen: boolean
   fullscreenSupported: boolean
@@ -35,8 +34,7 @@ const emit = defineEmits<{
   toggle: [id: DemoControlId, value: boolean]
   action: [id: string]
   'update:brightness': [value: number]
-  'update:lightAzimuth': [value: number]
-  'update:lightElevation': [value: number]
+  'update:sunLongitude': [value: number]
   'update:fullBright': [value: boolean]
   reset: []
   toggleFullscreen: []
@@ -50,6 +48,41 @@ const chips = computed(() => props.controls.map((id) => ({
   labelKey: CONTROL_LABEL_KEYS[id],
   checked: id === 'orbits' ? props.showOrbits : id === 'labels' ? props.showLabels : props.showGrid,
 })))
+
+/**
+ * The phase name for the current Sun longitude.
+ *
+ * The dial sets the selenographic longitude the Sun stands over, and the phase - the angle between
+ * the Sun and the Earth - is its supplement, because the sub-Earth point sits near longitude 0. So a
+ * Sun over the near side (longitude 0) is a full Moon and one over the far side is new. Naming the
+ * phase makes the single control self-explanatory: "158 degrees" tells most viewers nothing, while
+ * "waning gibbous" tells them what they are looking at.
+ */
+const phaseName = computed(() => {
+  const phase = (((props.sunLongitude + 180) % 360) + 360) % 360
+  const stops: [number, string][] = [
+    [0, 'phaseNew'],
+    [45, 'phaseWaxingCrescent'],
+    [90, 'phaseFirstQuarter'],
+    [135, 'phaseWaxingGibbous'],
+    [180, 'phaseFull'],
+    [225, 'phaseWaningGibbous'],
+    [270, 'phaseLastQuarter'],
+    [315, 'phaseWaningCrescent'],
+  ]
+  let nearest = stops[0]
+  let nearestDistance = Infinity
+  for (const stop of stops) {
+    const difference = Math.abs(phase - stop[0])
+    // Angular distance, so 350 degrees is recognised as 10 away from new rather than 350.
+    const distance = Math.min(difference, 360 - difference)
+    if (distance < nearestDistance) {
+      nearest = stop
+      nearestDistance = distance
+    }
+  }
+  return t(`demos.controls.${nearest[1]}`)
+})
 </script>
 
 <template>
@@ -75,33 +108,29 @@ const chips = computed(() => props.controls.map((id) => ({
 
     <div class="display-stack">
       <div class="display-controls">
-        <label v-if="lighting" class="chip slider light-slider" :title="t('demos.controls.lightAzimuth')">
+        <!-- One angle, because a real Sun position needs one: the selenographic longitude the Sun
+             stands over, which is what sets the terminator and therefore the phase. The old
+             azimuth-plus-elevation pair described a light hung over the *camera*, which is not where
+             the Sun is. The readout also names the phase, because "158 degrees" means nothing to most
+             viewers while "waning gibbous" does. -->
+        <label
+          v-if="sunLongitudeRange"
+          class="chip slider light-slider"
+          :title="t('demos.controls.sunLongitude')"
+        >
           <Compass :size="14" aria-hidden="true" />
           <input
             type="range"
-            :min="lighting.azimuthRange.min"
-            :max="lighting.azimuthRange.max"
-            :step="lighting.azimuthRange.step"
-            :value="lightAzimuth"
-            :aria-label="t('demos.controls.lightAzimuth')"
-            @input="emit('update:lightAzimuth', Number(($event.target as HTMLInputElement).value))"
+            :min="sunLongitudeRange.min"
+            :max="sunLongitudeRange.max"
+            :step="sunLongitudeRange.step"
+            :value="sunLongitude"
+            :aria-label="t('demos.controls.sunLongitude')"
+            @input="emit('update:sunLongitude', Number(($event.target as HTMLInputElement).value))"
           >
-          <output class="chip-value angle">{{ Math.round(lightAzimuth) }}°</output>
+          <output class="chip-value phase">{{ phaseName }} {{ Math.round(sunLongitude) }}°</output>
         </label>
-        <label v-if="lighting" class="chip slider light-slider" :title="t('demos.controls.lightElevation')">
-          <Sunrise :size="14" aria-hidden="true" />
-          <input
-            type="range"
-            :min="lighting.elevationRange.min"
-            :max="lighting.elevationRange.max"
-            :step="lighting.elevationRange.step"
-            :value="lightElevation"
-            :aria-label="t('demos.controls.lightElevation')"
-            @input="emit('update:lightElevation', Number(($event.target as HTMLInputElement).value))"
-          >
-          <output class="chip-value angle">{{ Math.round(lightElevation) }}°</output>
-        </label>
-        <label v-if="lighting" class="chip" :title="t('demos.controls.fullBright')">
+        <label v-if="sunLongitudeRange" class="chip" :title="t('demos.controls.fullBright')">
           <input
             type="checkbox"
             :checked="fullBright"
@@ -110,7 +139,7 @@ const chips = computed(() => props.controls.map((id) => ({
           <span>{{ t('demos.controls.fullBright') }}</span>
         </label>
         <label v-if="brightnessRange" class="chip slider" :title="t('demos.controls.brightness')">
-          <Sun :size="14" aria-hidden="true" />
+          <SunDim :size="14" aria-hidden="true" />
           <input
             type="range"
             :min="brightnessRange.min"

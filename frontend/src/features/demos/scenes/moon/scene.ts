@@ -12,7 +12,8 @@ import {
   type DemoSceneSettings,
 } from '../../types'
 import { kilometresToRadii, LIGHTING, MOON_RADIUS_KM, SCENE } from './config'
-import { featureTitleKey, findFeature, MOON_FEATURES, type MoonFeature } from './hotspots'
+import { featureTitleKey, findFeature, MOON_FEATURES, panoramaCaptionKey, panoramaTitleKey, type MoonFeature } from './hotspots'
+import { panoramasForSite } from './moonPanoramas'
 import { configurePolarSurface, poleHeightMeans } from './polarSurface'
 import { logarithmicDragScale, maximumSafePolarAngle, normaliseWheelPixels } from './navigation'
 import {
@@ -20,12 +21,111 @@ import {
   KILOMETRES_PER_DEGREE,
   lonLatToVector,
   minimumAltitudeForTexel,
+  subSolarPoint,
   texelKilometres,
   vectorToLonLat,
 } from './selenography'
 import { siteBumpScale, siteFloorSite, siteLevels, siteRelief, siteTier, type MoonSite } from './sites'
 
 const DEGREES_TO_RADIANS = Math.PI / 180
+
+/**
+ * The Sun's selenographic latitude for the session - the second half of its position, which the
+ * single temperature control does not set.
+ *
+ * A real Sun position is a point on the surface, so it needs a longitude and a latitude. The
+ * longitude is the terminator's position, which is what a viewer actually wants to move, so that
+ * gets the slider. The latitude is the Moon's solar declination, and taking it from the real sky for
+ * the current date is what keeps the lighting honest: the sub-solar point's latitude is exactly what
+ * the Moon's phase and each site's solar elevation are measured against, so both stay physical
+ * instead of being two more knobs to get wrong.
+ *
+ * A consequence worth knowing: the Moon's axis is tilted only about 1.5 degrees to the ecliptic, so
+ * this latitude is small most of the time. Near-side sites therefore see the Sun low in the sky and
+ * their poles decide how low - the far-north and far-south sites are lit at a much shallower angle
+ * than the equatorial ones, exactly as on the real Moon.
+ */
+function currentSubSolarLatitudeDeg(): number {
+  try {
+    return subSolarPoint(new Date()).latDeg
+  } catch {
+    return 0
+  }
+}
+
+const SUB_SOLAR_LATITUDE_DEG = currentSubSolarLatitudeDeg()
+
+/**
+ * The Sun's direction from the selenographic longitude it stands over.
+ *
+ * That longitude is the physical angle: 0 puts the Sun over the near side, which is a full Moon, and
+ * 180 puts it over the far side, which is new. Being a *position on the body* rather than a direction
+ * relative to the viewer is what gives one lit hemisphere and one great-circle terminator, with every
+ * site's solar elevation following from where that site is.
+ *
+ * The dial turns this rather than pinning the Sun wherever today's date puts it. Pinning it was tried:
+ * on the day it was written the real Moon was a thin crescent, so the near side - the side this demo
+ * shows - opened almost black. Correct, and useless as the first thing a viewer sees. A phase dial
+ * keeps the geometry honest and still lets the viewer look at the Moon they came for.
+ *
+ * What it does not model is libration, the Moon's few-degree wobble, so the terminator does not quite
+ * graze the poles exactly as it would on a particular date.
+ */
+export function sunDirectionFor(sunLongitudeDeg: number, latitudeDeg = SUB_SOLAR_LATITUDE_DEG): THREE.Vector3 {
+  // The phase - the angle between the Sun and the Earth - is the supplement of the sub-solar
+  // longitude, because the sub-Earth point sits near longitude 0.
+  const phase = ((sunLongitudeDeg + 180) * Math.PI) / 180
+  const latitude = (latitudeDeg * Math.PI) / 180
+  const subEarth = lonLatToVector(0, 0, 1)
+  const north = new THREE.Vector3(0, 1, 0)
+  // Perpendicular to the Earth direction: the Sun's distance from it is the phase, and the sign is
+  // chosen so that increasing sub-solar longitude moves the Sun from the far side toward the near one.
+  const east = new THREE.Vector3().crossVectors(subEarth, north).normalize()
+  return new THREE.Vector3(subEarth.x, subEarth.y, subEarth.z)
+    .multiplyScalar(-Math.cos(phase) * Math.cos(latitude))
+    .addScaledVector(east, Math.sin(phase) * Math.cos(latitude))
+    .addScaledVector(north, Math.sin(latitude))
+    .normalize()
+}
+
+/** The Sun's sub-solar latitude this session is using, for the readout and for tests. */
+export function subSolarLatitudeDeg(): number {
+  return SUB_SOLAR_LATITUDE_DEG
+}
+
+/**
+ * The Sun longitude the dial opens on: zero, the Sun over the near side, which is a full Moon.
+ *
+ * The real Moon's own longitude for today would be the more literal choice, and it was tried. On the
+ * day it was written that value was 158 degrees - a thin crescent - so the near side, the side this
+ * demo shows, opened almost black. A terrain inspector that starts by showing nothing is not being
+ * honest, it is being unusable, and it would land differently on another day anyway.
+ *
+ * A full Moon is the instructive choice: the terminator sits exactly on the limb, so nothing is
+ * hidden by shadow, and a viewer who wants the real sky has one dial that reaches every phase.
+ */
+export function openingSunLongitudeDeg(): number {
+  return 0
+}
+
+/**
+ * The real Moon's sub-solar longitude right now. Deliberately not what the dial opens on - see
+ * `openingSunLongitudeDeg` - but the honest answer for anything that wants to say where the Moon
+ * actually is.
+ */
+export function defaultSunLongitudeDeg(): number {
+  try {
+    // The sub-solar point's longitude is exactly the angle the dial sets.
+    return ((subSolarPoint(new Date()).lonDeg % 360) + 360) % 360
+  } catch {
+    return 0
+  }
+}
+
+/** The phase, in degrees, for a sub-solar longitude: 0 is new and 180 is full. */
+export function phaseDegFor(sunLongitudeDeg: number): number {
+  return (((sunLongitudeDeg + 180) % 360) + 360) % 360
+}
 /** Relief strength the globe's own LOLA bump map is drawn with; crops scale off it. */
 const BODY_BUMP_SCALE = 1.2
 const LOCAL_BUMP_EXAGGERATION = 3
@@ -231,7 +331,12 @@ export class MoonScene implements DemoScene {
     this.stage.setFrameHandler((delta) => this.update(delta))
     this.syncVisibility()
     this.applyBrightness()
+    // Open on a full Moon: the terminator sits on the limb, so the terrain this tool exists to show
+    // is not hidden by shadow. Reporting the value back keeps the slider honest rather than leaving it
+    // on the placeholder the registry could not know.
+    this.settings.sunLongitudeDeg = openingSunLongitudeDeg()
     this.updateLightDirection()
+    this.options.onSettingsResolved?.({ sunLongitudeDeg: this.settings.sunLongitudeDeg })
     this.stageReady = true
     this.refreshZoomFloor()
     this.stage.start()
@@ -263,29 +368,22 @@ export class MoonScene implements DemoScene {
   }
 
   /**
-   * Positions the Sun in a local north/east/up frame. Azimuth is clockwise from local north and
-   * elevation is above the local horizon, which is the convention used by terrain hillshades.
-   * While focused, the frame belongs to that feature; in the overview it belongs to the centre
-   * of the default near-side view.
+   * Places the Sun where it really is: at its sub-solar point, the spot on the surface it stands
+   * directly over.
+   *
+   * This replaced a light hung over the *camera*, positioned by a local azimuth and elevation. Such
+   * a light is not the Sun - it follows the viewer around the surface, so the same place is lit from
+   * a different direction depending on where you happen to be standing, and the terminator can be
+   * bent into shapes no phase of the Moon produces. A sub-solar point is one position for the whole
+   * body, which is what makes a terminator a single great circle and what makes the shadows agree
+   * with the atlas.
+   *
+   * The slider owns the longitude; the latitude comes from the real sky
+   * (`SUB_SOLAR_LATITUDE_DEG`).
    */
   private updateLightDirection(): void {
-    const feature = this.focusedId ? findFeature(this.focusedId) : null
-    const lonDeg = feature?.lonDeg ?? SCENE.homeLonDeg
-    const latDeg = feature?.latDeg ?? SCENE.homeLatDeg
-    const normal = this.directionFrom(lonDeg, latDeg)
-    const north = UP.clone().addScaledVector(normal, -UP.dot(normal))
-    if (north.lengthSq() < 1e-8) north.copy(perpendicular(normal))
-    else north.normalize()
-    const east = new THREE.Vector3().crossVectors(north, normal).normalize()
-    const azimuth = ((this.settings.lightAzimuthDeg ?? 315) % 360 + 360) % 360
-    const elevation = Math.min(90, Math.max(0, this.settings.lightElevationDeg ?? 28))
-    const azimuthRad = azimuth * DEGREES_TO_RADIANS
-    const elevationRad = elevation * DEGREES_TO_RADIANS
-    const horizontal = north.multiplyScalar(Math.cos(azimuthRad))
-      .addScaledVector(east, Math.sin(azimuthRad))
-    this.sunDirection.copy(normal).multiplyScalar(Math.sin(elevationRad))
-      .addScaledVector(horizontal, Math.cos(elevationRad))
-      .normalize()
+    const longitude = this.settings.sunLongitudeDeg ?? openingSunLongitudeDeg()
+    this.sunDirection.copy(sunDirectionFor(longitude))
     this.sunLight.position.copy(this.sunDirection).multiplyScalar(20)
     this.sunLight.target.position.set(0, 0, 0)
   }
@@ -1083,16 +1181,34 @@ export class MoonScene implements DemoScene {
       ? this.focusDistance
       : Math.max(this.stage.camera.position.length() - SCENE.radius, 0)
     ) * MOON_RADIUS_KM)
-    const azimuth = Math.round(this.settings.lightAzimuthDeg ?? 315)
-    const elevation = Math.round(this.settings.lightElevationDeg ?? 28)
-    const signature = `${Number(Boolean(this.settings.fullBright))}/${azimuth}/${elevation}/${altitudeKm}`
+    const sunLongitude = Math.round(this.settings.sunLongitudeDeg ?? openingSunLongitudeDeg())
+    // How high the Sun stands over the place being looked at, which is what decides how the terrain
+    // reads: low Sun means long shadows. Computed from the real geometry rather than reported from a
+    // slider, because with a single control the elevation is a consequence, not an input.
+    const sunElevation = Math.round(this.solarElevationDeg())
+    const signature = `${Number(Boolean(this.settings.fullBright))}/${sunLongitude}/${sunElevation}/${altitudeKm}`
     if (signature === this.lastReadout) return
     this.lastReadout = signature
     const readout: DemoReadout = {
       key: this.settings.fullBright ? 'demos.items.moon.readoutFull' : 'demos.items.moon.readout',
-      params: { azimuth, elevation, altitude: altitudeKm },
+      params: { sunLongitude, sunElevation, altitude: altitudeKm },
     }
     handler(readout)
+  }
+
+  /**
+   * The Sun's elevation above the horizon at the point being looked at: the feature in focus, or the
+   * centre of the default near-side view. `asin` of the dot product between the surface normal and
+   * the Sun direction is the definition, so nothing here is estimated.
+   */
+  private solarElevationDeg(): number {
+    const feature = this.focusedId ? findFeature(this.focusedId) : null
+    const normal = this.directionFrom(
+      feature?.lonDeg ?? SCENE.homeLonDeg,
+      feature?.latDeg ?? SCENE.homeLatDeg,
+    )
+    const sine = Math.min(1, Math.max(-1, normal.dot(this.sunDirection)))
+    return (Math.asin(sine) * 180) / Math.PI
   }
 
   private readonly handlePointerDown = (event: PointerEvent): void => {
@@ -1336,7 +1452,16 @@ function describeFeature(feature: MoonFeature): DemoHotspot {
   const longitude = `${Math.abs(feature.lonDeg).toFixed(2)}\u00b0${feature.lonDeg < 0 ? 'W' : 'E'}`
   const facts = [`${latitude} ${longitude}`]
   if (feature.diameterKm) facts.push(`\u2300 ${feature.diameterKm} km`)
-  return { id: feature.id, facts }
+  // Panoramas the viewer may open from this feature's card. The scene reports which ones exist
+  // and how to name them; it never loads the imagery, which belongs to the overlay.
+  const panoramas = panoramasForSite(feature.id).map((panorama) => ({
+    id: panorama.id,
+    titleKey: panoramaTitleKey(panorama.id),
+    captionKey: panoramaCaptionKey(panorama.id),
+    credit: panorama.credit,
+    licence: panorama.licence,
+  }))
+  return { id: feature.id, facts, panoramas }
 }
 
 /** Any unit vector perpendicular to `normal`, used to tilt the camera off a pole-on view. */

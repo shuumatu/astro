@@ -38,7 +38,13 @@ const sceneLoading = ref(true)
 const isFullscreen = ref(false)
 const fullscreenSupported = ref(false)
 const surfaceComponent = shallowRef<Component | null>(null)
+const panoramaComponent = shallowRef<Component | null>(null)
 const panelComponent = shallowRef<Component | null>(null)
+/**
+ * Whether the panorama viewer is open. It is the viewer's own state rather than a scene phase:
+ * the scene keeps its focus on the feature, and closing the panorama returns to it unchanged.
+ */
+const panoramaOpen = ref(false)
 
 const controls = computed<DemoControlId[]>(() => demo.value?.controls ?? ['orbits', 'labels'])
 const actions = computed(() => demo.value?.actions ?? [])
@@ -47,7 +53,7 @@ const speedUnitKey = computed(() => demo.value?.speedUnitKey ?? 'demos.controls.
 const speedRange = computed(() => demo.value?.speedRange ?? { min: 0.05, max: 1.2, step: 0.05 })
 const transport = computed(() => demo.value?.transport !== false)
 const brightnessRange = computed(() => demo.value?.brightnessRange ?? null)
-const lighting = computed(() => demo.value?.lighting ?? null)
+const sunLongitudeRange = computed(() => demo.value?.sunLongitudeRange ?? null)
 const hintKey = computed(() => demo.value?.hintKey ?? 'demos.controls.hint')
 const cinematicKey = computed(() => demo.value?.cinematicKey === undefined
   ? 'demos.cinematic.entering'
@@ -118,10 +124,15 @@ async function loadOverlays(): Promise<void> {
   const definition = demo.value
   if (!definition) return
   surfaceComponent.value = null
+  panoramaComponent.value = null
   panelComponent.value = null
   if (definition.surfaceOverlay) {
     const module = await definition.surfaceOverlay()
     if (!disposed) surfaceComponent.value = module.default
+  }
+  if (definition.panoramaOverlay) {
+    const module = await definition.panoramaOverlay()
+    if (!disposed) panoramaComponent.value = module.default
   }
   if (definition.panel) {
     const module = await definition.panel()
@@ -154,6 +165,11 @@ async function mountScene(): Promise<void> {
       onReadout: (next) => {
         readout.value = next
       },
+      // A scene can resolve settings the registry could not know - the Moon's Sun position comes from
+      // today's date - so the controls adopt what it actually used rather than their placeholders.
+      onSettingsResolved: (resolved) => {
+        settings.value = { ...settings.value, ...resolved }
+      },
     })
     scene.value = created
     created.applySettings({ ...settings.value })
@@ -174,6 +190,7 @@ function unmountScene(): void {
   phase.value = 'orbit'
   hotspot.value = null
   readout.value = null
+  panoramaOpen.value = false
   labelEntries.value = []
   labelElements.clear()
   labelWidths.clear()
@@ -183,12 +200,29 @@ function leaveSurface(): void {
   scene.value?.leaveSurfaceView?.()
 }
 
+/** The viewer keeps rendering behind the panorama, so it is paused rather than torn down. */
+function suspendScene(suspended: boolean): void {
+  scene.value?.setSuspended?.(suspended)
+}
+
+function openPanorama(): void {
+  panoramaOpen.value = true
+}
+
+function closePanorama(): void {
+  panoramaOpen.value = false
+}
+
 function selectFeature(id: string): void {
   scene.value?.focusHotspot?.(id)
 }
 
-/** The overlays only belong to the free-look phase; a scripted move plays without chrome. */
-const overlaysVisible = computed(() => phase.value === 'orbit')
+/**
+ * The overlays only belong to the free-look phase; a scripted move plays without chrome. The
+ * panorama viewer covers the stage, so the chrome goes with it rather than floating on top of a
+ * photograph.
+ */
+const overlaysVisible = computed(() => phase.value === 'orbit' && !panoramaOpen.value)
 
 const selectedFeature = computed(() =>
   hotspot.value ? features.value.find((feature) => feature.id === hotspot.value?.id) ?? null : null)
@@ -226,6 +260,11 @@ async function toggleFullscreen(): Promise<void> {
 function handleKeydown(event: KeyboardEvent): void {
   const target = event.target as HTMLElement | null
   if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable)) return
+  if (panoramaOpen.value) {
+    // The viewer owns the arrow keys and Escape while it is open.
+    if (event.key === 'Escape') closePanorama()
+    return
+  }
   if (event.key === 'Escape' && phase.value === 'surface') {
     leaveSurface()
     return
@@ -313,6 +352,15 @@ watch(locale, async () => {
       />
 
       <component
+        v-if="panoramaComponent"
+        :is="panoramaComponent"
+        :active="panoramaOpen"
+        :hotspot="hotspot"
+        :suspend-scene="suspendScene"
+        @exit="closePanorama"
+      />
+
+      <component
         v-if="panelComponent && features.length > 0"
         :is="panelComponent"
         class="overlay-hidden-aware"
@@ -334,6 +382,27 @@ watch(locale, async () => {
           <span v-for="fact in hotspot.facts" :key="fact">{{ fact }}</span>
         </p>
         <p class="hotspot-body">{{ t(`demos.items.${demo.slug}.hotspots.${hotspot.id}.body`) }}</p>
+        <div v-if="demo.panoramaButtonKey" class="hotspot-panoramas">
+          <button
+            v-if="hotspot.panoramas && hotspot.panoramas.length > 0"
+            type="button"
+            class="panorama-button"
+            @click="openPanorama"
+          >
+            <!-- A wide-angle frame, the conventional glyph for a panorama view. -->
+            <svg class="panorama-button-icon" viewBox="0 0 20 14" aria-hidden="true">
+              <rect x="1" y="2.5" width="18" height="9" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.5" />
+              <path d="M1 5.1h18" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.55" />
+            </svg>
+            <span class="panorama-button-label">{{ t(demo.panoramaButtonKey) }}</span>
+            <!-- How many views the place has, kept short so the button stays a button and does not
+                 turn into a sentence. -->
+            <span v-if="hotspot.panoramas.length > 1" class="panorama-button-count">
+              {{ hotspot.panoramas.length }}
+            </span>
+          </button>
+          <p v-else-if="demo.panoramaNoneKey" class="hotspot-note">{{ t(demo.panoramaNoneKey) }}</p>
+        </div>
         <button type="button" class="demo-button" @click="scene?.clearFocus?.()">
           {{ t('demos.card.back') }}
         </button>
@@ -356,9 +425,8 @@ watch(locale, async () => {
         :actions="actions"
         :brightness-range="brightnessRange"
         :brightness="settings.brightness ?? 1"
-        :lighting="lighting"
-        :light-azimuth="settings.lightAzimuthDeg ?? 315"
-        :light-elevation="settings.lightElevationDeg ?? 28"
+        :sun-longitude-range="sunLongitudeRange"
+        :sun-longitude="settings.sunLongitudeDeg ?? 0"
         :full-bright="settings.fullBright ?? false"
         :fullscreen="isFullscreen"
         :fullscreen-supported="fullscreenSupported"
@@ -369,8 +437,7 @@ watch(locale, async () => {
         }"
         @action="(id) => scene?.runAction?.(id)"
         @update:brightness="(value) => { settings.brightness = value }"
-        @update:light-azimuth="(value) => { settings.lightAzimuthDeg = value }"
-        @update:light-elevation="(value) => { settings.lightElevationDeg = value }"
+        @update:sun-longitude="(value) => { settings.sunLongitudeDeg = value }"
         @update:full-bright="(value) => { settings.fullBright = value }"
         @reset="scene?.resetView()"
         @toggle-fullscreen="toggleFullscreen"
@@ -554,6 +621,59 @@ watch(locale, async () => {
 }
 
 .hotspot-body { margin: 0 0 .7rem; color: #b9c9dd; font-size: .84rem; line-height: 1.6; }
+
+.hotspot-panoramas { margin: 0 0 .5rem; }
+
+/**
+ * The way into the panorama viewer, from the feature card.
+ *
+ * Sized to its content rather than stretched across the card: a full-width bar for a two-word
+ * action read as a banner and dominated the card. It stays the strongest control here by being
+ * filled rather than outlined, so it still outranks the plain "back to the overview" button below
+ * it without taking the whole width to say so.
+ */
+.panorama-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 0 .75rem;
+  border: 1px solid #72d4d8;
+  border-radius: 5px;
+  color: #07111f;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  background: #72d4d8;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+
+.panorama-button:hover { background: #9ae7ea; border-color: #9ae7ea; }
+
+.panorama-button:focus-visible { outline: 2px solid #eaf2ff; outline-offset: 2px; }
+
+.panorama-button-icon { flex: none; width: 17px; height: 12px; }
+
+.panorama-button-label { overflow: hidden; text-overflow: ellipsis; }
+
+.panorama-button-count {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 .26rem;
+  border-radius: 999px;
+  font-size: .66rem;
+  font-weight: 700;
+  color: #d8f6f7;
+  background: rgb(7 17 31 / 72%);
+}
+
+.hotspot-note { margin: 0; color: #6d86a3; font-size: .74rem; line-height: 1.5; }
 
 .demo-fallback {
   position: absolute;

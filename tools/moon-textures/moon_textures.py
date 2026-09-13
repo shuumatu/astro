@@ -544,11 +544,16 @@ def process_site(
     tile_threshold: float = 0.5,
     keep_threshold: float = 0.45,
     tile_grid: int = 3,
+    seed: bool = False,
 ) -> dict:
     site_id, bbox = site["id"], site["bbox"]
     width, height = site["width"], site["height"]
     crop_path = SITES_DIR / f"{site_id}.webp"
-    if not crop_path.exists():
+    # The shipped crop doubles as the pipeline's seed: on a cold cache it is copied into the
+    # cache and deshaded from there. A brand-new site therefore has to be seeded first, which
+    # `--seed` does by pulling the WAC mosaic crop down. Without that flag a missing crop is an
+    # error rather than a silent rebuild, because deshading the wrong input would be invisible.
+    if not crop_path.exists() and not seed:
         raise FileNotFoundError(crop_path)
 
     log(f"{site_id}: {width}x{height} {'x'.join(f'{v:.2f}' for v in bbox)}")
@@ -676,16 +681,25 @@ def command_sites(args) -> int:
                 out_bump=out_bump,
                 tile_threshold=args.tile_threshold,
                 keep_threshold=args.keep_threshold,
+                seed=args.seed,
             ))
         except Exception as error:  # noqa: BLE001 - keep going, report at the end
+            if os.environ.get("MOON_DEBUG"):
+                import traceback
+
+                traceback.print_exc()
             log(f"  FAILED {site['id']}: {error}")
             report.append({"id": site["id"], "error": str(error)})
     out = args.work / "sites-report.json"
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     log(f"wrote {out}")
     if not args.out_sites and not args.out_bump:
-        emit_bump_module(report)
-        emit_relief_module(report)
+        # Rebuilding a subset with `--only` must not drop the other crops' entries: the modules
+        # are generated wholesale from `report`, which in that case covers only the named sites.
+        # `relief` already merged this way; the bump module did not, so a narrow `sites --only`
+        # run silently emptied every other bump scale.
+        emit_bump_module(report, merge=bool(args.only))
+        emit_relief_module(report, merge=bool(args.only))
     for entry in report:
         if "bumpScale" in entry:
             log(
@@ -1261,6 +1275,11 @@ def main(argv: list[str]) -> int:
         "--include-nac",
         action="store_true",
         help="also rebuild the LROC NAC landing-site tiers (not recommended: no matching DEM)",
+    )
+    sites.add_argument(
+        "--seed",
+        action="store_true",
+        help="allow a crop that has never been built: fetch its WAC mosaic crop as the pipeline input",
     )
     sites.set_defaults(func=command_sites)
 

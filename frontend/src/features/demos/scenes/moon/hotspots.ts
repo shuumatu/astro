@@ -141,6 +141,34 @@ export const MOON_FEATURES: MoonFeature[] = [
     focusAltitudeKm: 320,
   },
   {
+    id: 'apollo-12',
+    category: 'landingSite',
+    latDeg: -3.0124,
+    lonDeg: -23.4216,
+    focusAltitudeKm: 320,
+  },
+  {
+    id: 'apollo-14',
+    category: 'landingSite',
+    latDeg: -3.6453,
+    lonDeg: -17.4714,
+    focusAltitudeKm: 320,
+  },
+  {
+    id: 'apollo-15',
+    category: 'landingSite',
+    latDeg: 26.1322,
+    lonDeg: 3.6339,
+    focusAltitudeKm: 320,
+  },
+  {
+    id: 'apollo-16',
+    category: 'landingSite',
+    latDeg: -8.9734,
+    lonDeg: 15.5011,
+    focusAltitudeKm: 320,
+  },
+  {
     id: 'apollo-17',
     category: 'landingSite',
     latDeg: 20.19,
@@ -194,6 +222,21 @@ export function featureBodyKey(id: string): string {
 
 export function featureCategoryKey(category: MoonFeatureCategory): string {
   return `demos.items.moon.categories.${category}`
+}
+
+/**
+ * Locale key for a panorama's title. The panorama's own English title lives in the generated
+ * catalogue; the translated string sits beside the hotspot text, and this is how the viewer
+ * finds it. The key is relative to the bundle root, which is how `vue-i18n` composes `t()` and
+ * how the scene hands it to the shell, so both sides agree on one form.
+ */
+export function panoramaTitleKey(id: string): string {
+  return `demos.items.moon.panorama.${id}.title`
+}
+
+/** Locale key for a panorama's caption. */
+export function panoramaCaptionKey(id: string): string {
+  return `demos.items.moon.panorama.${id}.caption`
 }
 
 export function findFeature(id: string): MoonFeature | null {

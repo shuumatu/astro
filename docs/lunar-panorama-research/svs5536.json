@@ -1,0 +1,560 @@
+{
+    "id": 5536,
+    "url": "https://svs.gsfc.nasa.gov/5536/",
+    "page_type": "Visualization",
+    "title": "Simulated Artemis II Lunar Flyby",
+    "description": "This visualization simulates what the crew of Artemis II might see out the window on the day of their closest approach to the Moon.",
+    "release_date": "2025-08-15T09:00:00-04:00",
+    "update_date": "2025-09-29T13:59:08.454083-04:00",
+    "main_image": {
+        "id": 1154928,
+        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby.1158.jpg",
+        "filename": "a2_flyby.1158.jpg",
+        "media_type": "Image",
+        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+        "width": 1920,
+        "height": 1080,
+        "pixels": 2073600
+    },
+    "main_video": {
+        "id": 1154931,
+        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_1min_720p30.mp4",
+        "filename": "a2_flyby_1min_720p30.mp4",
+        "media_type": "Movie",
+        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+        "width": 1280,
+        "height": 720,
+        "pixels": 921600
+    },
+    "main_credits": {},
+    "progress": "Complete",
+    "media_groups": [
+        {
+            "id": 378040,
+            "url": "https://svs.gsfc.nasa.gov/5536/#media_group_378040",
+            "widget": "Video player",
+            "title": "",
+            "caption": "",
+            "description": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+            "items": [
+                {
+                    "id": 470109,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1154928,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby.1158.jpg",
+                        "filename": "a2_flyby.1158.jpg",
+                        "media_type": "Image",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 1920,
+                        "height": 1080,
+                        "pixels": 2073600
+                    }
+                },
+                {
+                    "id": 470110,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1154929,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_1min_1080p30.mp4",
+                        "filename": "a2_flyby_1min_1080p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 1920,
+                        "height": 1080,
+                        "pixels": 2073600
+                    }
+                },
+                {
+                    "id": 470111,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1154930,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/frames/1920x1080_16x9_30p/",
+                        "filename": "1920x1080_16x9_30p",
+                        "media_type": "Frames",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 1920,
+                        "height": 1080,
+                        "pixels": 2073600
+                    }
+                },
+                {
+                    "id": 470112,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1154931,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_1min_720p30.mp4",
+                        "filename": "a2_flyby_1min_720p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 1280,
+                        "height": 720,
+                        "pixels": 921600
+                    }
+                },
+                {
+                    "id": 470113,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1154932,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_1min_360p30.mp4",
+                        "filename": "a2_flyby_1min_360p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 640,
+                        "height": 360,
+                        "pixels": 230400
+                    }
+                },
+                {
+                    "id": 491107,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158018,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_1min_2160p30.mp4",
+                        "filename": "a2_flyby_1min_2160p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 3840,
+                        "height": 2160,
+                        "pixels": 8294400
+                    }
+                },
+                {
+                    "id": 491108,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158019,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/frames/3840x2160_16x9_30p/",
+                        "filename": "3840x2160_16x9_30p",
+                        "media_type": "Frames",
+                        "alt_text": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side.",
+                        "width": 3840,
+                        "height": 2160,
+                        "pixels": 8294400
+                    }
+                }
+            ],
+            "extra_data": {}
+        },
+        {
+            "id": 378041,
+            "url": "https://svs.gsfc.nasa.gov/5536/#media_group_378041",
+            "widget": "Basic text",
+            "title": "",
+            "caption": "",
+            "description": "This visualization simulates what the crew of Artemis II might see out the window on the day of their closest approach to the Moon. It compresses 36 hours into a little more than a minute as it flies the virtual camera on a realistic trajectory that swings the spacecraft around the Moon's far side. This sample trajectory is timed so that the far side is fully illuminated when the astronauts fly by, but other lighting conditions are possible depending on when Artemis II actually launches. As of this writing, the launch is scheduled for no later than April of 2026.\r\n\r\nThe Orion spacecraft carrying four astronauts is expected to reach a minimum altitude of about 6900 kilometers (4300 miles) above the surface of the Moon at the time of closest approach, known as pericynthion or PC. On this kind of trajectory, the Moon's gravity is used to bend the path of the spacecraft around the Moon's far side and then back toward the Earth. Apollo 13 followed a similar path to bring it home safely after an explosion damaged their spacecraft, although their PC altitude was only 251 kilometers (156 miles).\r\n\r\nAt their much higher altitude, the Artemis II crew will be able to see the entire disk of the Moon throughout their flyby. The virtual camera's short focal length approximates this view, which is roughly equivalent to a basketball held at arm's length. Depending on the Earth-Moon distance when they arrive, the Artemis II crew may achieve the farthest human distance from the surface of the Earth, a record currently held by Apollo 13 at 400,073 kilometers (248,647 miles). But they will undoubtedly be traveling almost 300 times farther than anyone has gone since the days of Apollo more than 50 years ago.",
+            "items": [],
+            "extra_data": {}
+        },
+        {
+            "id": 378949,
+            "url": "https://svs.gsfc.nasa.gov/5536/#media_group_378949",
+            "widget": "Video player",
+            "title": "",
+            "caption": "",
+            "description": "The virtual camera in this visualization follows a possible trajectory for the Orion spacecraft during the Artemis II mission, showing what astronauts might see out the window as they approach the Moon and fly around its far side. This version is rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display) and includes annotations. A 4K 16:9 version is also available.",
+            "items": [
+                {
+                    "id": 492413,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158624,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_hw_1296p30.mp4",
+                        "filename": "a2_flyby_hw_1296p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "What astronauts might see out the window as they approach the Moon and fly around its far side, rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display)",
+                        "width": 3840,
+                        "height": 1296,
+                        "pixels": 4976640
+                    }
+                },
+                {
+                    "id": 492414,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158625,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_hw.00875.jpg",
+                        "filename": "a2_flyby_hw.00875.jpg",
+                        "media_type": "Image",
+                        "alt_text": "What astronauts might see out the window as they approach the Moon and fly around its far side, rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display)",
+                        "width": 1920,
+                        "height": 648,
+                        "pixels": 1244160
+                    }
+                },
+                {
+                    "id": 492415,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158626,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/frames/9600x3240_3x1_30p/",
+                        "filename": "9600x3240_3x1_30p",
+                        "media_type": "Frames",
+                        "alt_text": "What astronauts might see out the window as they approach the Moon and fly around its far side, rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display)",
+                        "width": 9600,
+                        "height": 3240,
+                        "pixels": 31104000
+                    }
+                },
+                {
+                    "id": 492416,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158627,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2-lunar-flyby.hwshow",
+                        "filename": "a2-lunar-flyby.hwshow",
+                        "media_type": "HyperwallShow",
+                        "alt_text": "What astronauts might see out the window as they approach the Moon and fly around its far side, rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display)",
+                        "width": 0,
+                        "height": 0,
+                        "pixels": null
+                    }
+                },
+                {
+                    "id": 492551,
+                    "type": "media",
+                    "extra_data": null,
+                    "title": null,
+                    "caption": "",
+                    "instance": {
+                        "id": 1158676,
+                        "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005536/a2_flyby_2160p30.mp4",
+                        "filename": "a2_flyby_2160p30.mp4",
+                        "media_type": "Movie",
+                        "alt_text": "What astronauts might see out the window as they approach the Moon and fly around its far side, rendered for the aspect ratio and resolution of a 9600 x 3240 hyperwall (tiled display)",
+                        "width": 3840,
+                        "height": 2160,
+                        "pixels": 8294400
+                    }
+                }
+            ],
+            "extra_data": {}
+        }
+    ],
+    "studio": "svs",
+    "funding_sources": [
+        "ESDMD"
+    ],
+    "credits": [
+        {
+            "role": "Visualizer",
+            "people": [
+                {
+                    "name": "Ernie Wright",
+                    "employer": "USRA"
+                }
+            ]
+        }
+    ],
+    "missions": [
+        "Artemis Program (Human Spaceflight — Moon to Mars) (Artemis)"
+    ],
+    "series": [],
+    "tapes": [],
+    "papers": [],
+    "datasets": [
+        {
+            "name": "JPL DE421",
+            "common_name": "DE421",
+            "platform": null,
+            "sensor": null,
+            "type": "Ephemeris",
+            "organizations": [
+                "NASA/JPL"
+            ],
+            "description": "Planetary ephemerides",
+            "credit": "",
+            "url": "http://ssd.jpl.nasa.gov/?ephemerides#planets",
+            "date_range": ""
+        },
+        {
+            "name": "Natural Color Hapke Normalized WAC Mosaic",
+            "common_name": "LROC WAC Color Mosaic",
+            "platform": "Lunar Reconnaissance Orbiter",
+            "sensor": "LRO Camera",
+            "type": "Mosaic",
+            "organizations": [
+                "Arizona State University"
+            ],
+            "description": "This natural-color global mosaic is based on the <a href='http://wms.lroc.asu.edu/lroc/view_rdr/WAC_HAPKE_NORMALIZED'>'Hapke normalized'</a> mosaic from LRO's wide-angle camera. The data has been gamma corrected, white balanced, and range adjusted to more closely match human vision.",
+            "credit": "",
+            "url": "",
+            "date_range": ""
+        },
+        {
+            "name": "Digital Elevation Map",
+            "common_name": "DEM",
+            "platform": "LRO",
+            "sensor": "LOLA",
+            "type": "Other",
+            "organizations": [],
+            "description": "",
+            "credit": "",
+            "url": "",
+            "date_range": ""
+        }
+    ],
+    "nasa_science_categories": [
+        "Planets & Moons"
+    ],
+    "keywords": [
+        "Artemis",
+        "Flyby",
+        "Lunar Surface",
+        "Moon",
+        "Trajectory"
+    ],
+    "recommended_pages": [],
+    "related": [
+        {
+            "id": 5632,
+            "url": "https://svs.gsfc.nasa.gov/5632/",
+            "page_type": "Visualization",
+            "title": "Artemis II mission trajectory",
+            "description": "Artemis II launches four astronauts aboard NASA’s Orion spacecraft into Earth orbit, sending them on a loop around the Moon before returning safely to Earth. The mission follows a free-return trajectory that uses the gravity of the Earth and Moon to naturally guide the crew home. This visualization shows the mission trajectory based on flight-derived ephemeris data.",
+            "release_date": "2026-04-06T05:00:00-04:00",
+            "update_date": "2026-04-06T17:46:31.411271-04:00",
+            "main_image": {
+                "id": 1202956,
+                "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005600/a005632/a2_mission_trajectory_04_preview_still.00800.jpg",
+                "filename": "a2_mission_trajectory_04_preview_still.00800.jpg",
+                "media_type": "Image",
+                "alt_text": "",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 31385,
+            "url": "https://svs.gsfc.nasa.gov/31385/",
+            "page_type": "Hyperwall Visual",
+            "title": "Artemis II launch live",
+            "description": "Artemis II launch live ad multi camera edited Artemis Launch videos",
+            "release_date": "2026-04-01T18:59:59-04:00",
+            "update_date": "2026-04-28T16:42:31.718852-04:00",
+            "main_image": {
+                "id": 1202907,
+                "url": "https://svs.gsfc.nasa.gov/vis/a030000/a031300/a031385/Artemis2-Launch_00000.png",
+                "filename": "Artemis2-Launch_00000.png",
+                "media_type": "Image",
+                "alt_text": "This video show the launch of Artemis II launch live",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 14934,
+            "url": "https://svs.gsfc.nasa.gov/14934/",
+            "page_type": "Produced Video",
+            "title": "NASA Interview Opportunity: Moonbound! NASA’s Artemis II Mission Days From Launch — First Crewed Journey Around the Moon in More Than 50 Years!",
+            "description": "Click here for the Artemis II PRESS KIT. || ARTEMIS_II_BANNER_english2.jpeg (1800x720) [342.6 KB] || ARTEMIS_II_BANNER_english2_print.jpg (1024x409) [139.2 KB] || ARTEMIS_II_BANNER_english2_searchweb.png (320x180) [86.2 KB] || ARTEMIS_II_BANNER_english2_thm.png (80x40) [7.7 KB] || ",
+            "release_date": "2026-03-26T16:00:00-04:00",
+            "update_date": "2026-04-01T02:48:12-04:00",
+            "main_image": {
+                "id": 1202854,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014934/ARTEMIS_II_BANNER_english2.jpeg",
+                "filename": "ARTEMIS_II_BANNER_english2.jpeg",
+                "media_type": "Image",
+                "alt_text": "Click here for the Artemis II PRESS KIT.",
+                "width": 1800,
+                "height": 720,
+                "pixels": 1296000
+            }
+        },
+        {
+            "id": 14992,
+            "url": "https://svs.gsfc.nasa.gov/14992/",
+            "page_type": "Animation",
+            "title": "Lunar Near and Far Side Phases",
+            "description": "These animations illustrate opposite lunar phases on the near and far sides of the Moon.",
+            "release_date": "2026-03-24T15:00:00-04:00",
+            "update_date": "2026-04-01T13:31:22.593735-04:00",
+            "main_image": {
+                "id": 1202697,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014992/Moon_Phases_Waning_Thumbnail_V2_Small.jpg",
+                "filename": "Moon_Phases_Waning_Thumbnail_V2_Small.jpg",
+                "media_type": "Image",
+                "alt_text": "Animation of the Moon’s near side in a waning gibbous phase and its far side in the opposite phase (waxing crescent).",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 14959,
+            "url": "https://svs.gsfc.nasa.gov/14959/",
+            "page_type": "Interactive",
+            "title": "Moon 3D Models for Web, AR, and Animation",
+            "description": "These models of the Moon are made with imagery and topographic data from NASA’s Lunar Reconnaissance Orbiter, which has been studying and mapping the lunar surface since 2009. The models are intended for use in web interactives, augmented reality (AR) applications, and animations. ||",
+            "release_date": "2026-01-29T00:00:00-05:00",
+            "update_date": "2026-04-01T13:21:05.020547-04:00",
+            "main_image": {
+                "id": 1201638,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014959/Moon-Model-Preview-Main.jpg",
+                "filename": "Moon-Model-Preview-Main.jpg",
+                "media_type": "Image",
+                "alt_text": "Image of a 3D Moon model in an animated scene file.",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 5610,
+            "url": "https://svs.gsfc.nasa.gov/5610/",
+            "page_type": "Visualization",
+            "title": "Nominal (reference) Artemis II mission trajectory",
+            "description": "Artemis II will launch four astronauts aboard NASA’s Orion spacecraft into Earth orbit, then send them on a loop around the Moon before returning safely to Earth. The mission follows a free-return trajectory that uses the gravity of the Earth and Moon to naturally guide the crew home. This visualization shows a nominal trajectory for Artemis II. The actual trajectory may vary slightly depending on the final launch timing.",
+            "release_date": "2026-01-27T17:00:00-05:00",
+            "update_date": "2026-02-12T14:26:10.466301-05:00",
+            "main_image": {
+                "id": 1201623,
+                "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005600/a005610/artemis2_full.00800_preview.jpg",
+                "filename": "artemis2_full.00800_preview.jpg",
+                "media_type": "Image",
+                "alt_text": "Nominal trajectory of NASA’s Artemis II mission, from Earth orbit around the Moon and back to Earth. The view starts close to Earth. A red dot and trail appears representing the path of Artemis II, which extends out in the direction of the Moon, before looping back and returning to Earth.",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 20412,
+            "url": "https://svs.gsfc.nasa.gov/20412/",
+            "page_type": "Animation",
+            "title": "Artemis II Flight Path Animations",
+            "description": "Animated Flight Path of Artemis II and comparison with NASA's Lunar Reconnaissance Orbiter and the Apollo mission orbits.",
+            "release_date": "2026-01-21T11:00:00-05:00",
+            "update_date": "2026-02-25T12:19:36.119913-05:00",
+            "main_image": {
+                "id": 1201659,
+                "url": "https://svs.gsfc.nasa.gov/vis/a020000/a020400/a020412/Artemis-II-Trajectory-Thumbnail_Small.jpg",
+                "filename": "Artemis-II-Trajectory-Thumbnail_Small.jpg",
+                "media_type": "Image",
+                "alt_text": "Animation of the Artemis II flight path to the Moon and back.",
+                "width": 1280,
+                "height": 720,
+                "pixels": 921600
+            }
+        },
+        {
+            "id": 14929,
+            "url": "https://svs.gsfc.nasa.gov/14929/",
+            "page_type": "Produced Video",
+            "title": "Planting an Artemis I Moon Tree",
+            "description": "Team members from NASA’s Artemis missions plant a tree grown from a seed that traveled beyond the Moon and back to Earth.Complete transcript available.Universal Production Music: “Positive Progression” by Harry Gregson Williams [BMI] and Ben Andrew [PRS]; “Timeless” by Joshua Benjamin Pacey [PRS] and Harry Gregson Williams [BMI]Watch this video on the NASA Goddard YouTube channel, X, Facebook, and LinkedIn. || A1-Moon-Tree-Planting-Thumbnail_print.jpg (1024x576) [203.3 KB] || A1-Moon-Tree-Planting-Thumbnail.jpg (1920x1080) [1.1 MB] || A1-Moon-Tree-Planting-Thumbnail.png (1920x1080) [2.6 MB] || A1-Moon-Tree-Planting-Thumbnail_searchweb.png (320x180) [99.4 KB] || A1-Moon-Tree-Planting-Thumbnail_thm.png (80x40) [7.2 KB] || 14929_A1_Moon_Tree_Planting_720.mp4 (1280x720) [25.8 MB] || 14929_A1_Moon_Tree_Planting_1080.mp4 (1920x1080) [143.2 MB] || MoonTreePlantingCaptions.en_US.srt [2.3 KB] || MoonTreePlantingCaptions.en_US.vtt [2.2 KB] || 14929_A1_Moon_Tree_Planting_4K.mp4 (3840x2160) [955.0 MB] || 14929_A1_Moon_Tree_Planting_ProRes.mov (3840x2160) [5.9 GB] || ",
+            "release_date": "2025-11-20T10:00:00-05:00",
+            "update_date": "2025-12-10T14:57:33-05:00",
+            "main_image": {
+                "id": 1159601,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014929/A1-Moon-Tree-Planting-Thumbnail.jpg",
+                "filename": "A1-Moon-Tree-Planting-Thumbnail.jpg",
+                "media_type": "Image",
+                "alt_text": "Team members from NASA’s Artemis missions plant a tree grown from a seed that traveled beyond the Moon and back to Earth.Complete transcript available.Universal Production Music: “Positive Progression” by Harry Gregson Williams [BMI] and Ben Andrew [PRS]; “Timeless” by Joshua Benjamin Pacey [PRS] and Harry Gregson Williams [BMI]Watch this video on the NASA Goddard YouTube channel, X, Facebook, and LinkedIn.",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 5535,
+            "url": "https://svs.gsfc.nasa.gov/5535/",
+            "page_type": "Visualization",
+            "title": "What Apollo Saw in Sunlight While in Orbit",
+            "description": "A map showing the sunlit parts of the lunar surface that the Apollo astronauts could see from orbit. The darkened parts of the map were either never in sunlight or were beyond the horizon of the spacecraft.",
+            "release_date": "2025-08-15T09:05:00-04:00",
+            "update_date": "2026-01-16T14:29:24.219833-05:00",
+            "main_image": {
+                "id": 1157291,
+                "url": "https://svs.gsfc.nasa.gov/vis/a000000/a005500/a005535/apollo_saw.jpg",
+                "filename": "apollo_saw.jpg",
+                "media_type": "Image",
+                "alt_text": "A map of the Moon showing the sunlit parts of the lunar surface that the Apollo astronauts could see from orbit.",
+                "width": 2048,
+                "height": 1024,
+                "pixels": 2097152
+            }
+        }
+    ],
+    "sources": [],
+    "products": [
+        {
+            "id": 14981,
+            "url": "https://svs.gsfc.nasa.gov/14981/",
+            "page_type": "Produced Video",
+            "title": "Behind the March 3rd Total Lunar Eclipse",
+            "description": "Music: \"Now or Never,\" \"Trypophobia,\" Universal Production MusicComplete transcript available. || March3_Eclipse_Short_thumb.png (1080x1920) [1.8 MB] || March3_Eclipse_Short_thumb_print.jpg (1024x1820) [266.1 KB] || March3_Eclipse_Short_thumb_searchweb.png (320x180) [84.1 KB] || March3_Eclipse_Short_thumb_thm.png (80x40) [6.5 KB] || March3_Eclipse_Short_IG_LRO.mp4 (1080x1920) [195.9 MB] || March3_Eclipse_Short_YT_LRO.mp4 (1080x1920) [195.1 MB] || March3_Eclipse.en_US.srt [7.9 KB] || March3_Eclipse.en_US.vtt [7.4 KB] || ",
+            "release_date": "2026-02-28T00:00:00-05:00",
+            "update_date": "2026-02-27T14:53:53.275303-05:00",
+            "main_image": {
+                "id": 1202204,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014981/March3_Eclipse_Short_thumb.png",
+                "filename": "March3_Eclipse_Short_thumb.png",
+                "media_type": "Image",
+                "alt_text": "Music: \"Now or Never,\" \"Trypophobia,\" Universal Production MusicComplete transcript available.",
+                "width": 1080,
+                "height": 1920,
+                "pixels": 2073600
+            }
+        },
+        {
+            "id": 14938,
+            "url": "https://svs.gsfc.nasa.gov/14938/",
+            "page_type": "Visualization",
+            "title": "Artemis Science: Visualizing NASA’s Next Lunar Flyby",
+            "description": "Artemis II visualization lead Ernie Wright explains how his data-driven animations are helping astronauts to prepare for a historic flyby of the Moon.",
+            "release_date": "2025-12-22T11:00:00-05:00",
+            "update_date": "2026-05-18T17:34:23.513530-04:00",
+            "main_image": {
+                "id": 1195185,
+                "url": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014938/Artemis-Sci-Wright-A2Sim-Thumbnail.jpg",
+                "filename": "Artemis-Sci-Wright-A2Sim-Thumbnail.jpg",
+                "media_type": "Image",
+                "alt_text": "Artemis II visualization lead Ernie Wright explains how his data-driven animations are helping astronauts to prepare for a historic flyby of the Moon.Complete transcript available.Universal Production Music: “Black Cloud” and “Magic Trick” by Hugo Dubery [SACEM] and Philippe Galtier [SACEM]; “Connecting Ideas” by Christopher Timothy White [PRS]; “Transitions” by Ben Niblett [PRS] and Jon Cotton [PRS]Watch this video on the NASA Goddard YouTube channel and Facebook.",
+                "width": 1920,
+                "height": 1080,
+                "pixels": 2073600
+            }
+        }
+    ],
+    "newer_versions": [],
+    "older_versions": [],
+    "alternate_versions": []
+}
