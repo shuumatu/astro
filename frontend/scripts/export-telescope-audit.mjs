@@ -15,7 +15,7 @@ function triangles(mesh, transform) {
     new THREE.Vector3().fromBufferAttribute(pos, ids ? ids.getX(i) : i).applyMatrix4(transform).toArray())
 }
 scene.traverse((object) => {
-  if (object instanceof THREE.Mesh && ['tube', 'focuser', 'finder', 'spider', 'mirrorCell', 'internalDisk'].includes(object.userData.partId)) {
+  if (object instanceof THREE.Mesh && ['tube', 'focuser', 'finder', 'spider', 'mirrorCell', 'internalDisk', 'primaryMirror', 'secondaryMirror'].includes(object.userData.partId)) {
     result.mechanics.push({ part: object.userData.partId, positions: triangles(object, inverse) })
   }
 })

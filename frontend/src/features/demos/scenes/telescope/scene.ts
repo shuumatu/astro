@@ -92,7 +92,7 @@ export class TelescopeScene implements DemoScene {
 
   private async loadModel(): Promise<void> {
     try {
-      const gltf = await new GLTFLoader().loadAsync('/models/telescope_newtonian_classified.glb')
+      const gltf = await new GLTFLoader().loadAsync('/models/telescope_newtonian_classified.glb?v=3')
       if (this.disposed) {
         gltf.scene.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return

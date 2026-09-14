@@ -27,6 +27,8 @@ that every source primitive retains its original triangle count.
 | spider | Thin cross and central hub at the front, near positive tube-axis X |
 | mirrorCell | Rear ring, cross and central support near negative tube-axis X |
 | internalDisk | Thick circular disk with a central hole inside the middle of the tube |
+| primaryMirror | Added concave parabolic optical surface at the rear of the tube |
+| secondaryMirror | Added thin flat elliptical optical surface at the Newtonian diagonal |
 | finder | Small independent telescope above the main tube and its stalk/base |
 | focuser | Side barrel, eyepiece housing, double handwheels and curved mounting base |
 | rings | Two circumferential rings, clamp screws and connecting saddle |
@@ -57,6 +59,11 @@ optics mode, with a visible teaching-model disclosure; it remains intact and
 selectable in mechanical mode. This is **not** evidence that the supplied mechanical
 model forms a working telescope. No focal ratio, optical coating, or eyepiece lens
 prescription is asserted to match a real product.
+
+The two optical surfaces are also real, closed, non-zero-thickness solid nodes in `telescope_newtonian_classified.glb`
+(`extras.partId` is `primaryMirror` or `secondaryMirror`), so they can be selected
+and isolated in mechanical mode. The bright teaching overlay in optics mode is the
+same coordinate-calibrated surface shown with rays; it is not a second physical mirror.
 
 To inspect geometry offline, run `node frontend/scripts/export-telescope-audit.mjs`
 (Node 24+) and `python tools/render-telescope-projection.py`. Classification atlases

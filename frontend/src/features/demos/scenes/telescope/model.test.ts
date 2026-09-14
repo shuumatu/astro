@@ -21,6 +21,7 @@ describe('reviewed telescope GLB', () => {
     for (const node of classified.json.nodes) {
       expect(isPartId(node.extras.partId)).toBe(true)
       categories.add(node.extras.partId)
+      if (node.extras.opticalGeometry) continue
       const key = `${node.extras.sourceNode}:${node.extras.sourcePrimitive}`
       const primitive = classified.json.meshes[node.mesh].primitives[0]
       const count = classified.json.accessors[primitive.attributes.POSITION].count
@@ -35,7 +36,7 @@ describe('reviewed telescope GLB', () => {
         actual.delete(`${index}:${pi}`)
       })
     })
-    expect(actual.size).toBe(0)
+    expect([...actual.entries()], `leftover ${JSON.stringify([...actual.entries()])}`).toEqual([])
   })
 
   it('loads with the actual frontend GLTFLoader and fits the mirrors inside the tube frame', async () => {
@@ -61,5 +62,27 @@ describe('reviewed telescope GLB', () => {
     const optics = buildOptics(frame)
     const modelSize = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3()).length()
     expect(new THREE.Box3().setFromObject(optics).getSize(new THREE.Vector3()).length()).toBeLessThan(modelSize)
+  })
+
+  it('contains closed, non-zero-thickness primary and secondary mirror solids', async () => {
+    const bytes = new Uint8Array(classified.bytes.byteLength)
+    bytes.set(classified.bytes)
+    const { scene } = await new GLTFLoader().parseAsync(bytes.buffer, '')
+    const frame = new THREE.Matrix4().fromArray(scene.userData.opticalFrame)
+    const inverse = frame.clone().invert()
+    const extents = new Map<string, { min: THREE.Vector3; max: THREE.Vector3 }>()
+    scene.traverse((object) => {
+      if (!(object instanceof THREE.Mesh) || !object.userData.opticalGeometry) return
+      const box = new THREE.Box3().setFromObject(object)
+      box.applyMatrix4(inverse)
+      extents.set(object.userData.partId, { min: box.min, max: box.max })
+    })
+    const primary = extents.get('primaryMirror')!
+    const secondary = extents.get('secondaryMirror')!
+    expect(primary.max.x - primary.min.x).toBeGreaterThan(.017)
+    expect(primary.max.y - primary.min.y).toBeGreaterThan(.15)
+    expect(secondary.max.x - secondary.min.x).toBeGreaterThan(.005)
+    expect(secondary.max.y - secondary.min.y).toBeGreaterThan(.03)
+    expect(secondary.max.z - secondary.min.z).toBeGreaterThan(.02)
   })
 })

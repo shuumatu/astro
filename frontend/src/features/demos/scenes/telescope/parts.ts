@@ -4,6 +4,8 @@ export const TELESCOPE_PARTS = [
   { id: 'spider', label: '蜘蛛架与副镜支座', color: 0xceafff, description: '镜筒前端的十字支臂及中心支座，用于支撑副镜；不是调焦旋钮。' },
   { id: 'mirrorCell', label: '后端支撑环与支座', color: 0xe6bc76, description: '位于镜筒后端的圆环、十字支撑与中心座。后端支撑不同于前端蜘蛛架，也不能据此认定存在面形正确的主镜。' },
   { id: 'internalDisk', label: '筒内带孔圆盘', color: 0xe4b59d, description: '镜筒中段的厚圆盘，中央有孔。形状和位置可以确认，但没有依据把它认定为主镜；它会遮挡这里的牛反光束，光路教学中将其隐藏。' },
+  { id: 'primaryMirror', label: '主镜（抛物面）', color: 0xffc56e, description: '新增的可选中光学几何：凹面抛物镜，位于镜筒后端，承担集光和物镜作用。尺寸为教学模型参数。' },
+  { id: 'secondaryMirror', label: '副镜（平面椭圆）', color: 0x8fe7ff, description: '新增的可选中光学几何：约 45° 放置的平面椭圆镜，把会聚光束折向侧面调焦座。尺寸为教学模型参数。' },
   { id: 'finder', label: '寻星镜与支座', color: 0x91dfaa, description: '主镜筒上方独立的小型望远镜与支撑杆，用于寻找目标，不属于主望远镜的成像光路。' },
   { id: 'focuser', label: '调焦座、手轮与目镜筒', color: 0xf6a6d8, description: '镜筒前部侧面的套筒、双手轮和目镜外壳，用于移动目镜位置完成调焦。' },
   { id: 'rings', label: '镜筒抱箍与安装座', color: 0xf7d675, description: '环抱镜筒的两个圆环及下方安装座，把镜筒连接到赤道仪。' },
