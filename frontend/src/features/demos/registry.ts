@@ -118,6 +118,17 @@ export const demos: DemoDefinition[] = [
       categoryKey: featureCategoryKey(feature.category),
     })),
   },
+  {
+    slug: 'telescope-newtonian',
+    titleKey: 'demos.items.telescope.title',
+    summaryKey: 'demos.items.telescope.summary',
+    hintKey: 'demos.items.telescope.hint',
+    creditKey: 'demos.items.telescope.credit',
+    loadScene: () => import('./scenes/telescope/index'),
+    defaultSettings: { playing: false, timeScale: 0, showLabels: true, showOrbits: false },
+    controls: ['labels'],
+    transport: false,
+  },
 ]
 
 export function findDemo(slug: string): DemoDefinition | null {

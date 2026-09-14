@@ -24,3 +24,10 @@ Thumbs.db
 # Local generated data
 data/
 logs/
+
+# Scratch: downloaded originals, headless-browser profiles, verification screenshots. None of this is
+# source, and a browser profile must never be committed even when it looks empty - one was, and it
+# carried a Login Data database and a Local State with an encryption key.
+.cache/
+.agents/
+.chrome-test*/

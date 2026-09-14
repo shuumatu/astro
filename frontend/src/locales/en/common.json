@@ -197,6 +197,13 @@
             "caption": "Chang'e 4, January 2019. The first panorama taken from the lunar far side: the lander's solar panels and the Yutu-2 rover's tracks inside Von Kármán crater, in the South Pole–Aitken basin."
           }
         }
+      },
+      "telescope": {
+        "title": "Newtonian reflector: meet the parts",
+        "summary": "Inspect geometry-reviewed mechanical groups with glowing selection and isolation, then trace light inside the transparent tube from entry through both mirrors to the focus.",
+        "hint": "Drag to orbit · Scroll to zoom · Select to glow or isolate · Reveal light paths step by step",
+        "credit": "Mechanical geometry preserved from the source GLB; added mirrors and rays are an ideal teaching model, not manufacturer optical specifications",
+        "readout": "{count} geometry-reviewed mechanical groups · Optics share the tube coordinate frame"
       }
     },
     "scene": {
@@ -204,7 +211,18 @@
       "earth": "Earth",
       "comet": "Comet",
       "dustBand": "Dust trail",
-      "meteorShowerPoint": "Meteor shower point"
+      "meteorShowerPoint": "Meteor shower point",
+      "telescope": {
+        "primaryMirror": "Primary mirror (objective)",
+        "secondaryMirror": "Secondary mirror (flat)",
+        "spider": "Secondary support (spider)",
+        "tube": "Main tube",
+        "optics": "Primary and secondary mirrors",
+        "focuser": "Focuser and eyepiece",
+        "mount": "Equatorial mount",
+        "tripod": "Tripod and base",
+        "hardware": "Knobs and fasteners"
+      }
     },
     "controls": {
       "playback": "Playback",
@@ -218,14 +236,6 @@
       "grid": "Graticule",
       "brightness": "Brightness",
       "sunLongitude": "Sun position",
-      "phaseNew": "New Moon",
-      "phaseWaxingCrescent": "Waxing crescent",
-      "phaseFirstQuarter": "First quarter",
-      "phaseWaxingGibbous": "Waxing gibbous",
-      "phaseFull": "Full Moon",
-      "phaseWaningGibbous": "Waning gibbous",
-      "phaseLastQuarter": "Last quarter",
-      "phaseWaningCrescent": "Waning crescent",
       "fullBright": "Full bright",
       "resetView": "Reset view",
       "fullscreen": "Full screen",

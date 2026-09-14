@@ -5,7 +5,6 @@ import * as THREE from 'three'
 import {
   defaultSunLongitudeDeg,
   openingSunLongitudeDeg,
-  phaseDegFor,
   subSolarLatitudeDeg,
   sunDirectionFor,
 } from './scene'
@@ -47,16 +46,6 @@ describe('the Sun as a sub-solar longitude', () => {
     for (const longitude of [90, 270]) {
       expect(Math.abs(sunDirectionFor(longitude).dot(nearSide)), `longitude ${longitude} is a quarter`)
         .toBeLessThan(0.02)
-    }
-  })
-
-  it('labels the phase as the supplement of the longitude', () => {
-    expect(phaseDegFor(0)).toBeCloseTo(180, 6)
-    expect(phaseDegFor(180)).toBeCloseTo(0, 6)
-    expect(phaseDegFor(90)).toBeCloseTo(270, 6)
-    for (const longitude of [0, 33, 200, 359]) {
-      expect(phaseDegFor(longitude)).toBeGreaterThanOrEqual(0)
-      expect(phaseDegFor(longitude)).toBeLessThan(360)
     }
   })
 

@@ -48,41 +48,6 @@ const chips = computed(() => props.controls.map((id) => ({
   labelKey: CONTROL_LABEL_KEYS[id],
   checked: id === 'orbits' ? props.showOrbits : id === 'labels' ? props.showLabels : props.showGrid,
 })))
-
-/**
- * The phase name for the current Sun longitude.
- *
- * The dial sets the selenographic longitude the Sun stands over, and the phase - the angle between
- * the Sun and the Earth - is its supplement, because the sub-Earth point sits near longitude 0. So a
- * Sun over the near side (longitude 0) is a full Moon and one over the far side is new. Naming the
- * phase makes the single control self-explanatory: "158 degrees" tells most viewers nothing, while
- * "waning gibbous" tells them what they are looking at.
- */
-const phaseName = computed(() => {
-  const phase = (((props.sunLongitude + 180) % 360) + 360) % 360
-  const stops: [number, string][] = [
-    [0, 'phaseNew'],
-    [45, 'phaseWaxingCrescent'],
-    [90, 'phaseFirstQuarter'],
-    [135, 'phaseWaxingGibbous'],
-    [180, 'phaseFull'],
-    [225, 'phaseWaningGibbous'],
-    [270, 'phaseLastQuarter'],
-    [315, 'phaseWaningCrescent'],
-  ]
-  let nearest = stops[0]
-  let nearestDistance = Infinity
-  for (const stop of stops) {
-    const difference = Math.abs(phase - stop[0])
-    // Angular distance, so 350 degrees is recognised as 10 away from new rather than 350.
-    const distance = Math.min(difference, 360 - difference)
-    if (distance < nearestDistance) {
-      nearest = stop
-      nearestDistance = distance
-    }
-  }
-  return t(`demos.controls.${nearest[1]}`)
-})
 </script>
 
 <template>
@@ -109,10 +74,9 @@ const phaseName = computed(() => {
     <div class="display-stack">
       <div class="display-controls">
         <!-- One angle, because a real Sun position needs one: the selenographic longitude the Sun
-             stands over, which is what sets the terminator and therefore the phase. The old
-             azimuth-plus-elevation pair described a light hung over the *camera*, which is not where
-             the Sun is. The readout also names the phase, because "158 degrees" means nothing to most
-             viewers while "waning gibbous" does. -->
+             stands over, which is what sets the terminator. The old azimuth-plus-elevation pair
+             described a light hung over the *camera*, which is not where the Sun is. The readout is
+             the bare angle, matching the other sliders. -->
         <label
           v-if="sunLongitudeRange"
           class="chip slider light-slider"
@@ -128,7 +92,7 @@ const phaseName = computed(() => {
             :aria-label="t('demos.controls.sunLongitude')"
             @input="emit('update:sunLongitude', Number(($event.target as HTMLInputElement).value))"
           >
-          <output class="chip-value phase">{{ phaseName }} {{ Math.round(sunLongitude) }}°</output>
+          <output class="chip-value angle">{{ Math.round(sunLongitude) }}°</output>
         </label>
         <label v-if="sunLongitudeRange" class="chip" :title="t('demos.controls.fullBright')">
           <input

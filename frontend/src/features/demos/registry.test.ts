@@ -26,15 +26,6 @@ describe('demo registry locale keys', () => {
       'demos.controls.speed',
       'demos.controls.resetView',
       'demos.controls.sunLongitude',
-      // The Sun-angle slider names the phase that angle corresponds to, so all eight are visible.
-      'demos.controls.phaseNew',
-      'demos.controls.phaseWaxingCrescent',
-      'demos.controls.phaseFirstQuarter',
-      'demos.controls.phaseWaxingGibbous',
-      'demos.controls.phaseFull',
-      'demos.controls.phaseWaningGibbous',
-      'demos.controls.phaseLastQuarter',
-      'demos.controls.phaseWaningCrescent',
       'demos.controls.fullBright',
       'demos.controls.fullscreen',
       'demos.controls.exitFullscreen',
@@ -92,5 +83,20 @@ describe('demo registry locale keys', () => {
     expect(moon?.defaultSettings?.sunLongitudeDeg).toBeUndefined()
     expect(moon?.cinematicKey).toBeNull()
     expect(moon?.defaultSettings?.fullBright).toBe(false)
+  })
+
+  /**
+   * The Sun slider shows the bare angle, the way the brightness and speed sliders do. It briefly also
+   * named the lunar phase the angle corresponds to; that is gone, so the strings are gone too rather
+   * than left behind as dead entries.
+   */
+  it('does not carry lunar phase names for the Sun slider', () => {
+    for (const bundle of [zh, en]) {
+      const controls = bundle.demos.controls as Record<string, unknown>
+      const phaseKeys = Object.keys(controls).filter((key) => key.startsWith('phase'))
+      expect(phaseKeys, `unexpected phase strings: ${phaseKeys.join(', ')}`).toHaveLength(0)
+      // The label and the plain readout remain.
+      expect(typeof controls.sunLongitude).toBe('string')
+    }
   })
 })

@@ -197,6 +197,13 @@
             "caption": "嫦娥四号，2019 年 1 月。人类从月球背面拍摄的第一幅全景影像：着陆器的太阳翼，以及南极-艾特肯盆地冯·卡门坑内“玉兔二号”留下的车辙。"
           }
         }
+      },
+      "telescope": {
+        "title": "牛顿式反射望远镜：认识每个零件",
+        "summary": "按形状与装配位置拆分机械零件，点选发光或单独查看；切换透明镜筒，逐步追踪入射、主镜反射、副镜折转与焦点。",
+        "hint": "拖动旋转 · 滚轮缩放 · 点选发光 · 单独查看部件；光路：选择步骤逐段显示",
+        "credit": "机械几何按原 GLB 拆分保留；镜面与光路为模型内的理想教学补建，不代表厂家光学参数",
+        "readout": "{count} 类机械组件 · 按几何核对分类 · 光路与镜筒共用坐标"
       }
     },
     "scene": {
@@ -204,7 +211,18 @@
       "earth": "地球",
       "comet": "彗星",
       "dustBand": "尘埃带",
-      "meteorShowerPoint": "流星雨发生点"
+      "meteorShowerPoint": "流星雨发生点",
+      "telescope": {
+        "primaryMirror": "主镜（兼作物镜）",
+        "secondaryMirror": "副镜（平面镜）",
+        "spider": "副镜支架（蜘蛛架）",
+        "tube": "主镜筒",
+        "optics": "主镜与副镜",
+        "focuser": "调焦座与目镜",
+        "mount": "赤道仪支架",
+        "tripod": "三脚架与底座",
+        "hardware": "旋钮与紧固件"
+      }
     },
     "controls": {
       "playback": "播放控制",
@@ -218,14 +236,6 @@
       "grid": "月面经纬网",
       "brightness": "亮度",
       "sunLongitude": "太阳方位",
-      "phaseNew": "新月",
-      "phaseWaxingCrescent": "娥眉月",
-      "phaseFirstQuarter": "上弦月",
-      "phaseWaxingGibbous": "盈凸月",
-      "phaseFull": "满月",
-      "phaseWaningGibbous": "亏凸月",
-      "phaseLastQuarter": "下弦月",
-      "phaseWaningCrescent": "残月",
       "fullBright": "全亮",
       "resetView": "重置视角",
       "fullscreen": "全屏",

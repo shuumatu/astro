@@ -122,10 +122,6 @@ export function defaultSunLongitudeDeg(): number {
   }
 }
 
-/** The phase, in degrees, for a sub-solar longitude: 0 is new and 180 is full. */
-export function phaseDegFor(sunLongitudeDeg: number): number {
-  return (((sunLongitudeDeg + 180) % 360) + 360) % 360
-}
 /** Relief strength the globe's own LOLA bump map is drawn with; crops scale off it. */
 const BODY_BUMP_SCALE = 1.2
 const LOCAL_BUMP_EXAGGERATION = 3

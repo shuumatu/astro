@@ -42,10 +42,72 @@ h1 { margin: .4rem 0 1rem; font-size: 4.5rem; line-height: .98; }
 .placeholder h1 { font-size: 3rem; }
 .placeholder p { color: #aabbd0; }
 
+/* Newtonian telescope lesson controls (mounted by the Three.js scene). */
+.telescope-controls {
+  position: absolute;
+  z-index: 6;
+  top: clamp(86px, 12vh, 120px);
+  right: clamp(12px, 2vw, 24px);
+  width: min(270px, 86vw);
+  max-height: calc(100% - 170px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: .85rem .9rem .8rem;
+  border: 1px solid rgb(55 83 112 / 72%);
+  border-radius: 8px;
+  color: #d8e4f4;
+  background: rgb(6 14 26 / 88%);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(10px);
+}
+.telescope-controls-title { color: #eaf2ff; font-size: .96rem; font-weight: 650; }
+.telescope-controls-subtitle { margin: .18rem 0 .75rem; color: #8fa4bd; font-size: .72rem; }
+.telescope-model-note { margin: -.2rem 0 .65rem; padding: .38rem .45rem; border-left: 2px solid #d8b4fe; color: #c2cede; background: rgb(35 26 53 / 48%); font-size: .65rem; line-height: 1.4; }
+.telescope-view-switch { display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; margin: -.15rem 0 .75rem; }
+.telescope-view-switch button { min-height: 32px; border: 1px solid #35516e; border-radius: 4px; color: #9fb4cf; background: transparent; cursor: pointer; font-size: .72rem; }
+.telescope-view-switch button:hover, .telescope-view-switch button.active { border-color: #72d4d8; color: #07111f; background: #72d4d8; }
+.telescope-parts-heading { margin-top: .65rem; color: #72d4d8; font-size: .72rem; font-weight: 650; letter-spacing: .04em; }
+.telescope-controls[data-mode='structure'] .telescope-lesson { display: none; }
+.telescope-controls[data-mode='optics'] .telescope-parts-heading,
+.telescope-controls[data-mode='optics'] .telescope-structure-actions,
+.telescope-controls[data-mode='optics'] .telescope-part-list { display: none; }
+.telescope-structure-actions { display: flex; gap: .3rem; margin-top: .5rem; }
+.telescope-structure-actions button { border: 1px solid #35516e; border-radius: 4px; padding: .3rem; color: #c2d8e9; background: #152638; font-size: .68rem; cursor: pointer; }
+.telescope-controls button:disabled { opacity: .4; cursor: default; }
+.telescope-controls button:focus-visible { outline: 2px solid #8ee7e9; outline-offset: 2px; }
+.telescope-lesson { margin-top: .75rem; padding-top: .65rem; border-top: 1px solid rgb(55 83 112 / 55%); }
+.telescope-lesson-heading { margin-bottom: .38rem; color: #72d4d8; font-size: .72rem; font-weight: 650; letter-spacing: .04em; }
+.telescope-step-list { display: grid; gap: .25rem; }
+.telescope-step {
+  display: grid; grid-template-columns: 1.35rem 1fr; gap: .4rem; align-items: center; width: 100%;
+  padding: .28rem .34rem; border: 1px solid transparent; border-radius: 4px; color: #b9c9dd;
+  text-align: left; background: transparent; cursor: pointer; font: inherit;
+}
+.telescope-step:hover, .telescope-step.active { border-color: #35516e; color: #eaf2ff; background: rgb(22 42 66 / 74%); }
+.telescope-step-number { display: grid; place-items: center; width: 1.25rem; height: 1.25rem; border: 1px solid #53708c; border-radius: 50%; color: #72d4d8; font-size: .68rem; }
+.telescope-step strong, .telescope-step small { display: block; }
+.telescope-step strong { font-size: .72rem; font-weight: 600; }
+.telescope-step small { margin-top: .08rem; color: #8fa4bd; font-size: .63rem; line-height: 1.2; }
+.telescope-ray-toggle { margin-top: .45rem; padding: .2rem .45rem; border: 1px solid #35516e; border-radius: 4px; color: #9fb4cf; background: transparent; cursor: pointer; font-size: .68rem; }
+.telescope-ray-toggle:hover { color: #07111f; background: #72d4d8; }
+.telescope-part-list { display: grid; gap: .28rem; margin-top: .7rem; }
+.telescope-part-list button {
+  display: flex; align-items: center; gap: .48rem; min-height: 30px; padding: .25rem .4rem;
+  border: 1px solid transparent; border-radius: 4px; color: #b9c9dd; text-align: left;
+  background: transparent; cursor: pointer; font: inherit; font-size: .76rem;
+}
+.telescope-part-list button:hover, .telescope-part-list button.active { border-color: #35516e; color: #eaf2ff; background: rgb(22 42 66 / 74%); }
+.telescope-dot { flex: none; width: .55rem; height: .55rem; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.telescope-status { min-height: 2.4em; margin: .65rem 0 0; color: #8fa4bd; font-size: .72rem; line-height: 1.45; }
+
 @media (max-width: 680px) {
   .site-header { flex-wrap: wrap; gap: 1rem; padding: 1rem 5vw; }
   .nav-links { order: 3; width: 100%; overflow-x: auto; }
   .locale-switcher { margin-left: auto; }
   h1 { font-size: 2.75rem; }
   .page-shell.sky-map-shell { width: calc(100vw - 16px); }
+}
+
+@media (max-width: 700px) {
+  .telescope-controls { top: auto; right: 12px; bottom: 72px; width: min(250px, calc(100vw - 24px)); max-height: 42%; }
 }

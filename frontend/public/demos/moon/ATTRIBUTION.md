@@ -141,8 +141,9 @@ which site you last flew to, and the "terminator" bends into shapes no phase of 
 also needed two controls to say what one angle says.
 
 - The slider is the **sub-solar longitude**: 0 puts the Sun over the near side, which is a full Moon,
-  and 180 puts it over the far side, which is new. The readout names the phase that angle corresponds
-  to, because a bare number is not something most viewers can picture.
+  and 180 puts it over the far side, which is new. The readout is the bare angle, as on the other
+  sliders; it deliberately does not name the phase, which was tried and read as a second, competing
+  piece of information on a control whose job is to set one number.
 - The **solar latitude** is not a control. It is the Moon's solar declination, taken from the real sky
   for the current date, and it is within about 1.5 degrees of the equator because that is the Moon's
   axial tilt. Keeping it real is what makes each site's solar elevation and shadow length physically
