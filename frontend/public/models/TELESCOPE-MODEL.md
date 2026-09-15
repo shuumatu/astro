@@ -88,6 +88,20 @@ blocked by a spider vane. Screws are static teaching geometry, not functional CA
 constraints. Body chamfers, cap thickness and washers are modeled; manufacturing
 screw threads and adhesive deformation are not simulated.
 
+## Display materials
+
+The interactive viewer assigns neutral black/white/gray materials by reviewed part semantics rather than reusing
+the source GLB's ambiguous material slots. The tube and finder use a dark satin-painted
+finish; the spider, mount and rings use darker anodized/painted aluminum; counterweights,
+fasteners and the holder use brushed metal; pads use rubber-like dark surfaces; and the
+The primary and secondary reflecting faces use neutral silver `MeshPhysicalMaterial`
+surfaces with full metal response, low roughness and clearcoat. The primary is slightly
+rougher than the secondary so the two optical surfaces remain visually distinguishable
+without blue or gold tinting. These are visual teaching materials, not measured coating
+spectra or a claim about the exact manufacturer finish. Selected parts temporarily use
+the existing emissive highlight material, then restore their semantic PBR material when
+deselected.
+
 I also searched public model indexes and repository search results for downloadable
 Newtonian secondary-holder STL/STEP/OBJ assets. The results were either unavailable,
 unclear-license product renders, or holder designs with incompatible tube diameters;

@@ -1,9 +1,11 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { createStage, type Stage } from '../../engine/stage'
 import type { DemoScene, DemoSceneOptions, DemoSceneSettings } from '../../types'
 import { TELESCOPE_PARTS, isPartId, type PartId } from './parts'
 import { buildOptics, OPTICAL_VIEW_NORMAL } from './optics'
+import { GeometryDiagnostics } from '../../engine/geometryDiagnostics'
 import opticalSpec from './optical-spec.json'
 
 type ViewMode = 'structure' | 'optics'
@@ -33,7 +35,9 @@ export class TelescopeScene implements DemoScene {
   private rayVisible = true
   private lessonStep = 0
   private disposed = false
+  private environment: THREE.Texture | null = null
   private downPoint: { x: number; y: number } | null = null
+  private readonly diagnostics: GeometryDiagnostics
 
   constructor(container: HTMLElement, private readonly options: DemoSceneOptions = {}) {
     this.stage = createStage(container, {
@@ -43,11 +47,23 @@ export class TelescopeScene implements DemoScene {
     this.stage.scene.add(new THREE.HemisphereLight(0xdcefff, 0x42546b, 2.2))
     const key = new THREE.DirectionalLight(0xffffff, 3.2)
     key.position.set(5, 8, 6)
-    const rim = new THREE.DirectionalLight(0x8ed6ff, 1.8)
+    const rim = new THREE.DirectionalLight(0xffffff, 1.6)
     rim.position.set(-6, 3, -4)
     this.stage.scene.add(key, rim)
     this.stage.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.stage.renderer.toneMappingExposure = 1.25
+    // A neutral studio environment is required for metallic mirror coatings to
+    // produce visible reflections. Directional lights alone do not provide an
+    // image for a metal BRDF to reflect, so the mirror otherwise looks flat or black.
+    if (typeof (this.stage.renderer as THREE.WebGLRenderer).getRenderTarget === 'function') {
+      const pmrem = new THREE.PMREMGenerator(this.stage.renderer)
+      const room = new RoomEnvironment()
+      this.environment = pmrem.fromScene(room, 0.04).texture
+      this.stage.scene.environment = this.environment
+      this.stage.scene.environmentIntensity = .7
+      room.dispose()
+      pmrem.dispose()
+    }
     for (const part of TELESCOPE_PARTS) {
       const material = new THREE.MeshStandardMaterial({
         color: part.color, emissive: part.color, emissiveIntensity: 1,
@@ -57,6 +73,7 @@ export class TelescopeScene implements DemoScene {
       this.ownedMaterials.add(material)
     }
     this.panel = this.createControls(container)
+    this.diagnostics = new GeometryDiagnostics(container)
     const canvas = this.stage.renderer.domElement
     canvas.addEventListener('pointerdown', this.onPointerDown)
     canvas.addEventListener('pointerup', this.onPointerUp)
@@ -87,6 +104,8 @@ export class TelescopeScene implements DemoScene {
     canvas.removeEventListener('pointerup', this.onPointerUp)
     this.panel.remove()
     this.stage.dispose()
+    this.diagnostics.dispose()
+    this.environment?.dispose()
     // Include cached materials that are not currently attached to visible meshes.
     this.ownedMaterials.forEach((material) => material.dispose())
   }
@@ -107,17 +126,34 @@ export class TelescopeScene implements DemoScene {
       if (JSON.stringify(this.model.userData.opticalSpec) !== JSON.stringify(opticalSpec)) {
         throw new Error('GLB optical prescription is stale; rebuild the classified model')
       }
-      const palette = [0x344b66, 0xd3dbe3, 0x303947, 0x8493a5, 0xbecbd7, 0x52677e, 0x314761, 0x91a2b6]
-      const displayBySource = new Map<THREE.Material, THREE.MeshStandardMaterial>()
-      const displayMaterial = (source: THREE.Material): THREE.MeshStandardMaterial => {
-        const existing = displayBySource.get(source)
+      const profiles: Record<PartId, { color: number; metalness: number; roughness: number }> = {
+        tube: { color: 0x15171a, metalness: .16, roughness: .2 }, spider: { color: 0x101114, metalness: .55, roughness: .27 },
+        secondaryHolder: { color: 0x73777b, metalness: .68, roughness: .32 }, mirrorCell: { color: 0xe5e6e7, metalness: .7, roughness: .25 },
+        primaryMirror: { color: 0xd4d5d6, metalness: .72, roughness: .1 }, secondaryMirror: { color: 0xe1e2e3, metalness: .74, roughness: .07 },
+        finder: { color: 0x16181b, metalness: .12, roughness: .3 }, focuser: { color: 0xe7e8e9, metalness: .72, roughness: .2 },
+        rings: { color: 0xffffff, metalness: .62, roughness: .24 }, mount: { color: 0x9da1a5, metalness: .52, roughness: .72 },
+        counterweight: { color: 0x9b9da0, metalness: .78, roughness: .23 }, tripod: { color: 0xbcc0c4, metalness: .72, roughness: .23 },
+        tray: { color: 0xc8cacc, metalness: .68, roughness: .25 }, hardware: { color: 0x292b2e, metalness: .86, roughness: .18 },
+      }
+      const displayBySource = new Map<string, THREE.MeshStandardMaterial>()
+      const displayMaterial = (source: THREE.Material, id: PartId): THREE.MeshStandardMaterial => {
+        const key = `${id}:${source.name}`
+        const existing = displayBySource.get(key)
         if (existing) return existing
-        const material = source instanceof THREE.MeshStandardMaterial && source.name.startsWith('Modeled_')
-          ? source.clone() : new THREE.MeshStandardMaterial({
-          color: palette[displayBySource.size % palette.length], metalness: .3, roughness: .45,
-          side: THREE.DoubleSide,
-        })
-        displayBySource.set(source, material)
+        const p = profiles[id]
+        const generatedFinish = source.name.includes('Modeled_steel')
+          ? { color: 0xb6bbc0, metalness: .9, roughness: .2 }
+          : source.name.includes('Modeled_rubber')
+            ? { color: 0x25272a, metalness: .05, roughness: .7 }
+            : p
+        const material = id === 'primaryMirror' || id === 'secondaryMirror'
+          ? new THREE.MeshPhysicalMaterial({
+            color: generatedFinish.color, metalness: .72, roughness: p.roughness,
+            clearcoat: .58, clearcoatRoughness: .05,
+            side: THREE.DoubleSide, envMapIntensity: 1,
+          })
+          : new THREE.MeshStandardMaterial({ color: generatedFinish.color, metalness: generatedFinish.metalness, roughness: generatedFinish.roughness, side: THREE.DoubleSide, envMapIntensity: 1 })
+        displayBySource.set(key, material)
         this.ownedMaterials.add(material)
         return material
       }
@@ -129,7 +165,25 @@ export class TelescopeScene implements DemoScene {
         members.push(object)
         this.parts.set(id, members)
         const source = Array.isArray(object.material) ? object.material : [object.material]
-        const base = source.map(displayMaterial)
+        // These two front-rim fragments are welded into the original tube mesh,
+        // but their position and annular shape identify the white spider-side rim.
+        const visualId: PartId = id === 'tube' && /_p(?:5_c9|6_c7)$/.test(object.name)
+          ? 'rings' : id
+        let base = source.map((material) => displayMaterial(material, visualId))
+        // Explicit reviewed-node overrides from the geometry diagnostic pass.
+        if (/^EquatorialMount_n2_p3_c3$/.test(object.name)) {
+          const white = new THREE.MeshStandardMaterial({
+            color: 0xffffff, metalness: .62, roughness: .24, side: THREE.DoubleSide,
+          })
+          this.ownedMaterials.add(white)
+          base = source.map(() => white)
+        } else if (/^(EquatorialMount_n2_p6_c2|EquatorialMount_n2_p3_c1|EquatorialMount_n2_p6_c1)$/.test(object.name)) {
+          const rubber = new THREE.MeshStandardMaterial({
+            color: 0x17191b, metalness: .04, roughness: .78, side: THREE.DoubleSide,
+          })
+          this.ownedMaterials.add(rubber)
+          base = source.map(() => rubber)
+        }
         const faded = base.map((material) => {
           const clone = material.clone()
           clone.transparent = true
@@ -142,7 +196,6 @@ export class TelescopeScene implements DemoScene {
         this.fadedMaterials.set(object, Array.isArray(object.material) ? faded : faded[0]!)
         object.material = this.baseMaterials.get(object)!
       })
-      displayBySource.forEach((_display, source) => source.dispose())
       const frame: unknown = this.model.userData.opticalFrame
       if (!Array.isArray(frame) || frame.length !== 16 || !frame.every(Number.isFinite)) {
         throw new Error('Missing calibrated optical frame')
@@ -152,8 +205,10 @@ export class TelescopeScene implements DemoScene {
       this.model.scale.setScalar(scale)
       this.model.position.copy(box.getCenter(new THREE.Vector3())).multiplyScalar(-scale)
       this.optics = buildOptics(frame as number[], false)
+      this.diagnostics.inspect(this.model)
       this.model.add(this.optics)
       this.stage.scene.add(this.model)
+      this.stage.scene.add(this.diagnostics.group)
       this.options.onLabels?.([])
       this.options.onReadout?.({ key: 'demos.items.telescope.readout', params: { count: this.parts.size } })
       this.setViewMode(this.mode)
@@ -274,6 +329,7 @@ export class TelescopeScene implements DemoScene {
       <div class="telescope-structure-actions">
         <button type="button" data-isolate disabled>只看选中部件</button>
         <button type="button" data-clear>取消选择</button>
+        <button type="button" data-diagnostics>几何诊断</button>
       </div>
       <div class="telescope-part-list"></div>
       <p class="telescope-status" role="status">正在载入分类模型…</p>`
@@ -316,6 +372,10 @@ export class TelescopeScene implements DemoScene {
       this.selectPart(null)
       this.stage.resetView()
     })
+    panel.querySelector('[data-diagnostics]')!.addEventListener('click', () => {
+      this.diagnostics.toggle()
+      panel.querySelector<HTMLButtonElement>('[data-diagnostics]')!.setAttribute('aria-pressed', String(this.diagnostics.isEnabled()))
+    })
     container.appendChild(panel)
     return panel
   }
@@ -329,10 +389,18 @@ export class TelescopeScene implements DemoScene {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const start = this.downPoint
     this.downPoint = null
-    if (this.mode !== 'structure' || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) return
+    if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) return
     const rect = this.stage.renderer.domElement.getBoundingClientRect()
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1)
     this.raycaster.setFromCamera(this.pointer, this.stage.camera)
+    if (this.diagnostics.isEnabled()) {
+      const diagnosticMeshes = [...this.parts.values()].flat()
+      const hit = this.raycaster.intersectObjects(diagnosticMeshes, false)[0]?.object
+      this.diagnostics.selectMesh(hit instanceof THREE.Mesh ? hit : null)
+      if (hit instanceof THREE.Mesh) this.setStatus(`${hit.name} · ${String(hit.userData.partId ?? 'unclassified')} · 点击诊断列表可查看源图元信息。`)
+      return
+    }
+    if (this.mode !== 'structure') return
     const meshes = [...this.parts.values()].flat().filter((mesh) => mesh.visible)
     const id: unknown = this.raycaster.intersectObjects(meshes, false)[0]?.object.userData.partId
     this.selectPart(isPartId(id) ? id : null)

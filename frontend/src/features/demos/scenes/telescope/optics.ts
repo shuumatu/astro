@@ -44,9 +44,9 @@ export function buildOptics(frame: number[], includeReferenceSurfaces = true): T
   const geometry=new THREE.BufferGeometry()
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3))
   geometry.setIndex(indices); geometry.computeVertexNormals()
-  const primary=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:0xffc56e,emissive:0x624112,emissiveIntensity:.45,side:THREE.DoubleSide,metalness:.5,roughness:.25}))
+  const primary=new THREE.Mesh(geometry,new THREE.MeshPhysicalMaterial({color:0xd0d0d0,emissive:0x404040,emissiveIntensity:.14,side:THREE.DoubleSide,metalness:.68,roughness:.12,clearcoat:.58,clearcoatRoughness:.05}))
   primary.name='TeachingPrimaryMirror'; group.add(primary)
-  const secondary=new THREE.Mesh(new THREE.CircleGeometry(spec.secondaryMinorRadius,96),new THREE.MeshStandardMaterial({color:0x8fe7ff,emissive:0x12465a,side:THREE.DoubleSide,metalness:.5,roughness:.25}))
+  const secondary=new THREE.Mesh(new THREE.CircleGeometry(spec.secondaryMinorRadius,96),new THREE.MeshPhysicalMaterial({color:0xe2e2e2,emissive:0x404040,emissiveIntensity:.12,side:THREE.DoubleSide,metalness:.72,roughness:.08,clearcoat:.64,clearcoatRoughness:.04}))
   secondary.scale.x=Math.SQRT2
   secondary.position.copy(SECONDARY)
   // The ellipse's long axis lies in the plane containing the incident and exit axes.
