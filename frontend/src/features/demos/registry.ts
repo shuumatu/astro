@@ -129,6 +129,17 @@ export const demos: DemoDefinition[] = [
     controls: ['labels'],
     transport: false,
   },
+  {
+    slug: 'telescope-refractor',
+    titleKey: 'demos.items.refractor.title',
+    summaryKey: 'demos.items.refractor.summary',
+    hintKey: 'demos.items.refractor.hint',
+    creditKey: 'demos.items.refractor.credit',
+    loadScene: () => import('./scenes/refractor/index'),
+    defaultSettings: { playing: false, timeScale: 0, showLabels: true, showOrbits: false },
+    controls: ['labels'],
+    transport: false,
+  },
 ]
 
 export function findDemo(slug: string): DemoDefinition | null {

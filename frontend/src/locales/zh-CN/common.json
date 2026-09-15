@@ -204,6 +204,13 @@
         "hint": "拖动旋转 · 滚轮缩放 · 点选发光 · 单独查看部件；光路：选择步骤逐段显示",
         "credit": "机械几何按原 GLB 拆分保留；镜面与光路为模型内的理想教学补建，不代表厂家光学参数",
         "readout": "{count} 类机械组件 · 按几何核对分类 · 光路与镜筒共用坐标"
+      },
+      "refractor": {
+        "title": "折射式望远镜：光路与零件",
+        "summary": "按几何拆分机械零件，点选发光或单独查看；物镜与目镜为教学补建，逐步追踪平行光入射、物镜折射、焦平面成像与目镜出射。",
+        "hint": "拖动旋转 · 滚轮缩放 · 点选发光 · 单独查看部件；光路：选择步骤逐段显示",
+        "credit": "机械几何按原 GLB 拆分保留；物镜、目镜与光路为模型内的理想教学补建，不代表厂家光学参数",
+        "readout": "{parts} 类机械组件 · 口径 {aperture} mm · 焦距 {focal} mm · 放大 {magnification}×"
       }
     },
     "scene": {
@@ -607,6 +614,10 @@
     "markdownExportFailed": "Markdown 下载失败，当前语言可能还没有内容。",
     "untitled": "未填写标题",
     "selectArticle": "选择一篇探索文章开始编辑",
-    "status": { "DRAFT": "草稿", "PUBLISHED": "已发布", "SUPERSEDED": "历史版本" }
+    "status": {
+      "DRAFT": "草稿",
+      "PUBLISHED": "已发布",
+      "SUPERSEDED": "历史版本"
+    }
   }
 }

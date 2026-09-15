@@ -204,6 +204,13 @@
         "hint": "Drag to orbit · Scroll to zoom · Select to glow or isolate · Reveal light paths step by step",
         "credit": "Mechanical geometry preserved from the source GLB; added mirrors and rays are an ideal teaching model, not manufacturer optical specifications",
         "readout": "{count} geometry-reviewed mechanical groups · Optics share the tube coordinate frame"
+      },
+      "refractor": {
+        "title": "Refracting telescope: optics and parts",
+        "summary": "Inspect geometry-reviewed mechanical groups with glowing selection and isolation, then follow parallel starlight through the added objective, the focal plane and the eyepiece.",
+        "hint": "Drag to orbit · Scroll to zoom · Select to glow or isolate · Reveal light paths step by step",
+        "credit": "Mechanical geometry preserved from the source GLB; the objective, eyepiece and rays are an ideal teaching model, not manufacturer optical specifications",
+        "readout": "{parts} mechanical groups · {aperture} mm aperture · {focal} mm focal length · {magnification}x"
       }
     },
     "scene": {
@@ -607,6 +614,10 @@
     "markdownExportFailed": "Markdown download failed. This language may not have content yet.",
     "untitled": "Untitled article",
     "selectArticle": "Select an Explore article to edit",
-    "status": { "DRAFT": "Draft", "PUBLISHED": "Published", "SUPERSEDED": "Previous" }
+    "status": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published",
+      "SUPERSEDED": "Previous"
+    }
   }
 }
