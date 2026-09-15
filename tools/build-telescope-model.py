@@ -35,7 +35,7 @@ SIMPLE = {2:'hardware',3:'hardware',4:'hardware',5:'focuser',6:'mount',7:'rings'
 NAMES = {'tube':'OpticalTube','rings':'TubeRingsAndSaddle','finder':'FinderScope',
          'focuser':'FocuserAndEyepiece','spider':'SecondarySupport','mount':'EquatorialMount',
          'counterweight':'CounterweightsAndShaft','tripod':'Tripod','tray':'AccessoryTray',
-         'hardware':'Fasteners','mirrorCell':'RearMirrorCell','internalDisk':'InternalPerforatedDisk',
+         'hardware':'Fasteners','mirrorCell':'RearMirrorCell',
          'primaryMirror':'PrimaryParabolicMirror','secondaryMirror':'SecondaryFlatMirror'}
 
 output = {'asset':{'version':'2.0','generator':'Astro geometry-reviewed telescope builder'},
@@ -55,21 +55,29 @@ def add_accessor(values):
                                'type':'VEC3','min':values.min(axis=0).tolist(),'max':values.max(axis=0).tolist()})
     return aid
 
-def add_optical_part(part, local_positions, local_normals):
+def add_optical_part(part, local_positions, local_normals, name, finish):
     """Add a real, selectable optical surface in the same baked frame as the source GLB."""
     world = (np.c_[np.asarray(local_positions), np.ones(len(local_positions))] @ frame.T)[:, :3]
     linear = frame[:3,:3]
     normals = np.asarray(local_normals) @ np.linalg.inv(linear)
     normals /= np.maximum(np.linalg.norm(normals, axis=1)[:,None], 1e-16)
-    name = f'{NAMES[part]}_modeled'
+    assert len(local_positions)%3==0
+    finishes={'black':[.09,.12,.16,1], 'steel':[.53,.59,.66,1], 'rubber':[.025,.035,.045,1],
+              'primary':[.82,.75,.58,1], 'secondary':[.63,.81,.88,1]}
+    material_id=len(output['materials'])
+    output['materials'].append({'name':f'Modeled_{finish}', 'pbrMetallicRoughness':{
+        'baseColorFactor':finishes[finish], 'metallicFactor':.65 if finish in ['steel','primary','secondary'] else .1,
+        'roughnessFactor':.3 if finish in ['primary','secondary'] else .5}, 'doubleSided':False})
     mesh_id = len(output['meshes'])
     output['meshes'].append({'name':name,'primitives':[{'attributes':{
-        'POSITION':add_accessor(world), 'NORMAL':add_accessor(normals)}, 'material':1}]})
+        'POSITION':add_accessor(world), 'NORMAL':add_accessor(normals)}, 'material':material_id}]})
     node_id = len(output['nodes'])
     output['nodes'].append({'name':name,'mesh':mesh_id,'extras':{'partId':part,'opticalRole':part,
-        'geometry':'paraboloid' if part=='primaryMirror' else 'flat_ellipse','opticalGeometry':True}})
+        'geometry':'holder_component' if part=='secondaryHolder' else 'paraboloid' if part=='primaryMirror' else 'flat_ellipse',
+        'opticalGeometry':part!='secondaryHolder','generatedGeometry':True}})
     output['scenes'][0]['nodes'].append(node_id)
     report.append({'name':name,'part':part,'triangles':len(local_positions)//3,'opticalGeometry':True})
+    groups.setdefault(part,[]).append(world.reshape(-1,3,3))
 
 frame=transform(2).copy(); frame[:3,:]*=1000
 
@@ -100,7 +108,7 @@ for ni,node in enumerate(source['nodes']):
                 # End disks can be triangulated entirely from rim vertices, without a center vertex.
                 rear=(center_radius<.078) & (center[:,0]<-.40)
                 batches={'tube':np.asarray(faces)[~(interior|rear|internal_disk)], 'spider':np.asarray(faces)[interior],
-                         'mirrorCell':np.asarray(faces)[rear], 'internalDisk':np.asarray(faces)[internal_disk]}
+                         'mirrorCell':np.asarray(faces)[rear]}
             for part,faces in batches.items():
                 if len(faces)==0: continue
                 vertex_ids=ids.reshape(-1,3)[faces].flatten()
@@ -117,69 +125,12 @@ for ni,node in enumerate(source['nodes']):
                 groups.setdefault(part,[]).append(pos.reshape(-1,3,3))
                 report.append({'name':name,'part':part,'triangles':len(faces)})
 
-# Add actual modeled optical components. The primary is a concave paraboloid; the secondary is a
-# thin flat ellipse whose long axis is in the incident/folded-ray plane.
-P=np.array([-0.405,0,.40827]); S=np.array([.0619,0,.40827]); f=.36336
-positions=[]; normals=[]; rings=16; segments=64
-positions.extend(P); normals.extend([1,0,0])
-for ring in range(1,rings+1):
-    r=.078*ring/rings
-    for j in range(segments):
-        a=2*np.pi*j/segments; y=r*np.cos(a); z=r*np.sin(a)
-        positions.append([P[0]+r*r/(4*f),y,P[2]+z]); normals.append([1,-y/(2*f),-z/(2*f)])
-for ring in range(rings):
-    for j in range(segments):
-        nxt=(j+1)%segments; a=0 if ring==0 else 1+(ring-1)*segments+j; b=1+ring*segments+j
-        c=1+ring*segments+nxt; d=0 if ring==0 else 1+(ring-1)*segments+nxt
-        if ring==0: positions_tri=[positions[a],positions[b],positions[c]]; normals_tri=[normals[a],normals[b],normals[c]]
-        else: positions_tri=[positions[a],positions[b],positions[c],positions[a],positions[c],positions[d]]; normals_tri=[normals[a],normals[b],normals[c],normals[a],normals[c],normals[d]]
-        if ring==0: positions.extend([]); normals.extend([])
-# Rebuild the triangle arrays directly so the center fan does not leave unused vertices.
-primary_pos=[]; primary_n=[]
-for ring in range(rings):
-    for j in range(segments):
-        def point(rr, jj):
-            if rr==0: return P.copy(), np.array([1.,0,0])
-            a=2*np.pi*jj/segments; y=.078*rr/rings*np.cos(a); z=.078*rr/rings*np.sin(a)
-            return np.array([P[0]+(y*y+z*z)/(4*f),y,P[2]+z]), np.array([1.,-y/(2*f),-z/(2*f)])
-        a,na=point(ring,j); b,nb=point(ring+1,j); c,nc=point(ring+1,j+1)
-        primary_pos.extend([a,b,c]); primary_n.extend([na,nb,nc])
-        if ring>0:
-            d,nd=point(ring,j+1); primary_pos.extend([a,c,d]); primary_n.extend([na,nc,nd])
-# Close the mirror blank: a flat rear face and a cylindrical edge give the optical surface
-# visible thickness instead of a zero-thickness sheet.
-back_x=P[0]-.018
-back_center=np.array([back_x,0,P[2]])
-for j in range(segments):
-    a=2*np.pi*j/segments; b=2*np.pi*(j+1)/segments
-    r1=np.array([back_x,.078*np.cos(a),P[2]+.078*np.sin(a)])
-    r2=np.array([back_x,.078*np.cos(b),P[2]+.078*np.sin(b)])
-    primary_pos.extend([back_center,r2,r1]); primary_n.extend([[-1,0,0]]*3)
-    f1,_=point(rings,j); f2,_=point(rings,j+1)
-    primary_pos.extend([f1,f2,r2,f1,r2,r1])
-    edge1=np.array([0,np.cos(a),np.sin(a)]); edge2=np.array([0,np.cos(b),np.sin(b)])
-    primary_n.extend([edge1,edge2,edge2,edge1,edge2,edge1])
-add_optical_part('primaryMirror',primary_pos,primary_n)
-exit_axis=(np.array([0,.185,.43476])-S); exit_axis/=np.linalg.norm(exit_axis)
-normal=np.array([1.,0,0])-exit_axis; normal/=np.linalg.norm(normal)
-major=np.array([1.,0,0])-normal*np.dot(normal,[1.,0,0]); major/=np.linalg.norm(major)
-minor=np.cross(normal,major); center=S; epos=[]; enor=[]
-def ellipse(side,j):
-    a=2*np.pi*j/64
-    return center+side*.003*normal+.034*np.cos(a)*major+.024*np.sin(a)*minor
-for j in range(64):
-    n=(j+1)%64
-    # front and back caps
-    epos.extend([center+.003*normal,ellipse(1,n),ellipse(1,j)])
-    enor.extend([normal,normal,normal])
-    epos.extend([center-.003*normal,ellipse(-1,j),ellipse(-1,n)])
-    enor.extend([-normal,-normal,-normal])
-    # six vertices per edge quad, with genuine thickness
-    epos.extend([ellipse(-1,j),ellipse(-1,n),ellipse(1,n),ellipse(-1,j),ellipse(1,n),ellipse(1,j)])
-    edge=(np.cos(2*np.pi*j/64)*major+np.sin(2*np.pi*j/64)*minor); enor.extend([edge]*6)
-add_optical_part('secondaryMirror',epos,enor)
+optical_builder=runpy.run_path(str(ROOT/'tools/telescope-optical-solids.py'))
+for part in optical_builder['modeled_parts']():
+    add_optical_part(part['part'],part['positions'],part['normals'],part['name'],part['finish'])
 
 output['scenes'][0]['extras']={'opticalFrame':frame.flatten(order='F').tolist(),
+    'opticalSpec':optical_builder['SPEC'],
     'note':'Mechanical surfaces preserved; optical parameters are educational, not manufacturer measurements.'}
 output['buffers'][0]['byteLength']=len(binary)
 j=json.dumps(output,separators=(',',':')).encode(); j+=b' '*((-len(j))%4)
@@ -188,10 +139,17 @@ result=struct.pack('<III',0x46546c67,2,28+len(j)+len(binary))+struct.pack('<II',
 target=ROOT/'frontend/public/models/telescope_newtonian_classified.glb'
 target.write_bytes(result)
 (ROOT/'.cache/telescope-audit/classification.json').write_text(json.dumps(report,indent=2))
-atlas=Image.new('RGB',(1600,1200),'#101820')
+atlas=Image.new('RGB',(1600,int(np.ceil(len(groups)/4))*400),'#101820')
 for k,(part,geometry) in enumerate(groups.items()):
     x,y=(k%4)*400,(k//4)*400
     audit['draw_mesh'](atlas,np.concatenate(geometry),(x,y+24,x+400,y+400))
     ImageDraw.Draw(atlas).text((x+8,y+8),part,fill='white')
 atlas.save(ROOT/'.cache/telescope-audit/classified.png')
+assembly=np.concatenate([np.concatenate(groups[part]) for part in ['spider','secondaryMirror','secondaryHolder']])
+assembly=(np.c_[assembly.reshape(-1,3),np.ones(assembly.size//3)]@np.linalg.inv(frame).T)[:,:3].reshape(-1,3,3)
+preview=Image.new('RGB',(1600,800),'#101820')
+audit['draw_mesh'](preview,assembly,(0,30,800,800),(-1,-.7,1))
+audit['draw_mesh'](preview,assembly,(800,30,1600,800),(1,-.5,1))
+ImageDraw.Draw(preview).text((20,12),'Actual GLB geometry: spider + holder + solid secondary / two viewpoints',fill='white')
+preview.save(ROOT/'.cache/telescope-audit/secondary-holder.png')
 print('BUILT',target,len(result),'bytes',len(report),'fragments')

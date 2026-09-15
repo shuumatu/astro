@@ -1,9 +1,9 @@
 /** Reviewed against tools/audit-telescope.py atlases, then stored on each GLB node as extras.partId. */
 export const TELESCOPE_PARTS = [
   { id: 'tube', label: '镜筒与前口环', color: 0x6ed6d8, description: '容纳光学系统的圆筒外壳与前端口环。寻星镜、蜘蛛架、抱箍和支架已从原来的合并网格中分离。' },
-  { id: 'spider', label: '蜘蛛架与副镜支座', color: 0xceafff, description: '镜筒前端的十字支臂及中心支座，用于支撑副镜；不是调焦旋钮。' },
+  { id: 'spider', label: '蜘蛛架与中心轮毂', color: 0xceafff, description: '原模型镜筒前端的十字支臂及中心轮毂。新建副镜支座通过中心连接杆固定在这里。' },
+  { id: 'secondaryHolder', label: '副镜支座与调节螺钉', color: 0xb5a2dd, description: '新增的斜面镜托、三处背面粘接垫、调节盘、中心连接杆、轴向锁母及三组调节螺钉。连接蜘蛛架中心与副镜背面，可单独查看；为适配当前模型的教学结构，螺钉暂不可操作。' },
   { id: 'mirrorCell', label: '后端支撑环与支座', color: 0xe6bc76, description: '位于镜筒后端的圆环、十字支撑与中心座。后端支撑不同于前端蜘蛛架，也不能据此认定存在面形正确的主镜。' },
-  { id: 'internalDisk', label: '筒内带孔圆盘', color: 0xe4b59d, description: '镜筒中段的厚圆盘，中央有孔。形状和位置可以确认，但没有依据把它认定为主镜；它会遮挡这里的牛反光束，光路教学中将其隐藏。' },
   { id: 'primaryMirror', label: '主镜（抛物面）', color: 0xffc56e, description: '新增的可选中光学几何：凹面抛物镜，位于镜筒后端，承担集光和物镜作用。尺寸为教学模型参数。' },
   { id: 'secondaryMirror', label: '副镜（平面椭圆）', color: 0x8fe7ff, description: '新增的可选中光学几何：约 45° 放置的平面椭圆镜，把会聚光束折向侧面调焦座。尺寸为教学模型参数。' },
   { id: 'finder', label: '寻星镜与支座', color: 0x91dfaa, description: '主镜筒上方独立的小型望远镜与支撑杆，用于寻找目标，不属于主望远镜的成像光路。' },

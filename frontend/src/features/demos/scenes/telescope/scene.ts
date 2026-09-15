@@ -4,6 +4,7 @@ import { createStage, type Stage } from '../../engine/stage'
 import type { DemoScene, DemoSceneOptions, DemoSceneSettings } from '../../types'
 import { TELESCOPE_PARTS, isPartId, type PartId } from './parts'
 import { buildOptics, OPTICAL_VIEW_NORMAL } from './optics'
+import opticalSpec from './optical-spec.json'
 
 type ViewMode = 'structure' | 'optics'
 const STEPS = [
@@ -92,7 +93,7 @@ export class TelescopeScene implements DemoScene {
 
   private async loadModel(): Promise<void> {
     try {
-      const gltf = await new GLTFLoader().loadAsync('/models/telescope_newtonian_classified.glb?v=3')
+      const gltf = await new GLTFLoader().loadAsync(`/models/telescope_newtonian_classified.glb?v=${opticalSpec.revision}`)
       if (this.disposed) {
         gltf.scene.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return
@@ -103,12 +104,16 @@ export class TelescopeScene implements DemoScene {
         return
       }
       this.model = gltf.scene
+      if (JSON.stringify(this.model.userData.opticalSpec) !== JSON.stringify(opticalSpec)) {
+        throw new Error('GLB optical prescription is stale; rebuild the classified model')
+      }
       const palette = [0x344b66, 0xd3dbe3, 0x303947, 0x8493a5, 0xbecbd7, 0x52677e, 0x314761, 0x91a2b6]
       const displayBySource = new Map<THREE.Material, THREE.MeshStandardMaterial>()
       const displayMaterial = (source: THREE.Material): THREE.MeshStandardMaterial => {
         const existing = displayBySource.get(source)
         if (existing) return existing
-        const material = new THREE.MeshStandardMaterial({
+        const material = source instanceof THREE.MeshStandardMaterial && source.name.startsWith('Modeled_')
+          ? source.clone() : new THREE.MeshStandardMaterial({
           color: palette[displayBySource.size % palette.length], metalness: .3, roughness: .45,
           side: THREE.DoubleSide,
         })
@@ -146,7 +151,7 @@ export class TelescopeScene implements DemoScene {
       const scale = 7 / box.getSize(new THREE.Vector3()).length()
       this.model.scale.setScalar(scale)
       this.model.position.copy(box.getCenter(new THREE.Vector3())).multiplyScalar(-scale)
-      this.optics = buildOptics(frame as number[])
+      this.optics = buildOptics(frame as number[], false)
       this.model.add(this.optics)
       this.stage.scene.add(this.model)
       this.options.onLabels?.([])
@@ -162,9 +167,9 @@ export class TelescopeScene implements DemoScene {
     for (const [id, meshes] of this.parts) {
       for (const mesh of meshes) {
         mesh.visible = !(this.mode === 'structure' && this.isolated && this.selected && id !== this.selected)
-        if (this.mode === 'optics' && id === 'internalDisk') mesh.visible = false
         mesh.material = this.mode === 'structure' && id === this.selected
           ? this.glowMaterials.get(id)!
+          : this.mode === 'optics' && ['primaryMirror', 'secondaryMirror', 'secondaryHolder'].includes(id) ? this.baseMaterials.get(mesh)!
           : this.mode === 'optics' || this.selected ? this.fadedMaterials.get(mesh)! : this.baseMaterials.get(mesh)!
       }
     }
@@ -259,7 +264,7 @@ export class TelescopeScene implements DemoScene {
         <button type="button" data-view="structure" class="active" aria-pressed="true">机械结构</button>
         <button type="button" data-view="optics" aria-pressed="false">光路原理</button>
       </div>
-      <div class="telescope-model-note">主镜承担物镜作用。金色主镜与蓝色副镜为理想教学补建，非厂家参数。原模型筒内带孔圆盘会遮光，光路模式暂隐藏该件；不代表原机械模型已经光学验证。</div>
+      <div class="telescope-model-note">主镜承担物镜作用。金色主镜与蓝色副镜为理想教学补建，非厂家参数。已移除原模型中会遮光的筒内带孔圆盘；当前光路只显示镜面、支座和光线。</div>
       <div class="telescope-lesson" aria-label="光路讲解步骤">
         <div class="telescope-lesson-heading">镜筒内光路 · 外壳透明显示</div>
         <div class="telescope-step-list"></div>

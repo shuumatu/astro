@@ -1,10 +1,11 @@
 import * as THREE from 'three'
+import spec from './optical-spec.json' with { type: 'json' }
 
 // Calibrated in the original optical tube's local frame (stored in scene extras).
 // These describe an ideal educational mirror system, not measured optical specifications.
-export const PRIMARY = new THREE.Vector3(-0.405, 0, 0.40827)
-export const SECONDARY = new THREE.Vector3(0.0619, 0, 0.40827)
-export const FOCUS = new THREE.Vector3(0.0619, 0.185, 0.43476)
+export const PRIMARY = new THREE.Vector3().fromArray(spec.primary)
+export const SECONDARY = new THREE.Vector3().fromArray(spec.secondary)
+export const FOCUS = new THREE.Vector3().fromArray(spec.focus)
 const axis = new THREE.Vector3(1, 0, 0)
 const exitAxis = FOCUS.clone().sub(SECONDARY).normalize()
 export const OPTICAL_VIEW_NORMAL = axis.clone().cross(exitAxis).normalize()
@@ -20,15 +21,17 @@ export function traceRay(y: number, z: number): THREE.Vector3[] {
   return [new THREE.Vector3(0.28, primary.y, primary.z), primary, secondary, FOCUS.clone()]
 }
 
-export function buildOptics(frame: number[]): THREE.Group {
+export function buildOptics(frame: number[], includeReferenceSurfaces = true): THREE.Group {
   const group = new THREE.Group()
   group.name = 'TeachingOptics'
   group.matrix.fromArray(frame)
   group.matrixAutoUpdate = false
+  // Reference-only surfaces for standalone projection/tests. The app uses the actual GLB solids.
+  if (includeReferenceSurfaces) {
   const positions: number[] = []
   const indices: number[] = []
   for (let ring=0; ring<=16; ring++) {
-    const radius = .078 * ring / 16
+    const radius = spec.primaryRadius * ring / 16
     for (let j=0; j<=64; j++) {
       const angle=j/64*Math.PI*2
       positions.push(PRIMARY.x+radius*radius/(4*FOCAL_LENGTH), radius*Math.cos(angle), PRIMARY.z+radius*Math.sin(angle))
@@ -43,7 +46,7 @@ export function buildOptics(frame: number[]): THREE.Group {
   geometry.setIndex(indices); geometry.computeVertexNormals()
   const primary=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:0xffc56e,emissive:0x624112,emissiveIntensity:.45,side:THREE.DoubleSide,metalness:.5,roughness:.25}))
   primary.name='TeachingPrimaryMirror'; group.add(primary)
-  const secondary=new THREE.Mesh(new THREE.CircleGeometry(.024,48),new THREE.MeshStandardMaterial({color:0x8fe7ff,emissive:0x12465a,side:THREE.DoubleSide,metalness:.5,roughness:.25}))
+  const secondary=new THREE.Mesh(new THREE.CircleGeometry(spec.secondaryMinorRadius,96),new THREE.MeshStandardMaterial({color:0x8fe7ff,emissive:0x12465a,side:THREE.DoubleSide,metalness:.5,roughness:.25}))
   secondary.scale.x=Math.SQRT2
   secondary.position.copy(SECONDARY)
   // The ellipse's long axis lies in the plane containing the incident and exit axes.
@@ -51,6 +54,7 @@ export function buildOptics(frame: number[]): THREE.Group {
   const minorAxis=SECONDARY_NORMAL.clone().cross(majorAxis)
   secondary.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(majorAxis,minorAxis,SECONDARY_NORMAL))
   secondary.name='TeachingSecondaryMirror'; group.add(secondary)
+  }
   for (let i=0; i<8; i++) {
     const angle=(i+.5)*Math.PI/4
     const points=traceRay(.061*Math.cos(angle),.061*Math.sin(angle))

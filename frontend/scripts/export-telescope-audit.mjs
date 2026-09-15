@@ -15,11 +15,11 @@ function triangles(mesh, transform) {
     new THREE.Vector3().fromBufferAttribute(pos, ids ? ids.getX(i) : i).applyMatrix4(transform).toArray())
 }
 scene.traverse((object) => {
-  if (object instanceof THREE.Mesh && ['tube', 'focuser', 'finder', 'spider', 'mirrorCell', 'internalDisk', 'primaryMirror', 'secondaryMirror'].includes(object.userData.partId)) {
+  if (object instanceof THREE.Mesh && ['tube', 'focuser', 'finder', 'spider', 'mirrorCell', 'primaryMirror', 'secondaryMirror', 'secondaryHolder'].includes(object.userData.partId)) {
     result.mechanics.push({ part: object.userData.partId, positions: triangles(object, inverse) })
   }
 })
-const optics = buildOptics(new THREE.Matrix4().toArray())
+const optics = buildOptics(new THREE.Matrix4().toArray(), false)
 optics.updateMatrixWorld(true)
 for (const object of optics.children) {
   if (object instanceof THREE.Mesh || object instanceof THREE.Line) {

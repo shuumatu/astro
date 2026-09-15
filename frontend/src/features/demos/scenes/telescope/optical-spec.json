@@ -1,0 +1,17 @@
+{
+  "revision": "holder-mirror-clearance-7",
+  "primary": [-0.405, 0, 0.40827],
+  "secondary": [0.0619, 0, 0.40827],
+  "focus": [0.0619, 0.185, 0.43476],
+  "primaryRadius": 0.078,
+  "primaryThickness": 0.018,
+  "secondaryMinorRadius": 0.024,
+  "secondaryThickness": 0.006,
+  "spiderHub": [0.16, 0, 0.40827],
+  "secondaryHolder": {
+    "bondPadThickness": 0.001,
+    "cupThickness": 0.001,
+    "cupOutlineScale": 0.72,
+    "shellRadius": 0.019
+  }
+}

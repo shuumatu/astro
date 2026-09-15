@@ -71,10 +71,12 @@ describe('telescope controls with real classified geometry', () => {
     click('[data-view="optics"]')
     const optics = root.getObjectByName('TeachingOptics')!
     expect(optics.visible).toBe(true)
-    root.traverse((object) => {
-      if (object.userData.partId === 'internalDisk') expect(object.visible).toBe(false)
-    })
-    expect(optics.getObjectByName('TeachingPrimaryMirror')!.visible).toBe(true)
+    expect(optics.getObjectByName('TeachingPrimaryMirror')).toBeUndefined()
+    for (const name of ['PrimaryParabolicMirror_modeled', 'SecondaryFlatMirror_modeled', 'SecondaryHolder_MirrorCup']) {
+      const mesh = root.getObjectByName(name)! as THREE.Mesh
+      expect(mesh.visible).toBe(true)
+      expect((mesh.material as THREE.Material).transparent).toBe(false)
+    }
     expect(optics.children.some((child) => child.visible && child.userData.lessonStep === 0)).toBe(true)
     for (let i = 0; i < 4; i++) {
       click(`[data-step="${i}"]`)
