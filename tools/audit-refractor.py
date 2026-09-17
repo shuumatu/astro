@@ -98,7 +98,7 @@ def components(triangles, return_ids=False):
     return ids if return_ids else [triangles[i] for i in ids]
 
 
-def draw_mesh(canvas, triangles, box, view=(1, .6, 1)):
+def draw_mesh(canvas, triangles, box, view=(1, .6, 1), color=(140, 190, 220), fit_triangles=None):
     z = np.array(view, float)
     z /= np.linalg.norm(z)
     x = np.cross([0, 1, 0], z)
@@ -106,8 +106,10 @@ def draw_mesh(canvas, triangles, box, view=(1, .6, 1)):
         x = np.cross([1, 0, 0], z)
     x /= np.linalg.norm(x)
     y = np.cross(z, x)
-    t = triangles @ np.array([x, y, z]).T
-    lo, hi = t.min(axis=(0, 1)), t.max(axis=(0, 1))
+    basis = np.array([x, y, z]).T
+    t = triangles @ basis
+    fit = t if fit_triangles is None else fit_triangles @ basis
+    lo, hi = fit.min(axis=(0, 1)), fit.max(axis=(0, 1))
     scale = min((box[2] - box[0] - 24) / max(hi[0] - lo[0], 1e-12),
                 (box[3] - box[1] - 32) / max(hi[1] - lo[1], 1e-12))
     t[:, :, 0] = (t[:, :, 0] - (hi[0] + lo[0]) / 2) * scale + (box[0] + box[2]) / 2
@@ -118,7 +120,8 @@ def draw_mesh(canvas, triangles, box, view=(1, .6, 1)):
     draw = ImageDraw.Draw(canvas)
     for idx in np.argsort(t[:, :, 2].mean(axis=1)):
         b = brightness[idx]
-        draw.polygon([tuple(p[:2]) for p in t[idx]], fill=(int(140 * b), int(190 * b), int(220 * b)))
+        draw.polygon([tuple(p[:2]) for p in t[idx]],
+                     fill=tuple(int(channel * b) for channel in color))
 
 
 def describe(tri):

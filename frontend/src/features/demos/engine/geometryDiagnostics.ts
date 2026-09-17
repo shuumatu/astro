@@ -61,12 +61,12 @@ export class GeometryDiagnostics {
   select(mesh: THREE.Mesh | null): void {
     if (this.selected) {
       const previous = this.helpers.get(this.selected)
-      if (previous) (previous as THREE.Box3Helper).material.color.set(0x53d6ff)
+      if (previous) ((previous as THREE.Box3Helper).material as THREE.LineBasicMaterial).color.set(0x53d6ff)
     }
     this.selected = mesh
     if (mesh) {
       const helper = this.helpers.get(mesh)
-      if (helper) (helper as THREE.Box3Helper).material.color.set(0xffc857)
+      if (helper) ((helper as THREE.Box3Helper).material as THREE.LineBasicMaterial).color.set(0xffc857)
     }
     this.panel.querySelectorAll<HTMLElement>('[data-diagnostic-name]').forEach((row) => {
       row.classList.toggle('selected', row.dataset.diagnosticName === mesh?.name)

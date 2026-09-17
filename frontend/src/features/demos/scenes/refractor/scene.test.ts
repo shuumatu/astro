@@ -43,13 +43,14 @@ afterEach(() => { scene?.dispose(); host.remove(); vi.restoreAllMocks(); vi.unst
 const click = (selector: string) => host.querySelector<HTMLButtonElement>(selector)!.click()
 
 describe('refractor structure mode', () => {
-  it('selects and isolates every mechanical category, reusing one pulsing emissive material', () => {
+  it('selects and isolates every source category, reusing one pulsing emissive material', () => {
     for (const part of REFRACTOR_PARTS) {
       click(`[data-part="${part.id}"]`)
       click('[data-isolate]')
       const selected: THREE.Mesh[] = []
       root.traverse((object) => {
         if (!(object instanceof THREE.Mesh) || !object.userData.partId) return
+        if (object.userData.opticalGeometry) return
         expect(object.visible).toBe(object.userData.partId === part.id)
         if (object.visible) selected.push(object)
       })
@@ -65,10 +66,14 @@ describe('refractor structure mode', () => {
     click('[data-clear]')
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh) || !object.userData.partId) return
-      expect(object.visible).toBe(true)
+      expect(object.visible).toBe(!object.userData.opticalGeometry)
       const material = object.material as THREE.Material
       if (object.userData.opticalGeometry) {
         // the teaching glass is deliberately translucent so its edge stays readable
+        expect(material.transparent).toBe(true)
+      } else if (object.userData.partId === 'objectiveLens'
+        || object.userData.componentRole === 'eyepieceLens'
+        || String(object.userData.componentRole).startsWith('finderLens')) {
         expect(material.transparent).toBe(true)
       } else {
         expect(material.transparent).toBe(false)
@@ -83,6 +88,7 @@ describe('refractor structure mode', () => {
         click(`[data-part="${part.id}"]`)
         root.traverse((object) => {
           if (!(object instanceof THREE.Mesh) || object.userData.partId !== part.id) return
+          if (object.userData.opticalGeometry) return
           seen.add(object.material as THREE.Material)
         })
       }
@@ -91,11 +97,27 @@ describe('refractor structure mode', () => {
     expect(seen.size).toBe(REFRACTOR_PARTS.length)
   })
 
-  it('labels the three evidence classes in the list', () => {
-    expect(host.querySelector<HTMLElement>('[data-part="objectiveLens"]')!.dataset.kind).toBe('teaching')
-    expect(host.querySelector<HTMLElement>('[data-part="eyepieceLensGroup"]')!.dataset.kind).toBe('teaching')
-    expect(host.querySelector<HTMLElement>('[data-part="unknown"]')!.dataset.kind).toBe('unresolved')
+  it('distinguishes optical and mechanical source categories', () => {
+    expect(host.querySelector<HTMLElement>('[data-part="objectiveLens"]')!.dataset.kind).toBe('optical')
+    expect(host.querySelector<HTMLElement>('[data-part="eyepieceLensGroup"]')!.dataset.kind).toBe('optical')
+    expect(host.querySelector<HTMLElement>('[data-part="diagonal"]')!.dataset.kind).toBe('optical')
     expect(host.querySelector<HTMLElement>('[data-part="opticalTube"]')!.dataset.kind).toBe('mechanical')
+    expect(host.querySelector<HTMLElement>('[data-part="fasteners"]')!.dataset.kind).toBe('mechanical')
+    expect(host.querySelector('[data-part="unknown"]')).toBeNull()
+  })
+
+  it('opens the shared geometry diagnostics for source and teaching meshes', () => {
+    const button = host.querySelector<HTMLButtonElement>('[data-diagnostics]')!
+    expect(button.getAttribute('aria-pressed')).toBe('false')
+    button.click()
+    expect(button.getAttribute('aria-pressed')).toBe('true')
+    const panel = host.querySelector<HTMLElement>('.geometry-diagnostics')!
+    expect(panel.hidden).toBe(false)
+    expect(panel.querySelectorAll('[data-diagnostic-name]').length).toBeGreaterThan(80)
+    expect(root.getObjectByName('GeometryDiagnostics')!.visible).toBe(true)
+    button.click()
+    expect(panel.hidden).toBe(true)
+    expect(root.getObjectByName('GeometryDiagnostics')!.visible).toBe(false)
   })
 })
 
@@ -104,14 +126,14 @@ describe('refractor optics mode', () => {
     click('[data-view="optics"]')
     const optics = root.getObjectByName('TeachingOptics')!
     expect(optics.visible).toBe(true)
-    // the lenses keep their readable opacity in optics mode; only the mechanical parts fade
+    // Source parts, including the classified source lenses, fade to keep the ray overlay readable.
     const lensCount = scene.visibleMeshes('objectiveLens').length
       + scene.visibleMeshes('eyepieceLensGroup').length
     expect(lensCount).toBeGreaterThan(0)
     for (const id of ['objectiveLens', 'eyepieceLensGroup'] as const) {
       for (const mesh of scene.visibleMeshes(id)) {
         expect(mesh.visible).toBe(true)
-        expect((mesh.material as THREE.MeshStandardMaterial).opacity).toBeGreaterThanOrEqual(.4)
+        expect((mesh.material as THREE.MeshStandardMaterial).opacity).toBeLessThan(.3)
       }
     }
     // the focal-point marker and the focal-plane ring belong to the imaging phase, so they appear
@@ -134,18 +156,18 @@ describe('refractor optics mode', () => {
       expect((object.material as THREE.MeshStandardMaterial).opacity).toBeLessThan(.3)
     })
     expect(mechanical).toBeGreaterThan(50)
-    // the teaching lenses keep their own readable material, while every mechanical part is faded
-    for (const id of ['objectiveLens', 'eyepieceLensGroup'] as const) {
-      const lenses = scene.visibleMeshes(id)
-      expect(lenses.length).toBeGreaterThan(0)
-      for (const mesh of lenses) {
-        expect(mesh.visible).toBe(true)
-        const material = mesh.material as THREE.MeshStandardMaterial
-        // the display material is translucent glass with real edge presence: visible, not invisible
-        expect(material.transparent).toBe(true)
-        expect(material.opacity).toBeGreaterThan(.2)
-        expect(material.opacity).toBeLessThan(1)
-      }
+    // Generated teaching surfaces are separate from the source-part index and appear only here.
+    const teaching: THREE.Mesh[] = []
+    root.traverse((object) => {
+      if (object instanceof THREE.Mesh && object.userData.opticalGeometry) teaching.push(object)
+    })
+    expect(teaching).toHaveLength(3)
+    for (const mesh of teaching) {
+      expect(mesh.visible).toBe(true)
+      const material = mesh.material as THREE.MeshStandardMaterial
+      expect(material.transparent).toBe(true)
+      expect(material.opacity).toBeGreaterThan(.2)
+      expect(material.opacity).toBeLessThan(1)
     }
     const rayChildren = optics.children.filter((child) => typeof child.userData.lessonStep === 'number')
     expect(rayChildren.length).toBeGreaterThanOrEqual(4)
@@ -155,7 +177,7 @@ describe('refractor optics mode', () => {
         // the focal-point marker is a derived point, not a traced segment, so it is checked
         // separately above and excluded from the segment ladder
         if (child.name === 'FocalPoint' || child.name === 'FocalPlane') continue
-        expect(child.visible).toBe(child.userData.lessonStep <= i)
+        expect(child.visible).toBe(child.userData.lessonStep <= i && !child.userData.field)
       }
     }
   })
@@ -174,7 +196,10 @@ describe('refractor optics mode', () => {
     root.traverse((object) => {
       if (!(object instanceof THREE.Mesh) || !object.userData.partId) return
       if (object.userData.opticalGeometry) return
-      expect((object.material as THREE.Material).transparent).toBe(false)
+      const glass = object.userData.partId === 'objectiveLens'
+        || object.userData.componentRole === 'eyepieceLens'
+        || String(object.userData.componentRole).startsWith('finderLens')
+      expect((object.material as THREE.Material).transparent).toBe(glass)
     })
   })
 
@@ -190,6 +215,29 @@ describe('refractor optics mode', () => {
     expect(side).not.toBeNull()
     expect(Math.abs(side!.dot(optical))).toBeCloseTo(0, 6)
     expect(side!.length()).toBeCloseTo(1, 6)
+    // The side-view sign is part of the teaching contract: increasing optical s must
+    // project left-to-right, so the displayed order is objective → focus → eyepiece.
+    const horizontalAxis = optical.clone().setY(0).normalize()
+    expect(new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), side!).dot(horizontalAxis))
+      .toBeGreaterThan(.999)
+  })
+
+  it('switches field rays, shows propagation arrows and zooms the viewing end', () => {
+    click('[data-view="optics"]')
+    const optics = root.getObjectByName('TeachingOptics')!
+    expect(optics.children.some(c => c.name === 'PropagationArrow' && c.visible)).toBe(true)
+    const fields = optics.children.filter(c => c.userData.field)
+    expect(fields.length).toBeGreaterThan(0)
+    expect(fields.every(c => !c.visible)).toBe(true)
+    click('[data-fields]')
+    expect(fields.every(c => c.visible)).toBe(true)
+    click('[data-focus-view]')
+    const stage = vi.mocked(createStage).mock.results.at(-1)!.value
+    expect(stage.camera.position.distanceTo(stage.controls.target)).toBeCloseTo(.85)
+    click('[data-diagnostics]')
+    expect(host.querySelector<HTMLElement>('.geometry-diagnostics')!.hidden).toBe(false)
+    click('[data-optical-home]')
+    expect(stage.camera.position.distanceTo(stage.controls.target)).toBeGreaterThan(2)
   })
 
   it('publishes the numeric self-check the panel shows', () => {

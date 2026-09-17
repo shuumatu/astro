@@ -1,17 +1,8 @@
-"""Final fragment mapping: one explicit assignment per source fragment.
+"""Reviewed refractor fragment mapping.
 
-Every assignment below is read off ``.cache/refractor-audit/fragments-measured.json``, which measures
-each fragment about the published optical frame using the model's own numbers. The *layout* that the
-assignments encode, with s from the objective end (negative) to the eyepiece end (positive), mm:
-
-    -339 .. +305   the 643 mm tube shell, exactly coaxial (r 23.6 at -s, 59.5 at +s)
-    -294 .. -272   two solid discs spanning the whole 108.8 mm bore, exactly coaxial
-    -443 .. +442   the coaxial train of narrow rings along the axis (r 0.3..39 mm, off < 35 mm)
-    -113 ..  +12   the focuser   (off 61..85 mm, height 1.10..1.15 m)
-       +8 .. +103  the finder    (off 61..74 mm, height 1.20..1.23 m, i.e. higher up)
-    +272 .. +294   the front cell and retainer rings (off 25..65 mm)
-    +116 .. +667   the mount castings and linkage (off 119..410 mm)
-    +622 .. +1215  the counterweight drum and the tripod legs
+The source names and materials are meaningless, so every connected fragment is assigned from its
+ shape and its position in the complete assembly. The measured audit axis is kept only as review
+ evidence; the published teaching frame is fitted directly from the objective and eyepiece.
 """
 import json
 from pathlib import Path
@@ -19,155 +10,142 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / '.cache/refractor-audit'
 rows = json.loads((OUT / 'fragments-measured.json').read_text())
-by_tag = {x['tag']: x for x in rows}
+by_tag = {row['tag']: row for row in rows}
 
-TAXONOMY = ['objectiveCell', 'lensRetainer', 'opticalTube', 'dewShield', 'eyepieceHolder', 'focuser',
-            'finderScope', 'mount', 'counterweight', 'tripod', 'hardware', 'unknown']
+TAXONOMY = [
+    'opticalTube', 'objectiveCell', 'objectiveLens', 'tubeRings', 'fasteners', 'finderScope',
+    'focuser', 'diagonal', 'eyepieceLensGroup', 'mount', 'counterweight', 'tripod',
+]
 
-ASSIGNMENT = {
-    # the 643 mm shell
-    'n4-m2-p0:c1': 'opticalTube',
+# Grouping the tags by assembly makes the visual review auditable. Each source fragment appears
+# exactly once; the checks below reject omissions, duplicates and obsolete tags.
+GROUPS = {
+    # The single connected shell includes the long main tube and its enlarged front sun shade.
+    'opticalTube': ['n4-m2-p0:c1'],
 
-    # the two solid discs across the whole bore, plus the flange ring beside them
-    'n12-m6-p0:c0': 'dewShield',
-    'n12-m6-p0:c1': 'dewShield',
-    'n14-m7-p0:c17': 'lensRetainer',
+    # Retaining collar immediately around the two objective elements at the large-aperture end.
+    'objectiveCell': ['n14-m7-p0:c17'],
 
-    # the front opening: the cell rings and the retainers that hold a lens
-    'n10-m5-p0:c0': 'objectiveCell',
-    'n14-m7-p0:c5': 'objectiveCell',
-    'n4-m2-p0:c2': 'objectiveCell',
-    'n14-m7-p0:c15': 'objectiveCell',
-    'n14-m7-p0:c16': 'objectiveCell',
-    'n10-m5-p0:c2': 'objectiveCell',
-    'n10-m5-p0:c1': 'lensRetainer',
-    'n14-m7-p0:c4': 'lensRetainer',
-    'n4-m2-p0:c17': 'lensRetainer',
-    'n12-m6-p0:c3': 'lensRetainer',
-    'n12-m6-p0:c4': 'lensRetainer',
-    'n4-m2-p0:c16': 'lensRetainer',
-    'n4-m2-p0:c18': 'lensRetainer',
-    'n10-m5-p0:c6': 'lensRetainer',
-    'n10-m5-p0:c7': 'lensRetainer',
+    # Two coaxial convex glass blanks filling the front aperture: the achromatic objective pair.
+    'objectiveLens': ['n12-m6-p0:c0', 'n12-m6-p0:c1'],
 
-    # the coaxial train along the axis: the eyepiece and focuser tubes
-    'n4-m2-p0:c7': 'eyepieceHolder',
-    'n4-m2-p0:c6': 'eyepieceHolder',
-    'n14-m7-p0:c25': 'eyepieceHolder',
-    'n14-m7-p0:c30': 'eyepieceHolder',
-    'n14-m7-p0:c23': 'eyepieceHolder',
-    'n14-m7-p0:c24': 'eyepieceHolder',
+    # Two split tube rings, their saddle/dovetail plates and the four adjacent fasteners.
+    'tubeRings': [
+        'n4-m2-p0:c3', 'n4-m2-p0:c4', 'n4-m2-p0:c6', 'n4-m2-p0:c7',
+        'n4-m2-p0:c8', 'n10-m5-p0:c8', 'n10-m5-p0:c9',
+        'n14-m7-p0:c18', 'n14-m7-p0:c19',
+    ],
 
-    # the focuser on the tube's flank
-    'n4-m2-p0:c3': 'focuser',
-    'n4-m2-p0:c4': 'focuser',
-    'n10-m5-p0:c9': 'focuser',
-    'n14-m7-p0:c18': 'focuser',
-    'n14-m7-p0:c19': 'focuser',
-    'n10-m5-p0:c8': 'focuser',
+    # Parallel small telescope above the main tube, including both lenses, barrel and alignment screws.
+    'finderScope': [
+        'n4-m2-p0:c2', 'n4-m2-p0:c16', 'n4-m2-p0:c23', 'n10-m5-p0:c3', 'n10-m5-p0:c4',
+        'n10-m5-p0:c5', 'n12-m6-p0:c2', 'n12-m6-p0:c5', 'n14-m7-p0:c3',
+        'n14-m7-p0:c6', 'n14-m7-p0:c7',
+    ],
 
-    # the finder on the tube's upper side
-    'n4-m2-p0:c8': 'finderScope',
-    'n14-m7-p0:c10': 'finderScope',
+    # Rear axial drawtube/body, paired focus wheels and the small controls next to them.
+    'focuser': [
+        'n4-m2-p0:c17', 'n4-m2-p0:c18', 'n10-m5-p0:c0', 'n10-m5-p0:c1',
+        'n10-m5-p0:c2', 'n10-m5-p0:c6', 'n10-m5-p0:c7', 'n14-m7-p0:c8',
+        'n14-m7-p0:c9', 'n14-m7-p0:c15', 'n14-m7-p0:c16',
+    ],
 
-    # the mount under the tube
-    # The 6412-face column is the largest single part. It sits 321 mm off the optical axis at
-    # heights 0.73..0.93 m and its inner surface does not match the tube, so the measurements do
-    # not establish its function: it stays reported as unconfirmed.
-    'n0-m0-p0:c0': 'unknown',
-    'n4-m2-p0:c0': 'mount',
-    'n2-m1-p0:c0': 'mount',
-    'n14-m7-p0:c3': 'mount',
-    'n14-m7-p0:c6': 'mount',
-    'n4-m2-p0:c5': 'mount',
-    'n14-m7-p0:c7': 'mount',
-    'n14-m7-p0:c11': 'mount',
-    'n14-m7-p0:c12': 'mount',
-    'n14-m7-p0:c8': 'mount',
-    'n14-m7-p0:c9': 'mount',
-    'n14-m7-p0:c22': 'mount',
-    'n14-m7-p0:c14': 'mount',
-    'n14-m7-p0:c13': 'mount',
-    'n14-m7-p0:c20': 'mount',
-    'n6-m3-p0:c0': 'mount',
-    'n6-m3-p0:c1': 'mount',
-    'n6-m3-p0:c2': 'mount',
-    'n6-m3-p0:c3': 'mount',
-    'n4-m2-p0:c10': 'mount',
-    'n4-m2-p0:c22': 'mount',
-    'n12-m6-p0:c2': 'mount',
-    'n12-m6-p0:c5': 'mount',
-    'n4-m2-p0:c13': 'mount',
-    'n4-m2-p0:c23': 'mount',
-    'n14-m7-p0:c26': 'mount',
-    'n14-m7-p0:c27': 'mount',
-    'n14-m7-p0:c28': 'mount',
-    'n10-m5-p0:c13': 'mount',
-    'n10-m5-p0:c10': 'mount',
+    # Angled rear housing and its reflecting surface between the focuser and eyepiece.
+    'diagonal': ['n12-m6-p0:c4', 'n14-m7-p0:c5', 'n14-m7-p0:c22'],
 
-    # the balance
-    'n4-m2-p0:c19': 'counterweight',
-    'n14-m7-p0:c29': 'counterweight',
-    'n4-m2-p0:c21': 'counterweight',
-    'n4-m2-p0:c20': 'counterweight',
-    'n4-m2-p0:c12': 'counterweight',
-    'n14-m7-p0:c2': 'counterweight',
-    'n14-m7-p0:c0': 'counterweight',
-    'n14-m7-p0:c1': 'counterweight',
-    'n10-m5-p0:c11': 'counterweight',
-    'n10-m5-p0:c12': 'counterweight',
-    'n4-m2-p0:c14': 'counterweight',
+    # Small coaxial convex lens and its barrel at the end of the diagonal.
+    'eyepieceLensGroup': ['n12-m6-p0:c3', 'n14-m7-p0:c4'],
 
-    # the ground end
-    'n4-m2-p0:c9': 'tripod',
-    'n4-m2-p0:c11': 'tripod',
-    'n8-m4-p0:c5': 'tripod',
-    'n8-m4-p0:c3': 'tripod',
-    'n8-m4-p0:c4': 'tripod',
-    'n8-m4-p0:c0': 'tripod',
-    'n8-m4-p0:c1': 'tripod',
-    'n8-m4-p0:c2': 'tripod',
-    'n14-m7-p0:c21': 'tripod',
+    # Equatorial head, polar-axis housings, locks and adjustment controls.
+    'mount': [
+        'n0-m0-p0:c0', 'n2-m1-p0:c0', 'n4-m2-p0:c0', 'n4-m2-p0:c15',
+        'n4-m2-p0:c22', 'n6-m3-p0:c0', 'n6-m3-p0:c1', 'n6-m3-p0:c2',
+        'n6-m3-p0:c3', 'n14-m7-p0:c10', 'n14-m7-p0:c11', 'n14-m7-p0:c12',
+        'n14-m7-p0:c13', 'n14-m7-p0:c14', 'n14-m7-p0:c20', 'n14-m7-p0:c26',
+    ],
 
-    # the small fittings that the measurements do not tie to one assembly
-    'n4-m2-p0:c15': 'mount',
-    'n10-m5-p0:c3': 'hardware',
-    'n10-m5-p0:c4': 'hardware',
-    'n10-m5-p0:c5': 'hardware',
+    # The hanging circular weight, the long shaft leading to it and its end lock.
+    'counterweight': ['n4-m2-p0:c5', 'n10-m5-p0:c10', 'n14-m7-p0:c21'],
+
+    # Three two-section legs, feet, leg clamps, spreader rods, connectors and central hub.
+    'tripod': [
+        'n4-m2-p0:c9', 'n4-m2-p0:c10', 'n4-m2-p0:c11', 'n4-m2-p0:c12',
+        'n4-m2-p0:c13', 'n4-m2-p0:c14', 'n4-m2-p0:c19', 'n4-m2-p0:c20',
+        'n4-m2-p0:c21', 'n8-m4-p0:c0', 'n8-m4-p0:c1', 'n8-m4-p0:c2',
+        'n8-m4-p0:c3', 'n8-m4-p0:c4', 'n8-m4-p0:c5', 'n10-m5-p0:c11',
+        'n10-m5-p0:c12', 'n10-m5-p0:c13', 'n14-m7-p0:c0', 'n14-m7-p0:c1',
+        'n14-m7-p0:c2', 'n14-m7-p0:c23', 'n14-m7-p0:c24', 'n14-m7-p0:c25',
+        'n14-m7-p0:c27', 'n14-m7-p0:c28', 'n14-m7-p0:c29', 'n14-m7-p0:c30',
+    ],
 }
 
-unassigned = sorted(set(by_tag) - set(ASSIGNMENT))
-if unassigned:
-    print('!!! these fragments have no assignment:')
-    for tag in unassigned:
-        x = by_tag[tag]
-        print(f'   {tag:20s} off {x["off"] * 1000:8.1f} s {x["sMid"] * 1000:+8.1f} '
-              f'r {x["rMin"] * 1000:6.1f}..{x["rMax"] * 1000:6.1f} h {x["height"]:.3f} '
-              f'({x["faces"]}f)')
-extra = sorted(set(ASSIGNMENT) - set(by_tag))
-if extra:
-    print('!!! these assignments name fragments that do not exist:', extra)
+# Dedicated mechanical classification for screws, nut-like thumb fasteners, clamping knobs and
+# locking controls. The list was reviewed from the isolated fragment renders in
+# .cache/refractor-audit/parts.
+FASTENER_GROUPS = {
+    'screw': [
+        # Focuser/diagonal retaining screws, finder alignment screws, and tube-ring clamp screws.
+        'n10-m5-p0:c0', 'n10-m5-p0:c1', 'n10-m5-p0:c2',
+        'n10-m5-p0:c3', 'n10-m5-p0:c4', 'n10-m5-p0:c5',
+        'n10-m5-p0:c6', 'n10-m5-p0:c7', 'n10-m5-p0:c8', 'n10-m5-p0:c9',
+    ],
+    'clampingKnob': [
+        # Finder bracket lock, mount locks, tube-ring thumb knobs, counterweight lock, and leg locks.
+        'n14-m7-p0:c6',
+        'n14-m7-p0:c10', 'n14-m7-p0:c11', 'n14-m7-p0:c12',
+        'n14-m7-p0:c13', 'n14-m7-p0:c14', 'n14-m7-p0:c18',
+        'n14-m7-p0:c19', 'n14-m7-p0:c20', 'n14-m7-p0:c21',
+        'n14-m7-p0:c27', 'n14-m7-p0:c28', 'n14-m7-p0:c29',
+    ],
+    'lockLever': ['n14-m7-p0:c26'],
+}
 
-groups = {}
-for tag, part in ASSIGNMENT.items():
-    if tag in by_tag:
-        groups.setdefault(part, []).append(by_tag[tag])
-missing = [p for p in TAXONOMY if p not in groups]
-print()
-print('%-16s %5s %7s %22s %19s' % ('category', 'frags', 'faces', 's band (mm)', 'off axis (mm)'))
-for pid in TAXONOMY:
-    v = groups.get(pid, [])
-    if not v:
-        print('%-16s %5d' % (pid, 0))
-        continue
-    print('%-16s %5d %7d %9.1f..%-11.1f %7.1f..%-8.1f' % (
-        pid, len(v), sum(y['faces'] for y in v),
-        min(y['sMin'] for y in v) * 1000, max(y['sMax'] for y in v) * 1000,
-        min(y['off'] for y in v) * 1000, max(y['off'] for y in v) * 1000))
+# Fasteners are a primary selectable category. Remove them from the assembly lists above, then add
+# them once under `fasteners`; their `fastenerType` below keeps the finer mechanical distinction.
+fastener_tags = [tag for tags in FASTENER_GROUPS.values() for tag in tags]
+fastener_set = set(fastener_tags)
+for part in GROUPS:
+    GROUPS[part] = [tag for tag in GROUPS[part] if tag not in fastener_set]
+GROUPS['fasteners'] = fastener_tags
 
-if missing:
-    raise SystemExit(f'these categories are empty: {missing}')
+assignment = {}
+duplicates = []
+for part, tags in GROUPS.items():
+    for tag in tags:
+        if tag in assignment:
+            duplicates.append(tag)
+        assignment[tag] = part
 
-json.dump(ASSIGNMENT, open(OUT / 'part-of.json', 'w'), indent=2)
-print()
+missing = sorted(set(by_tag) - set(assignment))
+extra = sorted(set(assignment) - set(by_tag))
+if duplicates or missing or extra:
+    raise SystemExit(f'invalid mapping: duplicates={duplicates}, missing={missing}, extra={extra}')
+if set(GROUPS) != set(TAXONOMY):
+    raise SystemExit('taxonomy and groups differ')
+
+fastener_of = {}
+fastener_duplicates = []
+for kind, tags in FASTENER_GROUPS.items():
+    for tag in tags:
+        if tag in fastener_of:
+            fastener_duplicates.append(tag)
+        fastener_of[tag] = kind
+fastener_extra = sorted(set(fastener_of) - set(by_tag))
+if fastener_duplicates or fastener_extra:
+    raise SystemExit(f'invalid fastener mapping: duplicates={fastener_duplicates}, extra={fastener_extra}')
+
+print('%-20s %5s %7s %22s %19s' % ('category', 'frags', 'faces', 's band (mm)', 'off axis (mm)'))
+for part in TAXONOMY:
+    values = [by_tag[tag] for tag in GROUPS[part]]
+    print('%-20s %5d %7d %9.1f..%-11.1f %7.1f..%-8.1f' % (
+        part, len(values), sum(value['faces'] for value in values),
+        min(value['sMin'] for value in values) * 1000,
+        max(value['sMax'] for value in values) * 1000,
+        min(value['off'] for value in values) * 1000,
+        max(value['off'] for value in values) * 1000,
+    ))
+
+(OUT / 'part-of.json').write_text(json.dumps(assignment, indent=2) + '\n')
+(OUT / 'fastener-of.json').write_text(json.dumps(fastener_of, indent=2) + '\n')
 print('WROTE', OUT / 'part-of.json')
+print('WROTE', OUT / 'fastener-of.json', f'({len(fastener_of)} fasteners)')

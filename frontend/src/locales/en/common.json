@@ -207,10 +207,15 @@
       },
       "refractor": {
         "title": "Refracting telescope: optics and parts",
-        "summary": "Inspect geometry-reviewed mechanical groups with glowing selection and isolation, then follow parallel starlight through the added objective, the focal plane and the eyepiece.",
+        "summary": "Inspect the parts in assembly, then follow starlight through the objective, focal plane and eyepiece.",
         "hint": "Drag to orbit · Scroll to zoom · Select to glow or isolate · Reveal light paths step by step",
-        "credit": "Mechanical geometry preserved from the source GLB; the objective, eyepiece and rays are an ideal teaching model, not manufacturer optical specifications",
-        "readout": "{parts} mechanical groups · {aperture} mm aperture · {focal} mm focal length · {magnification}x"
+        "credit": "Lens positions follow the source model; the straight-through lesson uses equivalent thin lenses",
+        "readout": "{parts} part groups · Teaching aperture {aperture} mm · Focal length {focal} mm · {magnification}×",
+        "labels": {
+          "objective": "Objective · incoming light",
+          "focus": "Focal plane",
+          "eyepiece": "Eyepiece · viewing end"
+        }
       }
     },
     "scene": {

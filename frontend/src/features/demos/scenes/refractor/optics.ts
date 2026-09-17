@@ -1,23 +1,27 @@
 import * as THREE from 'three'
 
-/**
- * Optics for the refractor demo.
- *
- * The builder (`tools/build-refractor-model.py`) solves the objective by tracing real meridional
- * rays through a spherical doublet, then places the eyepiece so its front focal plane sits on the
- * objective's traced focus. Everything the scene draws comes from that one solution, so the
- * interface, the geometry and the drawn rays cannot drift apart. Nothing here re-derives or
- * rescales the optics, because the model is normalised for display after it loads.
- */
+export const OPTICAL_REVISION = 9
 
-/** Calibration published by the builder in `scenes[0].extras`. */
+interface SourceLandmark {
+  source: string
+  s: number
+  front: number
+  back: number
+  radius: number
+  center: number[]
+}
+
+/** Metres in one frame fitted to source glass, with +s pointing from objective to viewing lens. */
 export interface RefractorMetadata {
-  /** Axial position of the tube end that carries the objective, in metres. */
+  opticalRevision: number
+  opticalFrame: number[]
+  sourceLandmarks: { objective: SourceLandmark[]; eyepiece: SourceLandmark }
   tubeObjectiveEndS: number
-  /** Axial position of the tube end that carries the eyepiece barrel, in metres. */
   tubeEyepieceEndS: number
   minBoreRadius: number
   tubeRadiusMax: number
+  /** Actual triangle/slice intersections of the tube shell: [s, minimum radius]. */
+  boreSamples: [number, number][]
   objectiveFrontS: number
   objectiveS: number
   objectiveLensDiameter: number
@@ -33,246 +37,152 @@ export interface RefractorMetadata {
   eyepieceFocalLength: number
   exitPupilRadius: number
   magnification: number
-  paraxialEfl: number
   fieldAngleRad: number
   rays: TracedRay[]
-  /**
-   * Sampled clear bore of the tube: [sStart, sEnd, smallest radius] per axial slice. The tube is
-   * not a constant-diameter pipe - its cell end narrows - so clearance is checked per slice.
-   */
-  boreSlices: [number, number, number][]
-  /**
-   * Column-major 4x4 that maps optical-frame coordinates (s along the axis, then the two
-   * perpendicular axes) into the baked model coordinates. It is the only frame the rays and the
-   * lenses use, so normalising the model for display cannot rescale the optics a second time.
-   */
-  opticalFrame: number[]
-  opticalDisplayScale: OpticalDisplayScale
   disclosure: string
-}
-
-export interface OpticalDisplayScale {
-  baseAperture: number
-  crownDiameter: number
-  crownSemi: number
-  eyepieceSemi: number
-  targetFocalRatioForSag: number
-  note: string
 }
 
 export interface TracedRay {
   field: number
   apertureFrac: number
   exitSlope: number
-  /** Height at which this ray meets the eyepiece, in metres. */
   focusY: number
-  /** Axial position where this ray crosses the axis: the focal plane, in metres. */
+  /** Focal plane coordinate, not necessarily an intersection with the optical axis. */
   focusCrossing: number
-  /** (s, height) pairs in the optical frame, from the incoming beam to the emitted beam. */
+  /** Objective front, equivalent objective plane, focus, eye front, eye back, outgoing beam. */
   points: [number, number][]
 }
-
-/**
- * Vertex layout of a traced ray, in the order the light meets things:
- * [0] entry at the objective's front vertex, [1] the objective's rear vertex, [2] the focal plane,
- * [3] the eyepiece's front vertex, [4] the eyepiece's rear vertex, [5] the emitted beam.
- */
-const OBJECTIVE_BACK = 1
-const FOCUS_VERTEX = 2
-const EYEPIECE_FIRST = 3
-const START_INDEX = 0
-const RAY_VERTICES = 6
 
 export function isRefractorMetadata(value: unknown): value is RefractorMetadata {
   if (typeof value !== 'object' || value === null) return false
   const m = value as Partial<RefractorMetadata>
-  return Array.isArray(m.rays)
-    && m.rays.length > 0
-    && typeof m.focusS === 'number'
-    && typeof m.focalLength === 'number'
-    && typeof m.eyepieceFrontS === 'number'
-    && typeof m.objectiveAperture === 'number'
-    && typeof m.minBoreRadius === 'number'
+  return m.opticalRevision === OPTICAL_REVISION
+    && Array.isArray(m.opticalFrame) && m.opticalFrame.length === 16
+    && m.opticalFrame.every(Number.isFinite)
+    && Array.isArray(m.boreSamples) && m.boreSamples.length > 0
+    && Array.isArray(m.rays) && m.rays.length > 0
+    && m.rays.every(r => r.points?.length === 6 && r.points.every(p => p.length === 2 && p.every(Number.isFinite)))
+    && typeof m.focalLength === 'number' && m.focalLength > 0
+    && typeof m.eyepieceFocalLength === 'number' && m.eyepieceFocalLength > 0
+    && typeof m.objectiveAperture === 'number' && m.objectiveAperture > 0
+    && !!m.sourceLandmarks?.eyepiece
 }
 
-/** An optical-frame point (s along the axis, height across it) in the model's own coordinates. */
 export function opticalPoint(frame: THREE.Matrix4, s: number, height: number): THREE.Vector3 {
-  const e = frame.elements
-  return new THREE.Vector3(
-    e[0]! * s + e[4]! * height + e[12]!,
-    e[1]! * s + e[5]! * height + e[13]!,
-    e[2]! * s + e[6]! * height + e[14]!,
-  )
+  return new THREE.Vector3(s, height, 0).applyMatrix4(frame)
 }
 
-/** The optical axis direction in the model's own coordinates. */
 export function opticalAxis(frame: THREE.Matrix4): THREE.Vector3 {
   return new THREE.Vector3().setFromMatrixColumn(frame, 0).normalize()
+}
+
+/** Recheck the exported frame against the source vertex coordinates, before display normalisation. */
+export function validateSourceAlignment(root: THREE.Object3D, m: RefractorMetadata): boolean {
+  const inverse = new THREE.Matrix4().fromArray(m.opticalFrame).invert()
+  const expected = new Map([[1, m.objectiveFrontS], [0, m.objectiveS], [3, m.eyepieceFrontS]])
+  let checked = 0
+  let aligned = true
+  root.updateMatrixWorld(true)
+  root.traverse(object => {
+    if (!(object instanceof THREE.Mesh) || object.userData.sourceNode !== 12) return
+    const target = expected.get(object.userData.sourceComponent as number)
+    if (target === undefined) return
+    const transform = inverse.clone().multiply(object.matrixWorld)
+    const bounds = new THREE.Box3()
+    const points = object.geometry.getAttribute('position')
+    for (let i = 0; i < points.count; i++) {
+      bounds.expandByPoint(new THREE.Vector3().fromBufferAttribute(points, i).applyMatrix4(transform))
+    }
+    const center = bounds.getCenter(new THREE.Vector3())
+    aligned &&= Math.abs(center.x - target) < .0005 && Math.hypot(center.y, center.z) < .001
+    checked++
+  })
+  return checked === 3 && aligned && m.objectiveFrontS < m.objectiveS && m.objectiveS < m.eyepieceFrontS
 }
 
 export interface RaySegment {
   start: THREE.Vector3
   end: THREE.Vector3
-  /** 0 incoming parallel light, 1 objective refraction and convergence, 2 focal plane, 3 eyepiece. */
   step: number
   field: number
+  apertureFrac: number
 }
 
-/**
- * Split every traced ray into the four teaching phases from its own vertices: the entry run to the
- * objective is the incoming parallel light, the objective to the focal plane is the refraction and
- * convergence, the focal plane vertex is the image, and the eyepiece and beyond is the exit.
- */
-export function raySegments(metadata: RefractorMetadata, frame: THREE.Matrix4): RaySegment[] {
-  const segments: RaySegment[] = []
-  const stepOf = (i: number) => {
-    if (i === START_INDEX) return 0
-    if (i < FOCUS_VERTEX) return 1
-    if (i === FOCUS_VERTEX) return 2
-    return 3
-  }
-  for (const ray of metadata.rays) {
-    const points = ray.points
-    if (points.length < RAY_VERTICES) continue
-    for (let i = 0; i + 1 < points.length; i++) {
-      const a = points[i]!
-      const b = points[i + 1]!
-      segments.push({
-        start: opticalPoint(frame, a[0], a[1]),
-        end: opticalPoint(frame, b[0], b[1]),
-        step: stepOf(i),
-        field: ray.field,
-      })
-    }
-  }
-  return segments
-}
-
-/**
- * True when the vertex list follows the light. The exported frame runs with the light, so every
- * successive vertex sits at a smaller s: entry, objective, focal plane, eyepiece, emitted beam.
- */
-export function rayOrderIsPhysical(metadata: RefractorMetadata): boolean {
-  return metadata.rays.every((ray) => {
-    const s = ray.points.map(([value]) => value)
-    if (ray.points.length !== RAY_VERTICES) return false
-    for (let i = 0; i + 1 < s.length; i++) {
-      if (!(s[i]! > s[i + 1]!)) return false
-    }
-    // the third vertex is the focal plane itself, and it lies between the two lens groups
-    return Math.abs(s[FOCUS_VERTEX]! - metadata.focusS) < 1e-6
-      && Math.abs(ray.points[FOCUS_VERTEX]![1]) < 1e-9
-      && Math.abs(ray.focusCrossing - metadata.focusS) < 1e-6
+/** Include the sky-side incoming beam, preserving the inclination of off-axis fields. */
+export function raySegments(m: RefractorMetadata, frame: THREE.Matrix4): RaySegment[] {
+  return m.rays.flatMap(ray => {
+    const first = ray.points[0]!
+    const incomingS = Math.min(m.tubeObjectiveEndS, first[0]) - .16
+    const incoming: [number, number] = [incomingS, first[1] + Math.tan(ray.field) * (incomingS - first[0])]
+    const points = [incoming, ...ray.points]
+    return points.slice(1).map((end, i) => ({
+      start: opticalPoint(frame, ...points[i]!), end: opticalPoint(frame, ...end),
+      step: i === 0 ? 0 : i <= 2 ? 1 : i === 3 ? 2 : 3,
+      field: ray.field, apertureFrac: ray.apertureFrac,
+    }))
   })
 }
 
+export function rayOrderIsPhysical(m: RefractorMetadata): boolean {
+  const landmarks = [m.objectiveFrontS, m.objectiveS, m.focusS, m.eyepieceFrontS, m.eyepieceBackS]
+  return m.rays.every(ray => ray.points.length === 6
+    && ray.points.every((p, i) => p.every(Number.isFinite)
+      && (i === 0 || p[0] > ray.points[i - 1]![0])
+      && (i >= landmarks.length || Math.abs(p[0] - landmarks[i]!) < 1e-7))
+    && Math.abs(ray.points[2]![1] - Math.tan(ray.field) * m.focalLength) < 1e-7)
+}
+
 export interface RayValidation {
-  /** Largest height at which an incoming ray meets the objective, in metres. */
   entryRadiusMax: number
   entryWithinAperture: boolean
-  /** Largest residual height of the on-axis bundle at the focal plane, in metres. */
   focusResidualMax: number
-  /** Spread of the emitted directions across the whole bundle, in radians. */
   exitSpreadRad: number
-  /** Spread of the emitted directions inside a single bundle, in radians. */
   exitBundleSpreadRad: number
-  /** Smallest clearance between a ray and the measured tube bore, in metres. */
   wallClearanceMin: number
-  /** Smallest distance from any ray to the tube wall where the aperture is, in metres. */
   objectiveClearance: number
   raysChecked: number
 }
 
-/**
- * Re-check the published rays against the published calibration. The scene draws exactly these
- * segments, so the interface never claims a property the traced data does not have.
- */
-export function validateRays(metadata: RefractorMetadata): RayValidation {
-  const aperture = metadata.objectiveAperture / 2
-  const front = metadata.objectiveFrontS
-  const back = metadata.eyepieceBackS
-  const slices = metadata.boreSlices ?? []
-  const boreAt = (s: number): number => {
-    for (const [lo, hi, radius] of slices) {
-      if (s >= lo && s < hi) return radius
-    }
-    return metadata.minBoreRadius
-  }
-  let entryMax = 0
-  let focusResidual = 0
-  let clearance = Number.POSITIVE_INFINITY
-  let objectiveClearance = Number.POSITIVE_INFINITY
-  const allSlopes: number[] = []
-  const byBundle = new Map<number, number[]>()
-  for (const ray of metadata.rays) {
-    const points = ray.points
-    entryMax = Math.max(entryMax, Math.abs(points[0]![1]))
-    if (Math.abs(ray.field) < 1e-9) {
-      focusResidual = Math.max(focusResidual, Math.abs(ray.focusCrossing - metadata.focusS))
-    }
-    allSlopes.push(ray.exitSlope)
-    const bundle = byBundle.get(ray.field) ?? []
-    bundle.push(ray.exitSlope)
-    byBundle.set(ray.field, bundle)
-    for (const [s, height] of points) {
-      // the exported s runs with the light, from the objective end down to the eyepiece
-      if (s > front || s < back) continue
-      const radius = boreAt(s)
-      if (radius <= 0) continue
-      clearance = Math.min(clearance, radius - Math.abs(height))
-      if (Math.abs(s - front) < 1e-5) {
-        objectiveClearance = Math.min(objectiveClearance, radius - Math.abs(height))
-      }
+function slope(a: [number, number], b: [number, number]): number {
+  return (b[1] - a[1]) / (b[0] - a[0])
+}
+
+function heightAt(ray: TracedRay, s: number): number {
+  const first = ray.points[0]!
+  if (s <= first[0]) return first[1] + Math.tan(ray.field) * (s - first[0])
+  const i = ray.points.findIndex(p => p[0] >= s)
+  const a = ray.points[Math.max(0, i - 1)]!
+  const b = ray.points[i < 0 ? ray.points.length - 1 : i]!
+  return a[1] + slope(a, b) * (s - a[0])
+}
+
+/** Checks are calculated from the drawn segments, including shell samples between ray vertices. */
+export function validateRays(m: RefractorMetadata): RayValidation {
+  let entryMax = 0, residual = 0, clearance = Infinity
+  const directions: number[] = []
+  const bundles = new Map<number, number[]>()
+  for (const ray of m.rays) {
+    const p = ray.points
+    entryMax = Math.max(entryMax, Math.abs(p[0]![1]))
+    const image = Math.tan(ray.field) * m.focalLength
+    // Extrapolate the objective-to-eyepiece segment, rather than trusting a declared focus field.
+    const s = slope(p[1]!, p[3]!)
+    residual = Math.max(residual, Math.abs(p[1]![1] + s * (m.focusS - p[1]![0]) - image),
+      Math.abs(p[2]![1] - image))
+    const angle = Math.atan(slope(p[4]!, p[5]!))
+    directions.push(angle)
+    const bundle = bundles.get(ray.field) ?? []
+    bundle.push(angle); bundles.set(ray.field, bundle)
+    for (const [position, radius] of m.boreSamples) {
+      clearance = Math.min(clearance, radius - Math.abs(heightAt(ray, position)))
     }
   }
-  const spread = (values: number[]) => (values.length < 2 ? 0 : Math.max(...values) - Math.min(...values))
+  const spread = (values: number[]) => Math.max(...values) - Math.min(...values)
   return {
-    entryRadiusMax: entryMax,
-    entryWithinAperture: entryMax <= aperture + 1e-9,
-    focusResidualMax: focusResidual,
-    exitSpreadRad: spread(allSlopes),
-    exitBundleSpreadRad: Math.max(...[...byBundle.values()].map(spread)),
-    wallClearanceMin: Number.isFinite(clearance) ? clearance : 0,
-    objectiveClearance: Number.isFinite(objectiveClearance) ? objectiveClearance : 0,
-    raysChecked: metadata.rays.length,
+    entryRadiusMax: entryMax, entryWithinAperture: entryMax <= m.objectiveAperture / 2 + 1e-9,
+    focusResidualMax: residual, exitSpreadRad: spread(directions),
+    exitBundleSpreadRad: Math.max(...[...bundles.values()].map(spread)),
+    wallClearanceMin: clearance, objectiveClearance: m.objectiveClearStopRadius - entryMax,
+    raysChecked: m.rays.length,
   }
-}
-
-/**
- * How much to exaggerate the drawn curvature of the teaching lenses.
- *
- * Fitted to this model the doublet is about three focal lengths across, so its true sag is a few
- * hundredths of a millimetre and it would render as a flat disk, which is exactly the failure the
- * brief warns about. The factor below deepens the drawn surface to that of an ordinary f/13
- * achromat. It changes only the drawn surface: the aperture, the axis, the focal length and every
- * traced ray keep the values the builder solved, and the interface says the curvature is drawn
- * deeper than the solved one.
- */
-export function lensSagScale(metadata: RefractorMetadata): number {
-  const display = metadata.opticalDisplayScale
-  if (!display || !Number.isFinite(metadata.focalRatio) || metadata.focalRatio <= 0) return 1
-  return Math.max(1, Math.min(30, metadata.focalRatio / display.targetFocalRatioForSag))
-}
-
-/**
- * Deepen a lens mesh's drawn sag about its vertex plane, leaving its rim radius alone.
- *
- * Each vertex is moved along the optical axis by (scale - 1) times its own deviation from the
- * vertex plane, so the surface keeps its diameter, its thickness at the centre and its axis.
- */
-export function exaggerateLensSag(mesh: THREE.Mesh, vertexS: number, frame: THREE.Matrix4, scale: number): void {
-  if (scale <= 1) return
-  const positions = mesh.geometry.getAttribute('position') as THREE.BufferAttribute
-  const e = frame.elements
-  const axis = new THREE.Vector3(e[0]!, e[1]!, e[2]!).normalize()
-  const point = new THREE.Vector3()
-  for (let i = 0; i < positions.count; i++) {
-    point.fromBufferAttribute(positions, i)
-    const along = point.dot(axis) - vertexS
-    point.addScaledVector(axis, along * (scale - 1))
-    positions.setXYZ(i, point.x, point.y, point.z)
-  }
-  positions.needsUpdate = true
-  mesh.geometry.computeVertexNormals()
-  mesh.geometry.computeBoundingSphere()
 }

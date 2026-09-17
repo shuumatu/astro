@@ -3,10 +3,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { createStage, type Stage } from '../../engine/stage'
 import type { DemoScene, DemoSceneOptions, DemoSceneSettings } from '../../types'
 import { isPartId, REFRACTOR_PARTS, type PartId } from './parts'
+import { GeometryDiagnostics } from '../../engine/geometryDiagnostics'
 import {
-  exaggerateLensSag,
   isRefractorMetadata,
-  lensSagScale,
+  OPTICAL_REVISION,
+  opticalPoint,
+  validateSourceAlignment,
   opticalAxis,
   raySegments,
   validateRays,
@@ -19,8 +21,8 @@ type ViewMode = 'structure' | 'optics'
 /** The four teaching phases. The third entry is the line shown in the status area. */
 export const REFRACTOR_STEPS = [
   ['平行光入射', '远处天体的光进入物镜', '星光来自远处，可以看作平行光。黄色光线从前方平行进入镜筒，高度都在物镜有效口径之内。'],
-  ['物镜折射与会聚', '物镜前后面各折射一次', '凸透镜把平行光折向光轴：光线先在物镜前表面折射，再在后表面折射，两条边界都画在图上。光束后来回会聚。'],
-  ['焦平面成像', '焦平面上形成倒立实像', '各条光线在物镜焦平面附近交于一点，形成倒立的实像。白色焦点标记光轴上的像点，虚线标出焦平面。'],
+  ['物镜折射与会聚', '大口径物镜组收集并会聚光线', '光从大口径物镜端进入，经过物镜组后向焦平面会聚。这里用等效薄透镜展示近轴光路，绿色箭头表示传播方向。'],
+  ['焦平面成像', '焦平面上形成倒立实像', '同一方向的平行光会聚在焦平面的同一像点。开启离轴光束，可看到不同方向的星光在焦平面形成不同像点；环线标记焦平面。'],
   ['目镜放大与出射', '目镜把实像再次放大', '目镜位于物镜焦平面附近，把实像作为物体再次放大，射出接近平行的光束，进入观察者的眼睛。'],
 ] as const
 
@@ -31,6 +33,8 @@ export class RefractorScene implements DemoScene {
   private readonly stage: Stage
   private readonly panel: HTMLDivElement
   private readonly parts = new Map<PartId, THREE.Mesh[]>()
+  /** Ray-lesson overlays are kept out of the source-part index used by structure mode. */
+  private readonly teachingMeshes: THREE.Mesh[] = []
   private readonly baseMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
   private readonly fadedMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
   /** The translucent set used in optics mode, so the mechanical shell never hides the light path. */
@@ -41,6 +45,7 @@ export class RefractorScene implements DemoScene {
   private readonly raycaster = new THREE.Raycaster()
   private readonly pointer = new THREE.Vector2()
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  private readonly diagnostics: GeometryDiagnostics
   private model: THREE.Group | null = null
   private optics: THREE.Group | null = null
   private metadata: RefractorMetadata | null = null
@@ -49,19 +54,21 @@ export class RefractorScene implements DemoScene {
   private mode: ViewMode = 'structure'
   private isolated = false
   private rayVisible = true
-  private lessonStep = 0
+  private lessonStep = 3
+  private showFields = false
+  private showLabels = true
   private disposed = false
   private downPoint: { x: number; y: number } | null = null
 
-  constructor(container: HTMLElement, private readonly options: DemoSceneOptions = {}) {
+  constructor(private readonly container: HTMLElement, private readonly options: DemoSceneOptions = {}) {
     this.stage = createStage(container, {
       cameraPosition: new THREE.Vector3(7, 3, 9), target: new THREE.Vector3(),
       minDistance: .3, maxDistance: 25, near: .01, background: 0x111923,
     })
-    this.stage.scene.add(new THREE.HemisphereLight(0xdcefff, 0x42546b, 2.2))
-    const key = new THREE.DirectionalLight(0xffffff, 3.2)
+    this.stage.scene.add(new THREE.HemisphereLight(0xffffff, 0x777777, 2.6))
+    const key = new THREE.DirectionalLight(0xffffff, 3.8)
     key.position.set(5, 8, 6)
-    const rim = new THREE.DirectionalLight(0x8ed6ff, 1.8)
+    const rim = new THREE.DirectionalLight(0xffffff, 1.4)
     rim.position.set(-6, 3, -4)
     this.stage.scene.add(key, rim)
     this.stage.renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -78,6 +85,7 @@ export class RefractorScene implements DemoScene {
       this.ownedMaterials.add(material)
     }
     this.panel = this.createControls(container)
+    this.diagnostics = new GeometryDiagnostics(container)
     const canvas = this.stage.renderer.domElement
     canvas.addEventListener('pointerdown', this.onPointerDown)
     canvas.addEventListener('pointerup', this.onPointerUp)
@@ -87,18 +95,23 @@ export class RefractorScene implements DemoScene {
         // Smooth pulsing highlight; a viewer who asked for reduced motion gets a static one.
         material.emissiveIntensity = this.reducedMotion ? 1.1 : .55 + (1 + Math.sin(elapsed * 4)) * .7
       }
+      this.updateLabels()
     })
     this.stage.start()
     void this.loadModel()
   }
 
-  applySettings(_settings: Partial<DemoSceneSettings>): void {}
+  applySettings(settings: Partial<DemoSceneSettings>): void {
+    if (settings.showLabels !== undefined) this.showLabels = settings.showLabels
+    this.updateLabels()
+  }
   setSuspended(suspended: boolean): void { if (suspended) this.stage.stop(); else this.stage.start() }
 
   resetView(): void {
     this.selected = null
     this.isolated = false
-    this.lessonStep = 0
+    this.lessonStep = 3
+    this.showFields = false
     this.rayVisible = true
     this.setViewMode('structure')
   }
@@ -111,6 +124,7 @@ export class RefractorScene implements DemoScene {
     canvas.removeEventListener('pointerup', this.onPointerUp)
     this.panel.remove()
     this.stage.dispose()
+    this.diagnostics.dispose()
     this.ownedMaterials.forEach((material) => material.dispose())
   }
 
@@ -126,7 +140,7 @@ export class RefractorScene implements DemoScene {
 
   private async loadModel(): Promise<void> {
     try {
-      const gltf = await new GLTFLoader().loadAsync('/models/telescope_refractor_classified.glb?v=1')
+      const gltf = await new GLTFLoader().loadAsync(`/models/telescope_refractor_classified.glb?v=${OPTICAL_REVISION}`)
       if (this.disposed) {
         gltf.scene.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return
@@ -141,9 +155,13 @@ export class RefractorScene implements DemoScene {
         if (!(object instanceof THREE.Mesh)) return
         const id: unknown = object.userData.partId
         if (!isPartId(id)) throw new Error(`Missing reviewed partId: ${object.name}`)
-        const members = this.parts.get(id) ?? []
-        members.push(object)
-        this.parts.set(id, members)
+        if (object.userData.opticalGeometry) {
+          this.teachingMeshes.push(object)
+        } else {
+          const members = this.parts.get(id) ?? []
+          members.push(object)
+          this.parts.set(id, members)
+        }
         // The appearance comes from the classified GLB, which the builder colours to match the
         // reference photograph. The scene deliberately does not repaint it: overriding the colour
         // here is exactly what would stop the model looking like the photograph.
@@ -163,7 +181,7 @@ export class RefractorScene implements DemoScene {
           return clone
         })
         const faded = fade(.10)
-        const translucent = fade(.16)
+        const translucent = fade(['mount', 'tripod', 'counterweight', 'finderScope', 'fasteners'].includes(id) ? .035 : .10)
         this.baseMaterials.set(object, Array.isArray(object.material) ? base : base[0]!)
         this.fadedMaterials.set(object, Array.isArray(object.material) ? faded : faded[0]!)
         this.opticsMaterials.set(object, Array.isArray(object.material) ? translucent : translucent[0]!)
@@ -173,6 +191,7 @@ export class RefractorScene implements DemoScene {
       const frame = new THREE.Matrix4().fromArray(gltf.scene.userData.opticalFrame as number[])
       const metadata: unknown = gltf.scene.userData
       if (!isRefractorMetadata(metadata)) throw new Error('Missing calibrated refractor metadata')
+      if (!validateSourceAlignment(this.model, metadata)) throw new Error('Optical frame does not match source glass')
       this.metadata = metadata
       this.validation = validateRays(metadata)
 
@@ -180,11 +199,13 @@ export class RefractorScene implements DemoScene {
       const scale = 7 / box.getSize(new THREE.Vector3()).length()
       this.model.scale.setScalar(scale)
       this.model.position.copy(box.getCenter(new THREE.Vector3())).multiplyScalar(-scale)
+      this.stage.setHomeView(new THREE.Vector3(6, 3, 8), new THREE.Vector3())
 
-      this.deepenLensCurvature(frame, metadata)
+      this.diagnostics.inspect(this.model)
       this.optics = this.buildOptics(frame, metadata)
       this.model.add(this.optics)
       this.stage.scene.add(this.model)
+      this.stage.scene.add(this.diagnostics.group)
 
       this.options.onLabels?.([])
       this.options.onReadout?.({
@@ -198,17 +219,9 @@ export class RefractorScene implements DemoScene {
       })
       this.setViewMode(this.mode)
       this.setRayCheck()
-    } catch (error) {      console.error('Failed to load reviewed refractor model', error)
+    } catch (error) {
+      console.error('Failed to load reviewed refractor model', error)
       this.setStatus('模型加载失败，请检查分类 GLB 与光学标定数据；可刷新页面重试。')
-    }
-  }
-
-  /** Deepen the drawn lens sag only; the solved surfaces and every ray stay untouched. */
-  private deepenLensCurvature(frame: THREE.Matrix4, metadata: RefractorMetadata): void {
-    const scale = lensSagScale(metadata)
-    for (const [vertexS, id] of [[metadata.objectiveFrontS, 'objectiveLens'],
-                                 [metadata.eyepieceFrontS, 'eyepieceLensGroup']] as const) {
-      for (const mesh of this.parts.get(id) ?? []) exaggerateLensSag(mesh, vertexS, frame, scale)
     }
   }
 
@@ -216,27 +229,34 @@ export class RefractorScene implements DemoScene {
     const group = new THREE.Group()
     group.name = 'TeachingOptics'
     const segments = raySegments(metadata, frame)
-    const byStep = new Map<number, THREE.Vector3[][]>()
     for (const segment of segments) {
-      const list = byStep.get(segment.step) ?? []
-      list.push([segment.start, segment.end])
-      byStep.set(segment.step, list)
-    }
-    for (const [step, lines] of byStep) {
-      const geometry = new THREE.BufferGeometry().setFromPoints(lines.flat())
-      const material = new THREE.LineBasicMaterial({
-        color: STEP_COLORS[step] ?? 0xffffff, transparent: true, opacity: .92,
-      })
+      const color = segment.field === 0 ? STEP_COLORS[segment.step]! : segment.field > 0 ? 0xffb36a : 0x79b5ff
+      const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: .95, depthTest: false })
       this.ownedMaterials.add(material)
-      const line = new THREE.LineSegments(geometry, material)
-      line.userData.lessonStep = step
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([segment.start, segment.end]), material)
+      line.name = 'RaySegment'
+      line.renderOrder = 20
+      line.userData = { lessonStep: segment.step, field: segment.field }
       group.add(line)
+      const length = segment.start.distanceTo(segment.end)
+      if (segment.field === 0 && Math.abs(segment.apertureFrac) === 1 && length > .04) {
+        const arrow = new THREE.ArrowHelper(segment.end.clone().sub(segment.start).normalize(),
+          segment.start.clone().lerp(segment.end, .55), .018, color, .008, .004)
+        arrow.name = 'PropagationArrow'
+        arrow.userData = { lessonStep: segment.step, field: 0 }
+        arrow.traverse(child => {
+          const material = (child as THREE.Mesh).material as THREE.Material | undefined
+          if (material) { material.depthTest = false; this.ownedMaterials.add(material) }
+          child.renderOrder = 21
+        })
+        group.add(arrow)
+      }
     }
     const focusPoint = new THREE.Mesh(
-      new THREE.SphereGeometry(.006, 14, 10),
+      new THREE.SphereGeometry(.002, 14, 10),
       new THREE.MeshBasicMaterial({ color: 0xffffff }))
     this.ownedMaterials.add(focusPoint.material as THREE.Material)
-    focusPoint.position.copy(this.opticalPoint(frame, metadata.focusS, 0))
+    focusPoint.position.copy(opticalPoint(frame, metadata.focusS, 0))
     focusPoint.name = 'FocalPoint'
     focusPoint.userData.lessonStep = 2
     group.add(focusPoint)
@@ -244,10 +264,10 @@ export class RefractorScene implements DemoScene {
     // the focal plane, drawn as a thin ring so it reads as a surface rather than a line
     const axis = opticalAxis(frame)
     const ring = new THREE.Mesh(
-      new THREE.RingGeometry(.020, .0215, 64),
+      new THREE.RingGeometry(.0095, .0102, 64),
       new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: .55, side: THREE.DoubleSide }))
     this.ownedMaterials.add(ring.material as THREE.Material)
-    ring.position.copy(this.opticalPoint(frame, metadata.focusS, 0))
+    ring.position.copy(opticalPoint(frame, metadata.focusS, 0))
     ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), axis)
     ring.name = 'FocalPlane'
     ring.userData.lessonStep = 2
@@ -255,26 +275,35 @@ export class RefractorScene implements DemoScene {
     return group
   }
 
-  private opticalPoint(frame: THREE.Matrix4, s: number, height: number): THREE.Vector3 {
-    const e = frame.elements
-    return new THREE.Vector3(
-      e[0]! * s + e[4]! * height + e[12]!,
-      e[1]! * s + e[5]! * height + e[13]!,
-      e[2]! * s + e[6]! * height + e[14]!,
-    )
+  private updateLabels(): void {
+    const m = this.metadata
+    if (!m || !this.model || this.mode !== 'optics' || !this.showLabels) {
+      this.options.onLabels?.([])
+      return
+    }
+    const frame = new THREE.Matrix4().fromArray(m.opticalFrame)
+    this.model.updateMatrixWorld(true)
+    const landmarks = [
+      { id: 'objective', s: m.objectiveFrontS, h: .085, step: 0 },
+      { id: 'focus', s: m.focusS, h: .045, step: 2 },
+      { id: 'eyepiece', s: m.eyepieceFrontS, h: -.045, step: 0 },
+    ]
+    this.options.onLabels?.(landmarks.map(({ id, s, h, step }) => {
+      const point = this.model!.localToWorld(opticalPoint(frame, s, h)).project(this.stage.camera)
+      return { id: `refractor-${id}`, textKey: `demos.items.refractor.labels.${id}`,
+        x: (point.x + 1) * this.container.clientWidth / 2,
+        y: (1 - point.y) * this.container.clientHeight / 2,
+        visible: point.z > -1 && point.z < 1 && Math.abs(point.x) < 1 && Math.abs(point.y) < 1
+          && this.lessonStep >= step }
+    }))
   }
 
   private updateAppearance(): void {
     for (const [id, meshes] of this.parts) {
       for (const mesh of meshes) {
-        const lenses = Boolean(mesh.userData.opticalGeometry)
         mesh.visible = !(this.mode === 'structure' && this.isolated && this.selected && id !== this.selected)
         if (this.mode === 'structure' && id === this.selected) {
           mesh.material = this.glowMaterials.get(id)!
-        } else if (lenses) {
-          // The teaching optics keep their readable material in both modes: they are the subject of
-          // the light-path view, so they are never faded out of it.
-          mesh.material = this.baseMaterials.get(mesh)!
         } else if (this.mode === 'optics') {
           // The mechanical structure goes translucent rather than disappearing, so the rays stay in
           // context and a tube never blocks the whole path.
@@ -286,14 +315,20 @@ export class RefractorScene implements DemoScene {
         }
       }
     }
+    for (const mesh of this.teachingMeshes) {
+      mesh.visible = this.mode === 'optics'
+      mesh.material = this.baseMaterials.get(mesh)!
+    }
     if (this.optics) {
       this.optics.visible = this.mode === 'optics'
       for (const child of this.optics.children) {
         if (typeof child.userData.lessonStep === 'number') {
           child.visible = this.rayVisible && child.userData.lessonStep <= this.lessonStep
+            && (this.showFields || !child.userData.field)
         }
       }
     }
+    this.panel.querySelector('[data-fields]')!.setAttribute('aria-pressed', String(this.showFields))
     this.panel.dataset.mode = this.mode
     this.panel.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
       const active = button.dataset.view === this.mode
@@ -328,11 +363,12 @@ export class RefractorScene implements DemoScene {
     if (mode === 'optics' && this.optics) {
       // Look along a direction perpendicular to the optical axis, so the whole path is readable.
       const view = this.sideViewDirection() ?? new THREE.Vector3(0, 0, 1)
-      this.focusObject(this.optics, 2.4)
+      this.focusObject(this.optics, 1.5)
       const distance = this.stage.camera.position.distanceTo(this.stage.controls.target)
       this.stage.camera.position.copy(this.stage.controls.target).addScaledVector(view, distance)
       this.stage.controls.update()
     }
+    this.updateLabels()
     this.setStatus(mode === 'optics' ? REFRACTOR_STEPS[this.lessonStep]![2] : this.structureHint())
   }
 
@@ -342,6 +378,10 @@ export class RefractorScene implements DemoScene {
     const frame = new THREE.Matrix4().fromArray(this.model.userData.opticalFrame as number[])
     const axis = opticalAxis(frame)
     const up = new THREE.Vector3(0, 1, 0)
+    // Pick the sign deliberately: with the camera on `axis × up`, increasing optical
+    // coordinate s projects from left to right.  That keeps the teaching order visible
+    // in the canvas: objective → focus → eyepiece.  The opposite perpendicular direction
+    // is geometrically valid but makes the labels and the propagation arrows look reversed.
     const view = new THREE.Vector3().crossVectors(axis, up)
     return view.lengthSq() < 1e-6 ? new THREE.Vector3(0, 0, 1) : view.normalize()
   }
@@ -349,10 +389,9 @@ export class RefractorScene implements DemoScene {
   private structureHint(): string {
     const counts = new Map<PartId, number>()
     for (const [id, meshes] of this.parts) counts.set(id, meshes.length)
-    const confirmed = REFRACTOR_PARTS.filter((part) => part.kind === 'mechanical'
-      && (counts.get(part.id) ?? 0) > 0).length
+    const confirmed = REFRACTOR_PARTS.filter((part) => (counts.get(part.id) ?? 0) > 0).length
     return `点击模型或列表：选中部件呼吸发光，其他部件淡化。可单独显示以核对形状。`
-      + `当前已确认机械类别 ${confirmed} 类，教学补建光学件 2 类。`
+      + `当前已按形状和装配位置确认 ${confirmed} 类零件。`
   }
 
   private selectPart(id: PartId | null): void {
@@ -397,18 +436,22 @@ export class RefractorScene implements DemoScene {
         <button type="button" data-view="structure" class="active" aria-pressed="true">机械结构</button>
         <button type="button" data-view="optics" aria-pressed="false">光路原理</button>
       </div>
-      <div class="telescope-model-note">教学近似：物镜与目镜为本项目补建的理想球面双胶合镜片，焦距由本模型的镜室到后端筒长度反推，镜片曲率按可视需要画深；不代表任何厂家镜片处方。原始模型内没有任何镜片几何。</div>
+      <div class="telescope-model-note">直通观测端示意：光传播方向为 <strong>物镜 → 焦平面 → 目镜 → 观察者</strong>。默认侧视图中，物镜在左、目镜在右。使用等效薄透镜展示成像原理；侧向接口不参与本光路。</div>
       <div class="telescope-lesson" aria-label="光路讲解步骤">
         <div class="telescope-lesson-heading">镜筒内光路 · 外壳半透明显示</div>
         <div class="telescope-step-list"></div>
         <button type="button" class="telescope-ray-toggle" data-rays aria-pressed="true">隐藏光线</button>
-        <p class="telescope-ray-check" role="status"></p>
+        <button type="button" class="telescope-ray-toggle" data-fields aria-pressed="false">离轴光束</button>
+        <button type="button" class="telescope-ray-toggle" data-focus-view>放大焦点与目镜</button>
+        <button type="button" class="telescope-ray-toggle" data-optical-home>完整光路</button>
+        <details class="telescope-ray-check"><summary>光路校验</summary><p data-ray-check role="status"></p></details>
       </div>
       <div class="telescope-parts-heading">机械结构 · 已确认类别</div>
       <div class="telescope-structure-actions">
         <button type="button" data-isolate disabled>只看选中部件</button>
         <button type="button" data-clear>取消选择</button>
       </div>
+      <button type="button" class="telescope-ray-toggle" data-diagnostics aria-pressed="false">几何诊断</button>
       <div class="telescope-part-list"></div>
       <p class="telescope-status" role="status">正在载入分类模型…</p>`
     REFRACTOR_STEPS.forEach(([title, detail], index) => {
@@ -432,14 +475,29 @@ export class RefractorScene implements DemoScene {
       button.dataset.part = part.id
       button.dataset.kind = part.kind
       button.disabled = true
-      const tag = part.kind === 'teaching' ? '（教学补建）'
-        : part.kind === 'unresolved' ? '（未确认）' : ''
-      button.innerHTML = `<span class="telescope-dot" style="background:${new THREE.Color(part.highlight).getStyle()}"></span>${part.label}${tag}`
+      button.innerHTML = `<span class="telescope-dot" style="background:${new THREE.Color(part.highlight).getStyle()}"></span>${part.label}`
       button.addEventListener('click', () => this.selectPart(part.id))
       panel.querySelector('.telescope-part-list')!.appendChild(button)
     }
     panel.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((button) => {
       button.addEventListener('click', () => this.setViewMode(button.dataset.view as ViewMode))
+    })
+    panel.querySelector('[data-fields]')!.addEventListener('click', () => {
+      this.showFields = !this.showFields
+      this.updateAppearance()
+    })
+    panel.querySelector('[data-optical-home]')!.addEventListener('click', () => this.setViewMode('optics'))
+    panel.querySelector('[data-focus-view]')!.addEventListener('click', () => {
+      if (!this.metadata || !this.model) return
+      this.lessonStep = 3
+      this.rayVisible = true
+      this.updateAppearance()
+      const frame = new THREE.Matrix4().fromArray(this.metadata.opticalFrame)
+      const center = this.model.localToWorld(opticalPoint(frame,
+        (this.metadata.focusS + this.metadata.eyepieceFrontS) / 2, 0))
+      this.stage.controls.target.copy(center)
+      this.stage.camera.position.copy(center).addScaledVector(this.sideViewDirection()!, .85)
+      this.stage.controls.update()
     })
     panel.querySelector('[data-rays]')!.addEventListener('click', () => {
       this.rayVisible = !this.rayVisible
@@ -454,6 +512,11 @@ export class RefractorScene implements DemoScene {
       this.selectPart(null)
       this.stage.resetView()
     })
+    panel.querySelector('[data-diagnostics]')!.addEventListener('click', () => {
+      this.diagnostics.toggle()
+      panel.querySelector<HTMLButtonElement>('[data-diagnostics]')!
+        .setAttribute('aria-pressed', String(this.diagnostics.isEnabled()))
+    })
     container.appendChild(panel)
     return panel
   }
@@ -466,7 +529,7 @@ export class RefractorScene implements DemoScene {
   private setRayCheck(): void {
     const v = this.validation
     const m = this.metadata
-    const target = this.panel.querySelector<HTMLElement>('.telescope-ray-check')
+    const target = this.panel.querySelector<HTMLElement>('[data-ray-check]')
     if (!target || !v || !m) return
     target.textContent = `数值自检：入射高度上限 ${(v.entryRadiusMax * 1000).toFixed(2)} mm `
       + `（口径 ${(m.objectiveAperture * 1000).toFixed(1)} mm，${v.entryWithinAperture ? '在口径内' : '超出口径'}）；`
@@ -482,11 +545,20 @@ export class RefractorScene implements DemoScene {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const start = this.downPoint
     this.downPoint = null
-    if (this.mode !== 'structure' || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) return
+    if ((this.mode !== 'structure' && !this.diagnostics.isEnabled()) || !start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) return
     const rect = this.stage.renderer.domElement.getBoundingClientRect()
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1,
       -(event.clientY - rect.top) / rect.height * 2 + 1)
     this.raycaster.setFromCamera(this.pointer, this.stage.camera)
+    if (this.diagnostics.isEnabled()) {
+      const diagnosticMeshes = [...this.parts.values()].flat().concat(this.teachingMeshes).filter(mesh => mesh.visible)
+      const hit = this.raycaster.intersectObjects(diagnosticMeshes, false)[0]?.object
+      this.diagnostics.selectMesh(hit instanceof THREE.Mesh ? hit : null)
+      if (hit instanceof THREE.Mesh) {
+        this.setStatus(`${hit.name} · ${String(hit.userData.partId ?? 'unclassified')} · 点击诊断列表可查看源图元信息。`)
+      }
+      return
+    }
     const meshes = [...this.parts.values()].flat().filter((mesh) => mesh.visible)
     const id: unknown = this.raycaster.intersectObjects(meshes, false)[0]?.object.userData.partId
     this.selectPart(isPartId(id) ? id : null)

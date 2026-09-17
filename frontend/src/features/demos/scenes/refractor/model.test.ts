@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { isPartId, REFRACTOR_PARTS, type PartId } from './parts'
-import { isRefractorMetadata, lensSagScale, rayOrderIsPhysical, raySegments, validateRays } from './optics'
+import { isRefractorMetadata, validateSourceAlignment, opticalAxis, opticalPoint, rayOrderIsPhysical, raySegments, validateRays } from './optics'
 
 function readGLB(name: string) {
   const bytes = readFileSync(new URL(`../../../../../public/models/${name}.glb`, import.meta.url))
@@ -44,24 +44,23 @@ describe('reviewed refractor GLB', () => {
     expect(meshes).toBeGreaterThan(80)
   })
 
-  it('uses every declared category and leaves only a small share unresolved', () => {
-    const counts = new Map<PartId, number>()
+  it('uses every declared category for source geometry with no catch-all bucket', () => {
+    const fragments = new Map<PartId, number>()
     for (const node of classified.json.nodes as RefractorNode[]) {
-      if (node.mesh === undefined) continue
+      if (node.mesh === undefined || node.extras?.geometrySource !== 'source') continue
       const id = node.extras?.partId as PartId
-      const primitive = classified.json.meshes[node.mesh].primitives[0]
-      counts.set(id, (counts.get(id) ?? 0) + classified.json.accessors[primitive.attributes.POSITION].count)
+      fragments.set(id, (fragments.get(id) ?? 0) + 1)
     }
-    const present = [...counts.keys()]
+    const present = [...fragments.keys()]
     for (const part of REFRACTOR_PARTS) expect(present, `missing ${part.id}`).toContain(part.id)
-    const total = [...counts.values()].reduce((sum, value) => sum + value, 0)
-    // One merged casting (node 0, 6412 triangles of a 57480-triangle model) could not be resolved
-    // into mechanical parts, so it is reported as unresolved rather than guessed. That is the only
-    // unresolved fragment, and it must stay a small share of the model.
-    expect(counts.get('unknown')).toBe(19236)
-    expect((counts.get('unknown') ?? 0) / total).toBeLessThan(.13)
-    const named = [...counts.entries()].filter(([id]) => id !== 'unknown')
-    expect(named.length).toBe(REFRACTOR_PARTS.length - 1)
+    expect([...fragments.values()].reduce((sum, value) => sum + value, 0)).toBe(87)
+    expect(Object.fromEntries(fragments)).toMatchObject({
+      objectiveLens: 2, tubeRings: 5, fasteners: 24, finderScope: 7,
+      focuser: 6, diagonal: 3, eyepieceLensGroup: 2, mount: 9,
+      counterweight: 2, tripod: 25,
+    })
+    expect(present).not.toContain('unknown')
+    expect(present).not.toContain('hardware')
   })
 
   it('preserves every source primitive triangle count exactly', () => {
@@ -97,136 +96,203 @@ describe('reviewed refractor GLB', () => {
     expect(builder).toContain("SOURCE_HASH = 'ee85606fdecd74ebb05bbca88b6787864382870e25db55a3220d10a2c4002a09'")
     expect(builder).toContain('raise SystemExit')
   })
-})
 
-describe('teaching optics in the classified GLB', () => {
-  it('adds closed, non-zero-thickness objective and eyepiece solids', async () => {
-    const { scene, metadata } = await loadClassified()
-    const frame = new THREE.Matrix4().fromArray(scene.userData.opticalFrame as number[])
-    const inverse = frame.clone().invert()
-    const extents = new Map<PartId, { min: THREE.Vector3; max: THREE.Vector3; solids: number }>()
-    scene.traverse((object) => {
-      if (!(object instanceof THREE.Mesh) || !object.userData.opticalGeometry) return
-      const box = new THREE.Box3().setFromObject(object).applyMatrix4(inverse)
-      const id = object.userData.partId as PartId
-      const current = extents.get(id)
-      extents.set(id, {
-        min: current ? current.min.min(box.min) : box.min.clone(),
-        max: current ? current.max.max(box.max) : box.max.clone(),
-        solids: (current?.solids ?? 0) + 1,
-      })
-    })
-    const objective = extents.get('objectiveLens')
-    const eyepiece = extents.get('eyepieceLensGroup')
-    expect(objective, 'no objective lens node').toBeTruthy()
-    expect(eyepiece, 'no eyepiece lens node').toBeTruthy()
-    // thickness along the axis, not just a flat disk
-    expect(objective!.max.x - objective!.min.x).toBeGreaterThan(.008)
-    expect(eyepiece!.max.x - eyepiece!.min.x).toBeGreaterThan(.008)
-    // a real diameter, not a hairline
-    expect(objective!.max.y - objective!.min.y).toBeGreaterThan(.04)
-    expect(eyepiece!.max.y - eyepiece!.min.y).toBeGreaterThan(.02)
-    expect(objective!.solids).toBeGreaterThanOrEqual(1)
-    expect(eyepiece!.solids).toBeGreaterThanOrEqual(1)
+  it('keeps the counterweight white while rendering its shaft as metal', () => {
+    const materials = classified.json.materials as Array<{ name?: string }>
+    const sourceNode = (node: RefractorNode) => node.extras?.geometrySource === 'source'
+      && node.extras?.partId === 'counterweight'
+    const weight = (classified.json.nodes as RefractorNode[]).find(node =>
+      sourceNode(node) && node.extras?.sourceNode === 4 && node.extras?.sourceComponent === 5)!
+    const shaft = (classified.json.nodes as RefractorNode[]).find(node =>
+      sourceNode(node) && node.extras?.sourceNode === 10 && node.extras?.sourceComponent === 10)!
+    const weightPrimitive = classified.json.meshes[weight.mesh!].primitives[0]
+    const shaftPrimitive = classified.json.meshes[shaft.mesh!].primitives[0]
+    expect(materials[weightPrimitive.material!]?.name).toBe('refractorCounterweightFinish')
+    expect(materials[shaftPrimitive.material!]?.name).toBe('refractorCounterweightRodMetal')
   })
 
-  it('puts the objective in the front cell and the eyepiece past the focus, coaxially', async () => {
-    const { scene, metadata } = await loadClassified()
-    // The exported frame runs with the light. Measured landmarks: the tube spans -338.8..+304.5 mm
-    // with its narrow throat at the +end, the cell and retainer rings sit at +272..+294 mm, the two
-    // solid baffle discs at -294..-272 mm, and the coaxial train at -443..-272 mm and +397..+521 mm.
-    // The objective therefore sits in the front throat at about +301 mm and the eyepiece on the
-    // coaxial train beyond the focus at about -482 mm.
-    expect(metadata.tubeObjectiveEndS).toBeGreaterThan(metadata.tubeEyepieceEndS)
-    expect(metadata.objectiveFrontS).toBeGreaterThan(metadata.focusS)
-    // the focal plane comes first along the light, then the eyepiece, exactly as a telescope needs
-    expect(metadata.focusS).toBeGreaterThan(metadata.eyepieceFrontS)
-    expect(metadata.eyepieceFrontS).toBeGreaterThan(metadata.eyepieceBackS)
-    // the objective sits inside the tube, just behind its front opening
-    expect(metadata.objectiveFrontS).toBeLessThanOrEqual(metadata.tubeObjectiveEndS)
-    expect(metadata.objectiveFrontS).toBeGreaterThan(metadata.tubeEyepieceEndS)
-    // the eyepiece lands on the measured coaxial train at the far end of the tube
-    expect(metadata.eyepieceFrontS).toBeLessThan(-.470)
-    expect(metadata.eyepieceBackS).toBeGreaterThan(-.530)
-    // aperture is inside the measured clear stop and the blank fits the measured cell bore
-    expect(metadata.objectiveAperture / 2).toBeLessThan(metadata.objectiveClearStopRadius)
-    expect(metadata.objectiveLensDiameter / 2).toBeLessThan(metadata.cellBoreRadius)
-
-    const opticalFrame = new THREE.Matrix4().fromArray(metadata.opticalFrame)
-    const axis = new THREE.Vector3().setFromMatrixColumn(opticalFrame, 0).normalize()
-    expect(axis.length()).toBeCloseTo(1, 6)
-    scene.updateMatrixWorld(true)
-    let checked = 0
-    scene.traverse((object) => {
-      if (!(object instanceof THREE.Mesh) || !object.userData.opticalGeometry) return
-      checked++
-      const local = new THREE.Box3().setFromObject(object)
-        .getCenter(new THREE.Vector3()).applyMatrix4(opticalFrame.clone().invert())
-      expect(Math.hypot(local.y, local.z), `${object.name} is off the optical axis`).toBeLessThan(.002)
-    })
-    expect(checked).toBeGreaterThanOrEqual(3)
-  })
-
-  it('traces every ray through the objective, the focal plane and the eyepiece in order', async () => {
-    const { scene, metadata } = await loadClassified()
-    expect(rayOrderIsPhysical(metadata)).toBe(true)
-    const frame = new THREE.Matrix4().fromArray(metadata.opticalFrame)
-    for (const ray of metadata.rays) {
-      const s = ray.points.map((point) => point[0])
-      // entry, objective rear vertex, focal plane, eyepiece front, eyepiece rear, emitted beam
-      expect(ray.points.length).toBe(6)
-      // s falls along the light, so the entry is the largest and the emitted vertex the smallest
-      expect(Math.abs(s[0]! - metadata.objectiveFrontS)).toBeLessThan(1e-4)
-      expect(s[1]!).toBeCloseTo(metadata.objectiveS, 4)
-      expect(s[2]!).toBeCloseTo(metadata.focusS, 4)
-      expect(s[3]!).toBeCloseTo(metadata.eyepieceFrontS, 4)
-      expect(s[4]!).toBeCloseTo(metadata.eyepieceBackS, 4)
-      expect(s[5]!).toBeLessThan(metadata.eyepieceBackS)
-      // the third vertex is on the axis: that is what imaging at the focal plane means
-      expect(Math.abs(ray.points[2]![1])).toBeLessThan(1e-9)
-      // the incoming ray is parallel to the axis and enters at the aperture height for its
-      // fraction, measured from the axis
-      expect(Math.abs(ray.points[0]![1])).toBeCloseTo(
-        (metadata.objectiveAperture / 2) * ray.apertureFrac, 4)
-      // the beam is well inside the eyepiece element when it arrives
-      expect(Math.abs(ray.points[3]![1])).toBeLessThan(.013)
-      // off-axis bundles carry their image height to the eyepiece, which is where the field shows
-      if (Math.abs(ray.field) > 1e-9) expect(Math.abs(ray.points[3]![1])).toBeGreaterThan(0)
+  it('keeps the eyepiece glass optical while its barrel and requested finder barrels are black', () => {
+    const materials = classified.json.materials as Array<{ name?: string }>
+    const nodes = classified.json.nodes as RefractorNode[]
+    const findComponent = (sourceNode: number, sourceComponent: number) => nodes.find(node =>
+      node.extras?.geometrySource === 'source'
+      && node.extras?.sourceNode === sourceNode
+      && node.extras?.sourceComponent === sourceComponent)!
+    const materialName = (node: RefractorNode) => {
+      const primitive = classified.json.meshes[node.mesh!].primitives[0]
+      return materials[primitive.material!]?.name
     }
-    // six vertices give five segments, and all four lesson steps are present
-    const segments = raySegments(metadata, frame)
-    expect(new Set(segments.map((segment) => segment.step))).toEqual(new Set([0, 1, 2, 3]))
-    expect(segments.length).toBe(metadata.rays.length * 5)
+
+    const glass = findComponent(12, 3)
+    const eyepieceBarrel = findComponent(14, 4)
+    const finderRearBarrel = findComponent(14, 3)
+    const finderFrontBarrel = findComponent(14, 7)
+    expect(glass.extras?.componentRole).toBe('eyepieceLens')
+    expect(materialName(glass)).toBe('teachingEyepieceGlass')
+    expect(eyepieceBarrel.extras?.componentRole).toBe('eyepieceBarrel')
+    expect(finderRearBarrel.extras?.componentRole).toBe('finderRearBarrel')
+    expect(finderFrontBarrel.extras?.componentRole).toBe('finderFrontBarrel')
+    for (const barrel of [eyepieceBarrel, finderRearBarrel, finderFrontBarrel]) {
+      expect(materialName(barrel)).toBe('refractorBlackHardware')
+    }
   })
 
-  it('passes its own numerical checks: aperture, focus, collimation and wall clearance', async () => {
-    const { scene, metadata } = await loadClassified()
-    const validation = validateRays(metadata)
-    expect(validation.entryWithinAperture).toBe(true)
-    expect(validation.entryRadiusMax).toBeLessThanOrEqual(metadata.objectiveAperture / 2 + 1e-9)
-    expect(validation.focusResidualMax).toBeLessThan(1e-9)
-    // the emitted beam is parallel to a few milliradians across the whole bundle
-    expect(validation.exitBundleSpreadRad).toBeLessThan(8e-3)
-    expect(validation.wallClearanceMin).toBeGreaterThan(0)
-    expect(validation.objectiveClearance).toBeGreaterThan(0)
-    expect(validation.raysChecked).toBe(metadata.rays.length)
-    expect(metadata.disclosure).toContain('Teaching approximation')
-    expect(lensSagScale(metadata)).toBeGreaterThan(1)
+  it('uses glass for finder lenses, black for tripod spreaders, and white for the focuser collar', () => {
+    const materials = classified.json.materials as Array<{ name?: string }>
+    const nodes = classified.json.nodes as RefractorNode[]
+    const findComponent = (sourceNode: number, sourceComponent: number) => nodes.find(node =>
+      node.extras?.geometrySource === 'source'
+      && node.extras?.sourceNode === sourceNode
+      && node.extras?.sourceComponent === sourceComponent)!
+    const materialName = (node: RefractorNode) => {
+      const primitive = classified.json.meshes[node.mesh!].primitives[0]
+      return materials[primitive.material!]?.name
+    }
+    for (const component of [2, 5]) {
+      const lens = findComponent(12, component)
+      expect(lens.extras?.componentRole).toMatch(/^finderLens/)
+      expect(materialName(lens)).toBe('refractorFinderGlass')
+    }
+    for (const component of [0, 1, 2]) {
+      expect(materialName(findComponent(14, component))).toBe('refractorBlackHardware')
+    }
+    expect(materialName(findComponent(4, 17))).toBe('refractorFocuserWhiteFinish')
+  })
+
+  it('assigns the finder mounting shoe and rear coaxial tube to their functional assemblies', () => {
+    const nodes = classified.json.nodes as RefractorNode[]
+    const findComponent = (sourceComponent: number) => nodes.find(node =>
+      node.extras?.geometrySource === 'source'
+      && node.extras?.sourceNode === 4
+      && node.extras?.sourceComponent === sourceComponent)!
+    expect(findComponent(16).extras?.partId).toBe('finderScope')
+    expect(findComponent(16).name).toBe('FinderScope_n4_p0_c16')
+    expect(findComponent(18).extras?.partId).toBe('focuser')
+    expect(findComponent(18).name).toBe('Focuser_n4_p0_c18')
+  })
+
+  it('puts every reviewed fastener in its own mechanical category and renders it black', () => {
+    const materials = classified.json.materials as Array<{ name?: string }>
+    const fasteners = (classified.json.nodes as RefractorNode[]).filter(node =>
+      node.extras?.geometrySource === 'source' && node.extras?.hardwareClass === 'fastener')
+    const byType = fasteners.reduce<Record<string, number>>((counts, node) => {
+      expect(node.extras?.partId, node.name).toBe('fasteners')
+      const type = String(node.extras?.fastenerType)
+      counts[type] = (counts[type] ?? 0) + 1
+      const primitive = classified.json.meshes[node.mesh!].primitives[0]
+      expect(materials[primitive.material!]?.name, node.name).toBe('refractorBlackHardware')
+      return counts
+    }, {})
+    expect(fasteners).toHaveLength(24)
+    expect(byType).toEqual({ screw: 10, clampingKnob: 13, lockLever: 1 })
+    const finderLock = fasteners.find(node =>
+      node.extras?.sourceNode === 14 && node.extras?.sourceComponent === 6)
+    expect(finderLock?.extras?.fastenerType).toBe('clampingKnob')
   })
 })
 
-describe('refractor geometry against the source', () => {
-  it('keeps the added optics small next to the model, so nothing is rescaled twice', async () => {
-    const { scene, metadata } = await loadClassified()
-    const optics = new THREE.Box3()
-    const model = new THREE.Box3().setFromObject(scene)
-    scene.traverse((object) => {
-      if (object instanceof THREE.Mesh && object.userData.opticalGeometry) optics.expandByObject(object)
+function localBounds(mesh: THREE.Mesh, inverse: THREE.Matrix4): THREE.Box3 {
+  const box = new THREE.Box3()
+  const attribute = mesh.geometry.getAttribute('position')
+  for (let i = 0; i < attribute.count; i++) {
+    box.expandByPoint(new THREE.Vector3().fromBufferAttribute(attribute, i).applyMatrix4(inverse))
+  }
+  return box
+}
+
+describe('source-anchored refractor optics', () => {
+  it('places each teaching lens at its corresponding source glass, pointing from large glass to small glass', async () => {
+    const { scene, metadata: m } = await loadClassified()
+    const frame = new THREE.Matrix4().fromArray(m.opticalFrame)
+    const inverse = frame.clone().invert()
+    const sources = new Map<number, THREE.Mesh>()
+    scene.traverse(object => {
+      if (object instanceof THREE.Mesh && object.userData.sourceNode === 12) sources.set(object.userData.sourceComponent, object)
     })
-    expect(optics.getSize(new THREE.Vector3()).length())
-      .toBeLessThan(model.getSize(new THREE.Vector3()).length() * .5)
-    // the lens blank is a real, model-scale object: 48 mm across on a 1.4 m instrument
-    expect(metadata.focalLength).toBeGreaterThan(.05)
-    expect(metadata.focalLength).toBeLessThan(3)
+    const objective = sources.get(1)!, eye = sources.get(3)!
+    const sourceCenter = (mesh: THREE.Mesh) => new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3())
+    expect(opticalAxis(frame).dot(sourceCenter(eye).sub(sourceCenter(objective)).normalize())).toBeGreaterThan(.999)
+    for (const [sourceId, target, s, thickness] of [
+      [1, 'TeachingObjectiveFront', m.objectiveFrontS, .006],
+      [0, 'TeachingObjectiveRear', m.objectiveS, .006],
+      [3, 'TeachingEyepiece', m.eyepieceFrontS, .002],
+    ] as const) {
+      const original = localBounds(sources.get(sourceId)!, inverse)
+      const teaching = localBounds(scene.getObjectByName(target) as THREE.Mesh, inverse)
+      expect(teaching.getCenter(new THREE.Vector3()).distanceTo(original.getCenter(new THREE.Vector3()))).toBeLessThan(.0005)
+      expect(teaching.getCenter(new THREE.Vector3()).x).toBeCloseTo(s, 6)
+      expect(teaching.getSize(new THREE.Vector3()).x).toBeCloseTo(thickness, 6)
+      expect(teaching.getSize(new THREE.Vector3()).y).toBeLessThanOrEqual(original.getSize(new THREE.Vector3()).y)
+    }
+    expect(validateSourceAlignment(scene, m)).toBe(true)
+    const reversed = structuredClone(m)
+    for (const i of [0, 1, 2, 8, 9, 10]) reversed.opticalFrame[i] *= -1
+    expect(validateSourceAlignment(scene, reversed), 'the previously reversed frame must be rejected').toBe(false)
+    expect(m.focalRatio).toBeCloseTo(m.focalLength / m.objectiveAperture, 8)
+    expect(m.eyepieceFrontS - m.focusS).toBeCloseTo(m.eyepieceFocalLength, 8)
+  })
+
+  it('builds closed lenses without zero-area faces, open rims or inverted triangle normals', async () => {
+    const { scene } = await loadClassified()
+    scene.traverse(object => {
+      if (!(object instanceof THREE.Mesh) || !object.userData.opticalGeometry) return
+      const attr = object.geometry.getAttribute('position')
+      const normals = object.geometry.getAttribute('normal')
+      const edges = new Map<string, number>()
+      const vertex = (i: number) => new THREE.Vector3().fromBufferAttribute(attr, i)
+      const key = (v: THREE.Vector3) => v.toArray().map(n => Math.round(n * 1e6)).join(',')
+      for (let i = 0; i < attr.count; i += 3) {
+        const points = [vertex(i), vertex(i+1), vertex(i+2)]
+        const face = points[1]!.clone().sub(points[0]!).cross(points[2]!.clone().sub(points[0]!))
+        expect(face.length()).toBeGreaterThan(1e-10)
+        expect(face.normalize().dot(new THREE.Vector3().fromBufferAttribute(normals, i))).toBeGreaterThan(.999)
+        for (let j = 0; j < 3; j++) {
+          const edge = [key(points[j]!), key(points[(j+1)%3]!)].sort().join('|')
+          edges.set(edge, (edges.get(edge) ?? 0) + 1)
+        }
+      }
+      expect([...edges.values()].every(n => n === 2), object.name).toBe(true)
+    })
+  })
+
+  it('draws symmetric parallel input, continuous converging bundles and parallel output for each field', async () => {
+    const { metadata: m } = await loadClassified()
+    expect(rayOrderIsPhysical(m)).toBe(true)
+    const frame = new THREE.Matrix4().fromArray(m.opticalFrame)
+    const segments = raySegments(m, frame)
+    expect(segments).toHaveLength(m.rays.length * 6)
+    for (const ray of m.rays) {
+      const p = ray.points
+      expect(p[0]![1]).toBeCloseTo(m.objectiveAperture / 2 * ray.apertureFrac, 8)
+      expect(Math.abs(p[3]![1])).toBeLessThan(m.eyepieceElementRadius)
+      expect(p[2]![1]).toBeCloseTo(Math.tan(ray.field) * m.focalLength, 8)
+      const converging = (p[3]![1] - p[1]![1]) / (p[3]![0] - p[1]![0])
+      expect(p[1]![1] + converging * (m.focusS - p[1]![0])).toBeCloseTo(p[2]![1], 8)
+      expect((p[5]![1] - p[4]![1]) / (p[5]![0] - p[4]![0])).toBeCloseTo(-Math.tan(ray.field) * m.magnification, 8)
+    }
+    const axial = m.rays.filter(r => r.field === 0)
+    expect(axial.map(r => r.points[0]![1]).reduce((a, b) => a+b, 0)).toBeCloseTo(0, 8)
+    const entry = segments[0]!
+    const localStart = entry.start.clone().applyMatrix4(frame.clone().invert())
+    expect(localStart.x).toBeLessThan(m.tubeObjectiveEndS)
+    expect(entry.end.distanceTo(opticalPoint(frame, ...m.rays[0]!.points[0]!))).toBeLessThan(1e-7)
+  })
+
+  it('detects wrong focus, nonparallel output and an obstruction between ray vertices', async () => {
+    const { metadata: m } = await loadClassified()
+    const checked = validateRays(m)
+    expect(checked.entryWithinAperture).toBe(true)
+    expect(checked.focusResidualMax).toBeLessThan(1e-8)
+    expect(checked.exitBundleSpreadRad).toBeLessThan(1e-8)
+    expect(checked.wallClearanceMin).toBeGreaterThan(.005)
+    expect(m.boreSamples).toHaveLength(180)
+    const broken = structuredClone(m)
+    broken.rays[0]!.points[2]![1] += .01
+    broken.rays[0]!.points[5]![1] += .01
+    broken.boreSamples.push([(m.objectiveS + m.focusS) / 2, .001])
+    const bad = validateRays(broken)
+    expect(bad.focusResidualMax).toBeGreaterThan(.009)
+    expect(bad.exitBundleSpreadRad).toBeGreaterThan(.01)
+    expect(bad.wallClearanceMin).toBeLessThan(0)
   })
 })

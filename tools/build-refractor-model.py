@@ -5,8 +5,8 @@ The source is never modified. This builder:
   2. bakes every parent transform and splits each material primitive into welded
      connected fragments;
   3. assigns each fragment a reviewed partId together with the measured evidence;
-  4. adds real, closed teaching optics (an achromatic-doublet objective and a
-     two-element eyepiece) as separate nodes in the same baked frame;
+  4. keeps the source optical elements in their functional groups and adds closed
+     teaching surfaces for the ray-path lesson;
   5. writes the calibrated optical frame and traced ray paths into the scene extras;
   6. reports triangle counts per source primitive so the split can be verified.
 
@@ -37,519 +37,253 @@ instances = audit['instances']
 # Reviewed classification. Values record the measured evidence, never a node name.
 # ----------------------------------------------------------------------------------
 EVIDENCE = {
-    'opticalTube': 'one 2160-face shell whose wall normals share a single null direction: 94.5% of its '
-                   'area is cylindrical wall at concentric radii 23.6 / 41.2 / 48.9 / 59.5 mm, spanning '
-                   's -338.8..+304.5 mm (643 mm), and its centre sits 0.0 mm off the measured axis. It '
-                   'is the only part that is both that long and exactly coaxial.',
-    'objectiveCell': 'the coaxial rings at the front opening: r 54.9..58.6 mm at s -442.8..-434.3, '
-                     'r 20.0..100.2 mm at s -443.5..-412.5, r 43.2..140.7 mm at s -329.5..-272.0, '
-                     'r 26.6..41.1 mm at s -413.8..-398.4 and r 20.9..35.4 mm at s -402.5..-397.1. They '
-                     'share the axis and carry whatever sits in the front opening.',
-    'lensRetainer': 'the rings that close that opening onto the cell: r 43.5..53.6 and 46.4..53.6 mm at '
-                    's -288.6..-283.1, r 25.3..47.2 mm at s -319.4..-270.8, r 37.4..58.5 mm at '
-                    's -295.2..-271.1, plus the 29.9..39.1 mm and 0.3..10.2 mm collars further back.',
-    'dewShield': 'two solid discs that span the whole bore: 108.8 mm across (r 0.0..54.4 mm), 7-8 mm '
-                 'thick, exactly coaxial at s -294.2..-272.5. Being solid they block the axis, so they '
-                 'read as baffles or covers rather than as an optical element.',
-    'eyepieceHolder': 'the coaxial train along the axis: an 18.2 mm bore tube at s +367.4..+407.0 mm, '
-                      '23.0..24.6 mm and 29.9..39.1 mm collars, and 40..58 mm rings, all within 0.3 mm '
-                      'of the measured axis and 0.0 deg to it. This is where an eyepiece sits.',
-    'focuser': 'the mechanism on the tube flank, 60.6..73.7 mm off the axis at height 1.10..1.15 m over '
-               's -12.9..+112.6 mm: two knurled wheels (r 53.1..71.6 and 61.1..76.5 mm) and a coaxial '
-               'body of r 56.1..67.4 mm spanning s -112.6..+12.9 mm.',
-    'finderScope': 'the two parts that ride higher than the focuser, 64.2..84.7 mm off the axis at '
-                   'height 1.20..1.23 m over s -6.2..+110.9 mm. Not on the optical axis, so it takes no '
-                   'part in the main light path.',
-    'mount': 'the castings and linkage under the tube, 119..410 mm off the axis at heights 0.70..1.16 m: '
-             'the 6412-face column (r 208.7..426.0 mm at s -281.0..-101.5), the head casting '
-             '(r 87.6..280.1 mm at s -87.3..-18.5), a second casting and its rings and bar.',
-    'counterweight': 'the balance parts, 622..930 mm off the axis over s -596.7..-243.7 mm: the drum and '
-                     'the arms that carry it.',
-    'tripod': 'the ground end: the long members whose own cylinder fits reach 376..1190 mm from the axis '
-              'over s -761.0..-189.0 mm, with high wall fractions, plus the end fittings at 402 mm.',
-    'hardware': 'the three small fittings the measurements do not tie to one assembly: 106..147 mm off '
-                'the axis over s +299.7..+309.2 mm, 324 faces each.',
-    'unknown': 'geometry whose function the measurements do not establish; see the audit report',
-    'objectiveLens': 'teaching addition: closed achromatic doublet with spherical surfaces, fitted to the '
-                     'cell bore; the source model has no objective lens',
-    'eyepieceLensGroup': 'teaching addition: closed two-element eyepiece; the source model has no '
-                         'eyepiece lens',
+    'opticalTube': 'the unique 643 mm coaxial shell; its enlarged objective end surrounds the objective '
+                   'and forms the sun shade, while its narrow viewing end meets the focuser',
+    'objectiveCell': 'a stepped coaxial collar immediately surrounding the objective pair at the '
+                     'large-aperture objective end of the main tube',
+    'objectiveLens': 'two 108.8 mm coaxial convex optical blanks directly inside the large objective '
+                     'cell at the sky-facing end of the tube',
+    'tubeRings': 'two large split rings around the main tube together with the curved saddle, longitudinal '
+                 'dovetail plate above the equatorial head',
+    'fasteners': 'the reviewed screws, nut-like thumb fasteners, clamping knobs and locking controls '
+                 'distributed across the finder, focuser, tube rings, mount, counterweight and tripod',
+    'finderScope': 'a complete small optical train 98..147 mm from and parallel to the main axis, above the '
+                   'tube: two lenses, barrel, mounting shoe, bracket and three radial alignment screws',
+    'focuser': 'the rear viewing-end assembly: coaxial drawtube and body plus paired side wheels and '
+               'controls, all immediately before the diagonal',
+    'diagonal': 'the angled rear housing between drawtube and eyepiece, including its oblique reflecting '
+                'surface; the coaxial rear tube remains part of the focuser assembly',
+    'eyepieceLensGroup': 'the small convex optical element and coaxial barrel at the viewing end of the '
+                         'diagonal, following the side optical port',
+    'mount': 'the intersecting equatorial-axis castings and their locks and adjustment controls directly '
+             'below the tube saddle and above the tripod',
+    'counterweight': 'the circular weight opposite the telescope, the long shaft joining it to the '
+                     'declination axis and the shaft-end lock',
+    'tripod': 'three two-section ground legs with feet and clamps, plus three spreader rods, their '
+              'connectors and the central polygonal hub',
 }
 
-# The mapping is derived from measurements by tools/refractor-part-of.py; the builder reads it
-# rather than restating it, so a re-derivation cannot drift out of step with the model.
+# The mapping is generated by tools/refractor-classify.py; the builder reads it rather than
+# restating it, so the classified GLB cannot drift out of step with the reviewed source fragments.
 PART_OF = json.loads((Path(__file__).resolve().parents[1] / '.cache/refractor-audit/part-of.json')
                      .read_text())
 if not PART_OF:
-    raise SystemExit('run tools/refractor-part-of.py first: it derives the fragment mapping')
+    raise SystemExit('run tools/refractor-classify.py first: it writes the reviewed fragment mapping')
+FASTENER_OF = json.loads((CACHE / 'fastener-of.json').read_text())
 
 NAMES = {
-    'objectiveCell': 'ObjectiveCell', 'dewShield': 'DewShield', 'opticalTube': 'OpticalTube',
-    'lensRetainer': 'LensRetainer', 'tubeRings': 'TubeRings', 'focuser': 'Focuser',
-    'eyepieceHolder': 'EyepieceHolder', 'finderScope': 'FinderScope', 'mount': 'MountColumn',
-    'counterweight': 'Counterweight', 'tripod': 'Tripod', 'hardware': 'Fasteners',
-    'unknown': 'UnidentifiedMechanical',
+    'opticalTube': 'OpticalTubeAndSunShade', 'objectiveCell': 'ObjectiveCell',
+    'objectiveLens': 'ObjectiveLens', 'tubeRings': 'TubeRingsAndDovetail',
+    'fasteners': 'Fasteners',
+    'finderScope': 'FinderScope', 'focuser': 'Focuser', 'diagonal': 'StarDiagonal',
+    'eyepieceLensGroup': 'Eyepiece', 'mount': 'EquatorialMount',
+    'counterweight': 'CounterweightAndShaft', 'tripod': 'TripodAndSpreader',
 }
 
 # ----------------------------------------------------------------------------------
-# Optical frame, measured then re-centred on the tube bore.
+# Optical calibration derived afresh from SOURCE vertices, never a cached axis sign.
 # ----------------------------------------------------------------------------------
-topology = json.loads((CACHE / 'axis-and-topology.json').read_text())
-of = topology['opticalFrame']
-axis = np.array(of['axis']); up = np.array(of['up']); right = np.array(of['right'])
-O = np.array(of['point'])
+fragments = {}
+for inst in instances:
+    for ci, faces in enumerate(components(inst['tri'], return_ids=True)):
+        tag = f"n{inst['node']}-m{inst['mesh']}-p{inst['prim']}:c{ci}"
+        fragments[tag] = inst['tri'][faces]
 
-# The measured axis runs from the eyepiece end (-s) to the objective end (+s), so the demo frame
-# reverses it: the exported s axis points the way the light travels, from the objective towards
-# the eyepiece. Measured landmarks in the audit's frame, which the solve below still uses:
-# the objective cell and its front throat near s = -339..-261 mm, the lens retaining rings at
-# -319..-271 mm, and the barrel and drawtube at -521..-327 mm.
 
-# The tube is one connected fragment of mesh 2; use it alone so the tripod and mount in the
-# same merged mesh cannot bias the axis.
-tube_tri = next(i['tri'] for i in instances if i['node'] == 4 and i['mesh'] == 2)
-tube_groups = components(tube_tri, return_ids=True)
-TUBE_COMPONENT = 1  # ranked by face count: the 2160-face shell that spans the whole tube
-tube_pts = tube_tri[tube_groups[TUBE_COMPONENT]].reshape(-1, 3)
-d = tube_pts - O
-perpendicular = np.linalg.norm(d - np.outer(d @ axis, axis), axis=1)
-wall = perpendicular > 0.02
-across = np.c_[d[wall] @ up, d[wall] @ right]
-centre_offset = across.mean(axis=0)
-O = O + up * centre_offset[0] + right * centre_offset[1]
-print(f'tube shell: {wall.sum()} wall vertices, re-centred the axis by '
-      f'{np.round(centre_offset * 1000, 3).tolist()} mm')
+def unique_points(tag):
+    return np.unique(fragments[tag].reshape(-1, 3), axis=0)
+
+
+objective_tags = ['n12-m6-p0:c1', 'n12-m6-p0:c0']
+eyepiece_tag = 'n12-m6-p0:c3'  # the small on-axis viewing lens; the side port is separate
+front_pts = unique_points(objective_tags[0])
+eye_pts = unique_points(eyepiece_tag)
+_, vectors = np.linalg.eigh(np.cov(front_pts.T))
+axis = vectors[:, 0]
+if axis @ (eye_pts.mean(0) - front_pts.mean(0)) < 0:
+    axis = -axis
+up = np.array([0., 1., 0.])
+up -= axis * (up @ axis)
+up /= np.linalg.norm(up)
+right = np.cross(axis, up)
+O = front_pts.mean(0)
+# All subsequent coordinates, generated surfaces and exported metadata use this ONE frame.
+EXPORT_AXIS, EXPORT_UP, EXPORT_RIGHT = axis, up, right
 
 
 def to_optical(points):
-    dd = np.atleast_2d(points) - O
-    return np.c_[dd @ axis, dd @ up, dd @ right]
-
-
-# The demo frame runs from the objective towards the eyepiece, which is the direction the light
-# travels; the audit's measured axis runs the other way. The solve stays in the measured frame and
-# only the exported direction is flipped, so the ray tracing is untouched.
-# The measured axis already runs the way the light travels: the objective cell is at the
-# larger s and the light reaches the focus and the eyepiece at smaller s. The exported
-# frame is therefore the measured frame, with no sign flips anywhere.
-EXPORT_AXIS = axis
-EXPORT_UP = up
-EXPORT_RIGHT = np.cross(EXPORT_AXIS, up)
-if np.dot(np.cross(EXPORT_AXIS, EXPORT_UP), EXPORT_RIGHT) < 0:
-    EXPORT_RIGHT = -EXPORT_RIGHT
-
-
-def export_s(value):
-    """Solve-frame s -> exported s. The two frames are the same, so this is the identity."""
-    return value
+    return (np.atleast_2d(points) - O) @ np.array([axis, up, right]).T
 
 
 def to_world(s, u, v):
-    """Solve-frame coordinates -> baked world coordinates, in the exported direction."""
     return np.outer(s, axis) + np.outer(u, up) + np.outer(v, right) + O
 
 
-tp = to_optical(tube_pts)
-tube_s, tube_r = tp[:, 0], np.linalg.norm(tp[:, 1:], axis=1)
-TUBE_FRONT, TUBE_REAR = float(tube_s.min()), float(tube_s.max())
-slices = []
-for i in range(60):
-    lo = tube_s.min() + (tube_s.max() - tube_s.min()) * i / 60
-    hi = tube_s.min() + (tube_s.max() - tube_s.min()) * (i + 1) / 60
-    m = (tube_s >= lo) & (tube_s < hi)
-    if m.sum() > 20:
-        slices.append((float(lo), float(hi), float(tube_r[m].min()), float(tube_r[m].max())))
+def landmark(tag):
+    points = to_optical(unique_points(tag))
+    return {'source': tag, 's': float((points[:, 0].min() + points[:, 0].max()) / 2),
+            'front': float(points[:, 0].min()), 'back': float(points[:, 0].max()),
+            'radius': float(np.linalg.norm(points[:, 1:], axis=1).max()),
+            'center': to_world([(points[:, 0].min() + points[:, 0].max()) / 2], [0], [0])[0].tolist()}
 
 
-def bore_radius(s):
-    for lo, hi, rmin, _rmax in slices:
-        if lo <= s < hi:
-            return rmin
-    return float(tube_r.min())
-
-
-# ----------------------------------------------------------------------------------
-# Teaching optics. The model's own geometry fixes every number here:
-#   * the widest clear path runs from the objective cell's front opening to the rear
-#     barrel; that length sets the focal length, so the focal plane lands inside the
-#     drawtube's 36.5 mm bore exactly where a real refractor puts it;
-#   * the clear aperture is set so the resulting focal ratio keeps a single-element
-#     objective's spherical aberration small;
-#   * the objective blank is sized to sit on the measured 41.16 mm cell bore;
-#   * the eyepiece is a cemented doublet that fits the same 36.5 mm bore.
-# Everything is an ideal sphere set. No manufacturer prescription is claimed.
-# ----------------------------------------------------------------------------------
-# All positions below are in the measured optical frame: s increases from the objective towards
-# the eyepiece, which is also the direction the light travels. to_world() maps them to the baked
-# world coordinates of the classified GLB.
-LENS_FRONT = 0.3010      # objective front vertex, in the measured front throat (r 37.9 mm)
-CROWN_T = 0.0055         # crown centre thickness
-FLINT_T = 0.0045         # flint centre thickness
-CROWN_BACK = LENS_FRONT - CROWN_T
-LENS_BACK = CROWN_BACK - FLINT_T
-EYEPIECE_T = 0.0035      # eyepiece centre thickness
-LENS_SEMI = 0.0175       # objective blank radius that passes the measured 37.89 mm throat
-# The clear aperture is deliberately small. This model's cell-to-barrel distance is only about
-# 124 mm, so a lens focusing there works at a very short focal ratio; a 1.6 mm pencil keeps both
-# the objective and the eyepiece slow enough that a single-element eyepiece still emits a
-# genuinely parallel beam (the residual spread across the emitted bundle is well under 1 mrad).
-# The measured 47.2 mm throat is still the mechanical stop, so what is shown is a stopped-down
-# teaching instrument, not a manufacturer's prescription.
-APERTURE = 0.0035        # clear semi-aperture: a 7 mm pencil inside the 37.9 mm throat
-                         # The model leaves only ~1.2 m from the cell to the barrel, so the
-                         # objective works at a very long focal ratio; a small pencil keeps
-                         # the doublet and the eyepiece element well inside their diffraction
-                         # limits so the emitted beam is genuinely parallel.
-N_CROWN, N_FLINT = 1.5187, 1.6213
-N_EYE = 1.5187           # eyepiece glass
-CELL_BORE = 0.04116      # measured radius of the objective cell's lens seat
-FRONT_STOP = 0.02358     # measured radius of the cell's inner throat (the clear stop)
-RATIO = N_FLINT / N_CROWN  # achromatic radius ratio for this glass pair
-# The model's own cell-to-barrel distance sets the power: the objective blank has to sit in the
-# measured cell bore, and the focal plane has to fall inside the barrel at the low-s end of the
-# tube. The distance between those two points is the focal length, and the eyepiece then sits one
-# eyepiece focal length past the focus so its own front focal plane coincides with it.
-EYEPIECE_F = 0.0300      # eyepiece focal length
-FOCUS_TARGET = -0.4780   # the measured coaxial train at the -s end of the shell is where the
-                         # eyepiece fits, so the objective puts its focus there
-                         # eyepiece, at the mouth of the measured drawtube
-                         # eyepiece, at the mouth of the measured drawtube
-
-
-def biconvex_radius(f, n):
-    """Radius of curvature of a symmetric biconvex element with focal length f in air."""
-    return 2.0 * (n - 1.0) * f
-
-
-def system_matrix(surfaces):
-    """Paraxial matrix in reduced-angle form (y, n*u) for surfaces (s_vertex, R, n, n')."""
-    M = np.eye(2)
-    s_prev = surfaces[0][0]
-    n_prev = surfaces[0][2]
-    for (sv, R, n1, n2) in surfaces:
-        M = np.array([[1.0, (sv - s_prev) / n_prev], [0.0, 1.0]]) @ M
-        phi = (n2 - n1) / R if abs(R) > 1e-12 else 0.0
-        M = np.array([[1.0, 0.0], [-phi, 1.0]]) @ M
-        s_prev, n_prev = sv, n2
-    return M
-
-
-def effective_focal_length(surfaces):
-    """(effective focal length, back focal distance measured from the last vertex)."""
-    M = system_matrix(surfaces)
-    return -1.0 / M[1, 0], -M[0, 0] / M[1, 0]
-
-
-def objective_surfaces(R_crown, R_flint):
-    """The doublet's four surfaces, in the order the light meets them, for light along +s.
-
-    Each entry is (vertex_s, sphere_radius, n_before, n_after). The surface the light meets
-    first bulges towards the objective, so its sphere centre lies behind the vertex (+R); the
-    surface it leaves has its centre in front of the vertex (-R). Both elements are biconvex.
-    """
-    return [
-        (LENS_FRONT, +R_crown, 1.0, N_CROWN),
-        (CROWN_BACK, -R_crown, N_CROWN, 1.0),
-        (CROWN_BACK, +R_flint, 1.0, N_FLINT),
-        (LENS_BACK, -R_flint, N_FLINT, 1.0),
-    ]
-
-
-def crown_radius_for(efl_target):
-    """Bisection: the paraxial focal length grows monotonically with the crown curvature."""
-    lo, hi = 0.005, 20.0
-    for _ in range(200):
-        mid = (lo + hi) / 2
-        if effective_focal_length(objective_surfaces(mid, mid * RATIO))[0] > efl_target:
-            hi = mid
-        else:
-            lo = mid
-    return (lo + hi) / 2
-
-
-def surface_trace(ray_s, ray_y, ray_slope, surfaces):
-    """Exact meridional trace through spheres; returns the surface points and the exit slope.
-
-    The ray is carried as a position and a unit direction and each surface is the sphere centred
-    at (vertex_s + R, 0). The line/sphere intersection is solved in the (s, height) plane and the
-    refraction uses the vector form of Snell's law, so nothing here is paraxial and the trace stays
-    accurate at the steep angles a short-focus eyepiece produces.
-    """
-    norm = np.hypot(1.0, ray_slope)
-    pos = np.array([ray_s, ray_y])
-    direction = np.array([1.0, ray_slope]) / norm
-    points = [(ray_s, ray_y)]
-    for (vertex, R, n1, n2) in surfaces:
-        centre = np.array([vertex + R, 0.0])
-        offset = pos - centre
-        b = float(offset @ direction)
-        c = float(offset @ offset) - R * R
-        disc = b * b - c
-        if disc < 0:
-            return None
-        root = np.sqrt(disc)
-        t1, t2 = -b - root, -b + root
-        t = t1 if abs(t1) < abs(t2) else t2
-        if abs(t) > 0.05:
-            return None      # a real lens element is never touched 50 mm from its vertex
-        pos = pos + direction * t
-        points.append((float(pos[0]), float(pos[1])))
-        normal = pos - centre
-        ln = np.linalg.norm(normal)
-        if ln < 1e-15:
-            return None
-        normal = normal / ln
-        # the ray meets the surface from the side the normal points to
-        if float(direction @ normal) > 0:
-            normal = -normal
-        mu = n1 / n2
-        cosi = -float(direction @ normal)
-        sin2t = mu * mu * (1 - cosi * cosi)
-        if sin2t > 1.0:
-            return None
-        cost = np.sqrt(1 - sin2t)
-        direction = mu * direction + (mu * cosi - cost) * normal
-        direction = direction / np.linalg.norm(direction)
-    # The light runs towards decreasing s, so its direction has a negative s component. The slope
-    # is reported as dy/ds in the frame's own sign convention, which keeps
-    # 'height at s = y + slope * (s - s_here)' true for every caller.
-    return points, float(direction[1] / direction[0])
-
-
-def marginal_focus(R_crown, semi_aperture):
-    """Axial crossing of the marginal ray, measured from the ray the demo actually draws.
-
-    The trace runs towards decreasing s and returns the slope as dy/ds in the frame's own sign
-    convention. A converging element leaves the ray with a slope whose sign carries it back to the
-    axis, which in this frame means a crossing at a larger s than the last surface, so the
-    crossing is the usual straight-line intercept.
-    """
-    surfaces = objective_surfaces(R_crown, R_crown * RATIO)
-    traced = surface_trace(LENS_FRONT, semi_aperture, 0.0, surfaces)
-    if traced is None:
-        return None
-    points, slope = traced
-    s_end, y_end = points[-1]
-    if abs(slope) < 1e-15:
-        return None
-    return s_end + y_end / slope
-
-
-def solve_objective():
-    """Bisect the crown curvature until the traced marginal ray crosses the axis on the target."""
-    target = FOCUS_TARGET
-    lo, hi = 0.05, 12.0
-    f_lo, f_hi = marginal_focus(lo, APERTURE), marginal_focus(hi, APERTURE)
-    if f_lo is None or f_hi is None:
-        raise SystemExit(f'could not trace the objective at the bracket ends: {f_lo}, {f_hi}')
-    if (f_lo - target) * (f_hi - target) > 0:
-        raise SystemExit(f'the focal plane {target * 1000:.1f} mm is outside the range the '
-                         f'objective can reach: {f_lo * 1000:.1f}..{f_hi * 1000:.1f} mm')
-    for _ in range(120):
-        mid = (lo + hi) / 2
-        focus = marginal_focus(mid, APERTURE)
-        if focus is None:
-            raise SystemExit('objective trace failed while solving the curvature')
-        if focus > target:
-            lo = mid
-        else:
-            hi = mid
-    R = (lo + hi) / 2
-    focus = marginal_focus(R, APERTURE)
-    if abs(focus - target) > 1e-4:
-        raise SystemExit(f'objective solve did not converge: focus={focus}, target={target}')
-    return R, focus
-
-
-R_CROWN, EXACT_FOCUS = solve_objective()
-R_FLINT = R_CROWN * RATIO
-GLASS = {'crownFront': R_CROWN, 'crownBack': -R_CROWN,
-         'flintFront': R_FLINT, 'flintBack': -R_FLINT}
-OBJECTIVE_SURFACES = objective_surfaces(R_CROWN, R_FLINT)
-EFL, BFD = effective_focal_length(OBJECTIVE_SURFACES)
-TRACED_EFL = abs(LENS_BACK - EXACT_FOCUS)
-# The paraxial and marginal foci differ by the doublet's residual spherical aberration; the
-# ray bundle is built from the traced focus, so the displayed paths are self-consistent.
-FOCUS_S = EXACT_FOCUS
-print(f'  objective: traced marginal focus={EXACT_FOCUS * 1000:.3f} mm, '
-      f'traced EFL={TRACED_EFL * 1000:.3f} mm, paraxial EFL={EFL * 1000:.2f} mm, '
-      f'R_crown={R_CROWN:.5f}, R_flint={R_FLINT:.5f}')
-print(f'  aperture {APERTURE * 2000:.1f} mm gives f/{TRACED_EFL / APERTURE:.1f}')
-
-# The eyepiece sits one eyepiece focal length behind the shared focus, so its own front focal
-# plane coincides with that focus and the beam leaves it collimated.
-# the light travels towards decreasing s, so the eyepiece sits one focal length beyond
-# the focus in that direction, which is the smaller s
-# the eyepiece sits one focal length past the focus, along the direction the light runs
-# the eyepiece sits at the measured barrel, and the focal plane one eyepiece focal length in front
-EYEPIECE_POS = FOCUS_TARGET - EYEPIECE_T   # its front surface meets the focus exactly
-EYEPIECE_FRONT = EYEPIECE_POS
-EYEPIECE_BACK = EYEPIECE_POS - EYEPIECE_T
-R_EYE = biconvex_radius(EYEPIECE_F, N_EYE)
-# The light travels towards decreasing s, so it meets the eyepiece's front vertex first. For a
-# biconvex element each cap bulges away from the glass: R > 0 at the front vertex and R < 0 at the
-# rear vertex, which is also how cap_mesh draws them.
-# Light travels towards decreasing s and meets the front vertex first. For a converging
-# element in this frame the front vertex carries a negative radius and the rear vertex a
-# positive one, exactly as the objective's first element does.
-EP_SURFACES = [
-    (EYEPIECE_FRONT, +R_EYE, 1.0, N_EYE),
-    (EYEPIECE_BACK, -R_EYE, N_EYE, 1.0),
-]
-# For a single symmetric biconvex element of radius R the thin-lens focal length is R/2(n-1),
-# which is exact, so the eyepiece figures follow from it directly: the element is placed one
-# eyepiece focal length behind the shared focus, and its own front focal plane then coincides with
-# that focus, which is what makes the emitted beam parallel.
-EP_EFL = R_EYE / (2.0 * (N_EYE - 1.0))
-MAGNIFICATION = abs(TRACED_EFL / EP_EFL)
-# the exit pupil is the image of the objective aperture, and it sits EP_EFL beyond the eyepiece
-EXIT_PUPIL_RADIUS = APERTURE * EP_EFL / TRACED_EFL
-EYE_RELIEF = EP_EFL + EXIT_PUPIL_RADIUS * 0.0
-print(f'  eyepiece: front={EYEPIECE_FRONT * 1000:.2f} mm, back={EYEPIECE_BACK * 1000:.2f} mm, '
-      f'element R={R_EYE * 1000:.2f} mm, focal={EP_EFL * 1000:.2f} mm, '
-      f'magnification={MAGNIFICATION:.2f}x, exit pupil r={EXIT_PUPIL_RADIUS * 1000:.3f} mm')
-
-END_S = EYEPIECE_BACK - 0.050        # where the emitted beam is drawn to
+landmarks = [landmark(tag) for tag in objective_tags]
+eye_landmark = landmark(eyepiece_tag)
+assert landmarks[0]['s'] < landmarks[1]['s'] < eye_landmark['s']
+assert landmarks[0]['radius'] > 4 * eye_landmark['radius']
+LENS_FRONT = landmarks[0]['s']
+LENS_BACK = landmarks[1]['s']
+EYEPIECE_FRONT = eye_landmark['s']
+EYEPIECE_BACK = EYEPIECE_FRONT + .001
+EYEPIECE_F = .030
+FOCUS_S = EYEPIECE_FRONT - EYEPIECE_F
+TRACED_EFL = FOCUS_S - LENS_BACK
+APERTURE = .036                         # representative 72 mm bundle within the source objective
+LENS_SEMI = .050
+EYE_SEMI = .0095
+END_S = EYEPIECE_BACK + .100
+FIELD_ANGLES = [0., .006, -.006]
+APERTURE_FRACTIONS = [-1., -.6, -.2, .2, .6, 1.]
 
 
 def build_ray(aperture_frac, field_angle):
-    """One ray of a collimated bundle: objective, eyepiece, emitted beam.
-
-    The light enters at the objective's vertex plane at the requested aperture height and travels
-    towards decreasing s. It is refracted by the doublet's four surfaces and then crosses the
-    barrel to the eyepiece, which sits one eyepiece focal length beyond the traced focus, so the
-    focus falls on the eyepiece's own front focal plane and the emitted beam is parallel.
-    """
-    slope = np.tan(field_angle)
-    aperture_y = APERTURE * aperture_frac
-    y_start = -slope * LENS_FRONT - aperture_y
-    traced = surface_trace(LENS_FRONT, y_start, slope, OBJECTIVE_SURFACES)
-    if traced is None:
-        return None
-    obj_points, obj_slope = traced
-    # The trace starts on the first surface, so its first and last points are the objective's front
-    # and rear vertices. These surfaces are so shallow that the sphere intersection lands a fraction
-    # of a millimetre off the vertex, so the ray is translated so its entry height is exactly the
-    # requested aperture height: that is the quantity the interface and the tests report.
-    entry = (LENS_FRONT, aperture_y)
-    shift = aperture_y - obj_points[0][1]
-    s_exit, y_exit = obj_points[-1]
-    y_exit += shift
-    # The focal plane is a plane of the instrument, not of one ray: it sits where the on-axis
-    # marginal ray crosses the axis. A bundle at a field angle converges to an image point away
-    # from the axis, so this ray's height there is carried forward from the objective.
-    crossing = FOCUS_TARGET
-    # The exact sphere trace also leaves the exit slope a few percent short of the slope that
-    # actually lands on the focal plane, so the ray keeps the slope that reaches it exactly.
-    reach = crossing - s_exit
-    obj_slope = (-y_exit / reach) if abs(reach) > 1e-9 else obj_slope
-    focus_height = y_exit + obj_slope * reach
-    # the ray carries straight on to the eyepiece's front vertex
-    ep_entry_y = y_exit + obj_slope * (EYEPIECE_FRONT - s_exit)
-    if abs(ep_entry_y) >= 0.0130:
-        return None                                 # outside the eyepiece element
-    ep = surface_trace(EYEPIECE_FRONT, ep_entry_y, obj_slope, EP_SURFACES)
-    if ep is None:
-        return None
-    ep_points, ep_slope = ep
-    # The drawn path: entry, the objective's rear vertex, the focal plane, the eyepiece's two
-    # vertices and the emitted beam. The trace returns each element's entry and exit vertices, so
-    # the duplicates are dropped here to leave one vertex per landmark.
-    s_out, y_out = ep_points[-1]
-    full = [entry, (s_exit, y_exit), (crossing, focus_height),
-            ep_points[0], ep_points[-1],
-            (END_S, y_out + ep_slope * (END_S - s_out))]
-    return {'field': field_angle, 'apertureFrac': aperture_frac, 'points': full,
-            'exitSlope': ep_slope, 'focusCrossing': crossing, 'focusY': focus_height}
+    # Paraxial equivalent thin lenses. Off-axis incident rays have a nonzero field slope;
+    # rays of one field meet one image point and leave the eye lens parallel to each other.
+    incoming_slope = np.tan(field_angle)
+    entry_y = APERTURE * aperture_frac
+    rear_y = entry_y + incoming_slope * (LENS_BACK - LENS_FRONT)
+    image_height = incoming_slope * TRACED_EFL
+    converging_slope = incoming_slope - rear_y / TRACED_EFL
+    eyepiece_y = image_height + converging_slope * EYEPIECE_F
+    exit_slope = converging_slope - eyepiece_y / EYEPIECE_F
+    rear_eye_y = eyepiece_y + exit_slope * (EYEPIECE_BACK - EYEPIECE_FRONT)
+    return {'field': field_angle, 'apertureFrac': aperture_frac, 'exitSlope': exit_slope,
+            'focusY': image_height, 'focusCrossing': FOCUS_S,
+            'points': [[LENS_FRONT, entry_y], [LENS_BACK, rear_y], [FOCUS_S, image_height],
+                       [EYEPIECE_FRONT, eyepiece_y], [EYEPIECE_BACK, rear_eye_y],
+                       [END_S, rear_eye_y + exit_slope * (END_S - EYEPIECE_BACK)]]}
 
 
-FIELD_ANGLES = [0.0, 0.0025, -0.0025]
-APERTURE_FRACTIONS = [0.25, 0.6, 0.85, 1.0]
-rays = [r for r in (build_ray(f, t) for t in FIELD_ANGLES for f in APERTURE_FRACTIONS) if r]
-print(f'  traced {len(rays)} rays of {len(FIELD_ANGLES) * len(APERTURE_FRACTIONS)} requested')
-
-tube_shell = next(i['tri'] for i in instances if i['node'] == 4 and i['mesh'] == 2)
-tube_pts = tube_shell[components(tube_shell, return_ids=True)[1]].reshape(-1, 3)
-tp = to_optical(tube_pts)
-tube_s, tube_r = tp[:, 0], np.linalg.norm(tp[:, 1:], axis=1)
-TUBE_FRONT, TUBE_REAR = float(tube_s.min()), float(tube_s.max())
-slices = []
-for i in range(60):
-    lo = tube_s.min() + (tube_s.max() - tube_s.min()) * i / 60
-    hi = tube_s.min() + (tube_s.max() - tube_s.min()) * (i + 1) / 60
-    m = (tube_s >= lo) & (tube_s < hi)
-    if m.sum() > 20:
-        slices.append((float(lo), float(hi), float(tube_r[m].min()), float(tube_r[m].max())))
-
-
-def bore_radius(s):
-    for lo, hi, rmin, _rmax in slices:
-        if lo <= s < hi:
-            return rmin
-    return float(tube_r.min())
+rays = [build_ray(f, angle) for angle in FIELD_ANGLES for f in APERTURE_FRACTIONS]
+# Slice the actual shell triangles. Sparse vertex bins previously applied the rear throat's small
+# radius to the objective end and missed most of the tube. Triangle-plane intersections cover it.
+tube_tri = to_optical(fragments['n4-m2-p0:c1'].reshape(-1, 3)).reshape(-1, 3, 3)
+TUBE_FRONT, TUBE_REAR = float(tube_tri[:, :, 0].min()), float(tube_tri[:, :, 0].max())
+planes = np.linspace(TUBE_FRONT + 1e-6, TUBE_REAR - 1e-6, 180)
+bore_samples = []
+for s in planes:
+    intersections = []
+    for i, j in [(0, 1), (1, 2), (2, 0)]:
+        a, b = tube_tri[:, i], tube_tri[:, j]
+        delta = b[:, 0] - a[:, 0]
+        valid = (np.abs(delta) > 1e-10) & ((a[:, 0] - s) * (b[:, 0] - s) <= 0)
+        t = (s - a[valid, 0]) / delta[valid]
+        intersections.extend(a[valid, 1:] + t[:, None] * (b[valid, 1:] - a[valid, 1:]))
+    if len(intersections):
+        bore_samples.append([float(s), float(np.linalg.norm(intersections, axis=1).min())])
+assert len(bore_samples) == len(planes)
 
 
-worst = []
-for ray in rays:
-    for (s, y) in ray['points']:
-        demo_s = -s
-        for lo, hi, rmin, _rmax in slices:
-            if lo <= demo_s < hi:
-                worst.append((abs(y) - rmin, demo_s, y))
-                break
-worst.sort(reverse=True)
-if worst:
-    print(f'  tube wall clearance: worst margin {(-worst[0][0]) * 1000:.2f} mm at demo s='
-          f'{worst[0][1] * 1000:.1f} mm')
-print(f'  tube: demo-frame front {TUBE_FRONT * 1000:.1f} mm, rear {TUBE_REAR * 1000:.1f} mm, '
-      f'min bore r={tube_r.min() * 1000:.2f} mm')
+def height_at(ray, s):
+    points = ray['points']
+    if s < points[0][0]:
+        return points[0][1] + np.tan(ray['field']) * (s - points[0][0])
+    return float(np.interp(s, [p[0] for p in points], [p[1] for p in points]))
 
 
-# ----------------------------------------------------------------------------------
+wall_margin = min(radius - abs(height_at(ray, s)) for ray in rays for s, radius in bore_samples)
+if wall_margin <= 0:
+    raise SystemExit(f'Ray intersects source tube shell: {wall_margin * 1000:.3f} mm clearance')
+if max(abs(r['points'][3][1]) for r in rays) >= EYE_SEMI:
+    raise SystemExit('Ray misses the source eyepiece')
+print(f'  source-anchored axis: {axis.round(6).tolist()}')
+print(f'  objective planes {LENS_FRONT*1000:.2f}/{LENS_BACK*1000:.2f} mm; '
+      f'focus {FOCUS_S*1000:.2f} mm; eyepiece {EYEPIECE_FRONT*1000:.2f} mm')
+print(f'  {len(rays)} rays, sampled tube clearance {wall_margin*1000:.2f} mm')
+
+
 # Appearance reviewed against the reference photograph supplied with the task.
 #
 # The source model has no textures, no images and no text geometry at all, so there is nothing to
 # strip: the reference's "VIXIX" badge, the small blue discs and the tripod-leg lettering simply do
 # not exist in this geometry and are deliberately NOT recreated here. What is matched is the material
-# scheme: an off-white tube, finder and mount on near-black optics, focuser, counterweight and
-# spreaders, with a metallic silver counterweight shaft.
+# scheme: an off-white tube, finder and mount on near-black optics, focuser and
+# spreaders, with a white counterweight and metallic silver counterweight shaft.
 # ----------------------------------------------------------------------------------
 APPEARANCE = {
     # part           : (base colour,      metallic, roughness)
-    'opticalTube': (.930, .934, .938, .05, .34),
-    'dewShield': (.930, .934, .938, .05, .34),
-    'objectiveCell': (.930, .934, .938, .10, .32),
-    'lensRetainer': (.070, .072, .078, .20, .30),
-    'tubeRings': (.905, .912, .920, .12, .36),
-    'focuser': (.105, .108, .118, .30, .30),
-    'eyepieceHolder': (.095, .098, .108, .35, .26),
-    'finderScope': (.925, .930, .936, .06, .34),
-    'mount': (.920, .924, .930, .10, .32),
-    'counterweight': (.115, .118, .128, .45, .30),
-    'tripod': (.930, .933, .937, .05, .34),
-    'hardware': (.400, .410, .425, .72, .30),
-    'unknown': (.860, .865, .872, .12, .40),
+    # The reference finish is a clean white instrument with black optical hardware.
+    # Keep the palette neutral so the model does not acquire a blue cast on the light stage.
+    'opticalTube': (.965, .965, .955, .02, .38),
+    'objectiveCell': (.945, .945, .935, .06, .34),
+    'tubeRings': (.905, .905, .895, .10, .40),
+    'focuser': (.035, .038, .045, .55, .28),
+    'finderScope': (.950, .950, .940, .04, .38),
+    'diagonal': (.025, .028, .035, .58, .24),
+    'mount': (.925, .925, .915, .08, .38),
+    # The weight is white like the reference body; the separate shaft material below is metallic.
+    'counterweight': (.950, .950, .940, .08, .38),
+    'tripod': (.955, .955, .945, .03, .40),
 }
 
 # Part -> the GLB material index that carries its appearance.
 MATERIAL_OF = {}
 for part in list(APPEARANCE) + ['objectiveLens', 'eyepieceLensGroup']:
     MATERIAL_OF[part] = len(MATERIAL_OF)
+MATERIAL_OF['counterweightRod'] = len(MATERIAL_OF)
+MATERIAL_OF['blackHardware'] = len(MATERIAL_OF)
+MATERIAL_OF['finderGlass'] = len(MATERIAL_OF)
+MATERIAL_OF['focuserWhite'] = len(MATERIAL_OF)
+
+# Source component roles that must not be inferred from their parent partId. In particular, the
+# eyepiece barrel shares a functional group with the eyepiece glass, but it is opaque black metal.
+COMPONENT_ROLE = {
+    'n12-m6-p0:c2': 'finderLensRear',
+    'n12-m6-p0:c3': 'eyepieceLens',
+    'n12-m6-p0:c5': 'finderLensFront',
+    'n14-m7-p0:c4': 'eyepieceBarrel',
+    'n14-m7-p0:c3': 'finderRearBarrel',
+    'n14-m7-p0:c7': 'finderFrontBarrel',
+}
+BLACK_COMPONENTS = {
+    'n14-m7-p0:c4', 'n14-m7-p0:c3', 'n14-m7-p0:c7',
+    'n14-m7-p0:c0', 'n14-m7-p0:c1', 'n14-m7-p0:c2',
+}
+FINDER_GLASS_COMPONENTS = {'n12-m6-p0:c2', 'n12-m6-p0:c5'}
+WHITE_COMPONENTS = {'n4-m2-p0:c17'}
 
 
 def material_for(part):
     """The GLB material definition for one reviewed category, plus the teaching optics."""
     if part == 'objectiveLens':
-        # glass: translucent, but with a real edge and highlight rather than invisible
+        # The reference shows the objective aperture as a dark optical opening. Keep it
+        # translucent enough for the ray lesson while retaining that black appearance.
         return {'name': 'teachingObjectiveGlass',
-                'pbrMetallicRoughness': {'baseColorFactor': [.70, .87, .95, .40],
-                                         'metallicFactor': 0.0, 'roughnessFactor': .04},
+                'pbrMetallicRoughness': {'baseColorFactor': [.035, .115, .135, .70],
+                                         'metallicFactor': 0.0, 'roughnessFactor': .07},
                 'alphaMode': 'BLEND', 'doubleSided': True}
     if part == 'eyepieceLensGroup':
         return {'name': 'teachingEyepieceGlass',
-                'pbrMetallicRoughness': {'baseColorFactor': [.78, .91, .97, .48],
+                'pbrMetallicRoughness': {'baseColorFactor': [.045, .135, .155, .74],
                                          'metallicFactor': 0.0, 'roughnessFactor': .05},
                 'alphaMode': 'BLEND', 'doubleSided': True}
+    if part == 'finderGlass':
+        return {'name': 'refractorFinderGlass',
+                'pbrMetallicRoughness': {'baseColorFactor': [.055, .165, .180, .68],
+                                         'metallicFactor': 0.0, 'roughnessFactor': .08},
+                'alphaMode': 'BLEND', 'doubleSided': True}
+    if part == 'focuserWhite':
+        return {'name': 'refractorFocuserWhiteFinish',
+                'pbrMetallicRoughness': {'baseColorFactor': [.965, .965, .950, 1.0],
+                                         'metallicFactor': .03, 'roughnessFactor': .34}}
+    if part == 'counterweightRod':
+        return {'name': 'refractorCounterweightRodMetal',
+                'pbrMetallicRoughness': {'baseColorFactor': [.52, .55, .58, 1.0],
+                                         'metallicFactor': .88, 'roughnessFactor': .22}}
+    if part == 'blackHardware':
+        return {'name': 'refractorBlackHardware',
+                'pbrMetallicRoughness': {'baseColorFactor': [.018, .020, .025, 1.0],
+                                         'metallicFactor': .42, 'roughnessFactor': .28}}
     r, g, b, metallic, roughness = APPEARANCE[part]
     return {'name': f'refractor{part[0].upper()}{part[1:]}Finish',
             'pbrMetallicRoughness': {'baseColorFactor': [r, g, b, 1.0],
@@ -616,149 +350,91 @@ for inst in instances:
         if part is None:
             raise SystemExit(f'unmapped fragment {tag} ({len(faces)} faces)')
         vertex_ids = ids.reshape(-1, 3)[faces].flatten()
+        material_part = ('counterweightRod' if tag == 'n10-m5-p0:c10'
+                         else 'blackHardware' if tag in FASTENER_OF or tag in BLACK_COMPONENTS
+                         else 'finderGlass' if tag in FINDER_GLASS_COMPONENTS
+                         else 'focuserWhite' if tag in WHITE_COMPONENTS
+                         else part)
+        extras = {
+            'partId': part, 'sourceNode': ni, 'sourceMesh': mid, 'sourcePrimitive': pi,
+            'sourceComponent': ci,
+            'confidence': 'reviewed',
+            'evidence': EVIDENCE[part], 'geometrySource': 'source',
+        }
+        if tag in COMPONENT_ROLE:
+            extras['componentRole'] = COMPONENT_ROLE[tag]
+        if tag in FASTENER_OF:
+            extras['hardwareClass'] = 'fastener'
+            extras['fastenerType'] = FASTENER_OF[tag]
         add_solid(f'{NAMES[part]}_n{ni}_p{pi}_c{ci}', world[vertex_ids], normals[vertex_ids],
-                  MATERIAL_OF[part], {
-                      'partId': part, 'sourceNode': ni, 'sourceMesh': mid, 'sourcePrimitive': pi,
-                      'sourceComponent': ci,
-                      'confidence': 'unresolved' if part == 'unknown' else 'reviewed',
-                      'evidence': EVIDENCE[part], 'geometrySource': 'source'})
+                  MATERIAL_OF[material_part], extras)
 print(f'wrote {len(report)} reviewed fragments')
 
 
-def sag(R, r):
-    """Spherical sag at radius r for a surface of radius R."""
-    if abs(R) < 1e-12:
-        return 0.0
-    x = min(abs(r / R), 1.0)
-    return abs(R) * (1 - np.sqrt(max(1 - x * x, 0.0)))
-
-
-def cap_mesh(vertex_s, R, semi, rings, segments, outward):
-    """Spherical cap triangles in the optical frame; outward=+1 faces the objective end."""
-    pos, nor, idx = [], [], []
-    for i in range(rings + 1):
-        r = semi * i / rings
+def build_lens(part, name, center, semi, half_thickness):
+    # Closed biconvex teaching profile with shared rim coordinates and no duplicated pole faces.
+    segments, rings = 64, 12
+    profiles = []
+    for side in [-1, 1]:
+        profiles.append([(center + side * half_thickness, 0., 0.)])
+        for ring in range(1, rings + 1):
+            radius = semi * ring / rings
+            half = .0004 + (half_thickness - .0004) * (1 - (radius / semi)**2)
+            profiles[-1].extend((center + side * half, radius*np.cos(j*2*np.pi/segments),
+                                radius*np.sin(j*2*np.pi/segments)) for j in range(segments))
+    positions = np.array(profiles[0] + profiles[1])
+    count = len(profiles[0])
+    faces = []
+    for side in range(2):
+        offset = side * count
+        cap = []
         for j in range(segments):
-            a = 2 * np.pi * j / segments
-            u, v = r * np.cos(a), r * np.sin(a)
-            drop = sag(R, r)
-            s = vertex_s + (drop if outward > 0 else -drop)
-            n = np.array([-u / R, -v / R, 1.0]) if R > 0 else np.array([u / R, v / R, 1.0])
-            pos.append((s, u, v))
-            nor.append(n / np.linalg.norm(n))
-    for i in range(rings):
-        for j in range(segments):
-            j2 = (j + 1) % segments
-            a = i * segments + j
-            b = (i + 1) * segments + j
-            c = (i + 1) * segments + j2
-            d = i * segments + j2
-            if i == 0:
-                idx += [a, b, c] if outward > 0 else [a, c, b]
-            else:
-                idx += ([a, b, c, a, c, d] if outward > 0 else [a, c, b, a, d, c])
-    return np.array(pos), np.array(nor), np.array(idx, dtype=np.int64).reshape(-1, 3)
-
-
-def wall_mesh(s0, s1, R, segments):
-    pos, nor, idx = [], [], []
-    for s in (s0, s1):
-        for j in range(segments):
-            a = 2 * np.pi * j / segments
-            pos.append((s, R * np.cos(a), R * np.sin(a)))
-            nor.append((0.0, np.cos(a), np.sin(a)))
+            cap.append([offset, offset+1+j, offset+1+(j+1)%segments])
+        for ring in range(1, rings):
+            for j in range(segments):
+                a = offset+1+(ring-1)*segments+j
+                b = offset+1+(ring-1)*segments+(j+1)%segments
+                c, d = a+segments, b+segments
+                cap.extend([[a,c,d],[a,d,b]])
+        faces.extend([f[::-1] if side == 0 else f for f in cap])
+    start = 1+(rings-1)*segments
     for j in range(segments):
-        j2 = (j + 1) % segments
-        idx += [j, segments + j, segments + j2, j, segments + j2, j2]
-    return np.array(pos), np.array(nor), np.array(idx, dtype=np.int64).reshape(-1, 3)
-
-
-def build_lens(part, name, s_front, R_front, s_back, R_back, semi, material, note):
-    segments, rings = 56, 10
-    fp, fn, fi = cap_mesh(s_front, R_front, semi, rings, segments, +1)
-    bp, bn, bi = cap_mesh(s_back, R_back, semi, rings, segments, -1)
-    wp, wn, wi = wall_mesh(s_front, s_back, semi, segments)
-    nf, nb, nw = len(fp), len(bp), len(wp)
-    local = np.concatenate([fp, bp, wp])
-    nrm = np.concatenate([fn, bn + np.array([0.0, 0.0, 0.0]), wn])
-    # rear cap normals must point away from the glass; flip the stored direction
-    nrm[nf:nf + nb] *= -1
-    indices = np.concatenate([fi.reshape(-1, 3),
-                              bi[:, ::-1].reshape(-1, 3) + nf,
-                              wi.reshape(-1, 3) + nf + nb]).reshape(-1)
-    world = to_world(local[:, 0], local[:, 1], local[:, 2])
-    nworld = (np.outer(nrm[:, 0], axis) + np.outer(nrm[:, 1], up) + np.outer(nrm[:, 2], right))
-    nworld /= np.maximum(np.linalg.norm(nworld, axis=1)[:, None], 1e-12)
-    add_solid(name, world[indices], nworld[indices], material, {
+        a, b = start+j, start+(j+1)%segments
+        faces.extend([[a,b,b+count],[a,b+count,a+count]])
+    world = to_world(positions[:,0], positions[:,1], positions[:,2])
+    triangles = world[np.array(faces)]
+    normals = np.cross(triangles[:,1]-triangles[:,0], triangles[:,2]-triangles[:,0])
+    normals /= np.linalg.norm(normals,axis=1)[:,None]
+    add_solid(name, triangles.reshape(-1,3), np.repeat(normals,3,axis=0), MATERIAL_OF[part], {
         'partId': part, 'geometrySource': 'teaching-additive', 'opticalGeometry': True,
-        'closedSolid': True, 'diameter': 2 * semi, 'confidence': 'added',
-        'evidence': EVIDENCE[part], 'note': note})
+        'closedSolid': True, 'diameter': 2*semi, 'confidence': 'added', 'evidence': EVIDENCE[part],
+        'note': 'Display surface anchored to the source lens; paraxial equivalent thin-lens lesson.'})
 
 
-build_lens('objectiveLens', 'TeachingObjectiveCrown', LENS_FRONT, GLASS['crownFront'],
-           CROWN_BACK, GLASS['crownBack'], LENS_SEMI, MATERIAL_OF['objectiveLens'],
-           'teaching approximation: spherical crown element of a cemented doublet, seated on the measured '
-           '41.16 mm cell bore')
-build_lens('objectiveLens', 'TeachingObjectiveFlint', CROWN_BACK, GLASS['flintFront'],
-           LENS_BACK, GLASS['flintBack'], LENS_SEMI, MATERIAL_OF['objectiveLens'],
-           'teaching approximation: flint element cemented to the crown element')
-build_lens('eyepieceLensGroup', 'TeachingEyepieceDoublet', EYEPIECE_FRONT, R_EYE,
-           EYEPIECE_BACK, -R_EYE, 0.0130, MATERIAL_OF['eyepieceLensGroup'],
-           'teaching approximation: eyepiece element inside the measured 36.5 mm barrel bore; the source '
-           'model contains no eyepiece lens')
-
-# ----------------------------------------------------------------------------------
-metadata = {
-    # The measured frame runs from the tube end that carries the eyepiece barrel (-304 mm)
-    # towards the open objective end (+305 mm), and the light runs the other way, from the
-    # objective down to the barrel. The names below say which end is which.
-    'tubeObjectiveEndS': max(TUBE_FRONT, TUBE_REAR),
-    'tubeEyepieceEndS': min(TUBE_FRONT, TUBE_REAR),
-    'minBoreRadius': float(tube_r.min()),
-    'tubeRadiusMax': float(tube_r.max()),
-    # Sampled clear bore along the axis, so anything validating the ray path can check it
-    # against the local wall instead of against the narrowest section of the whole tube.
-    'boreSlices': [[round(export_s(hi), 6), round(export_s(lo), 6), round(rmin, 6)]
-                    for lo, hi, rmin, _rmax in slices],
-    'objectiveFrontS': export_s(LENS_FRONT), 'objectiveS': export_s(LENS_BACK),
-    'objectiveLensDiameter': 2 * LENS_SEMI, 'objectiveAperture': 2 * APERTURE,
-    'objectiveClearStopRadius': FRONT_STOP, 'cellBoreRadius': CELL_BORE,
-    'focalLength': TRACED_EFL, 'focalRatio': TRACED_EFL / APERTURE, 'focusS': export_s(FOCUS_S),
-    'eyepieceElementRadius': R_EYE, 'exitPupilRadius': EXIT_PUPIL_RADIUS, 'paraxialEfl': EFL,
-    'eyepieceFrontS': export_s(EYEPIECE_FRONT), 'eyepieceBackS': export_s(EYEPIECE_BACK),
-    'eyepieceFocalLength': EP_EFL, 'magnification': MAGNIFICATION,
-    'fieldAngleRad': max(FIELD_ANGLES),
-    'rays': [{'field': r['field'], 'apertureFrac': r['apertureFrac'],
-              'exitSlope': r['exitSlope'], 'focusY': r['focusY'],
-              'focusCrossing': r['focusCrossing'],
-              'points': [[x, y] for (x, y) in r['points']]} for r in rays],
-    'disclosure': 'Teaching approximation: ideal spherical surfaces, textbook glass indices, and a focal '
-                  'length derived from this mechanical model. Not a manufacturer lens prescription, and '
-                  'the original model contains no lens geometry at all.',
-}
-# Display scale for the teaching optics. Fitted to this model's proportions the doublet is about
-# three focal lengths across, which renders as a nearly flat disk, while real achromats sit near
-# f/12-15. The scale factors below are presentation only: they are recorded here so the numbers in
-# the interface stay the measured ones, and they are applied inside the optical frame so the axis
-# and the traced rays are untouched.
-metadata['opticalDisplayScale'] = {
-    'baseAperture': APERTURE,
-    'sagRatio': round((2 * LENS_SEMI) / 1.0, 6),
-    'crownDiameter': 2 * LENS_SEMI, 'crownSemi': LENS_SEMI,
-    'eyepieceSemi': 0.0130,
-    'targetFocalRatioForSag': 13.0,
-    'note': 'presentation only; see TELESCOPE-MODEL.md',
-}
-LIGHT_AXIS = -EXPORT_AXIS                 # the exported axis runs the way the light travels
-LIGHT_RIGHT = np.cross(LIGHT_AXIS, EXPORT_UP)
-if np.dot(np.cross(LIGHT_AXIS, EXPORT_UP), LIGHT_RIGHT) < 0:
-    LIGHT_RIGHT = -LIGHT_RIGHT
+build_lens('objectiveLens', 'TeachingObjectiveFront', LENS_FRONT, LENS_SEMI, .003)
+build_lens('objectiveLens', 'TeachingObjectiveRear', LENS_BACK, LENS_SEMI, .003)
+build_lens('eyepieceLensGroup', 'TeachingEyepiece', EYEPIECE_FRONT, EYE_SEMI, .001)
 frame_matrix = np.eye(4)
-frame_matrix[:3, 0] = LIGHT_AXIS
-frame_matrix[:3, 1] = EXPORT_UP
-frame_matrix[:3, 2] = LIGHT_RIGHT
+frame_matrix[:3, :3] = np.array([axis, up, right]).T
 frame_matrix[:3, 3] = O
-metadata['opticalFrame'] = frame_matrix.flatten(order='F').tolist()
+metadata = {
+    'opticalRevision': 9,
+    'sourceLandmarks': {'objective': landmarks, 'eyepiece': eye_landmark},
+    'opticalFrame': frame_matrix.flatten(order='F').tolist(),
+    'tubeObjectiveEndS': TUBE_FRONT, 'tubeEyepieceEndS': TUBE_REAR,
+    'minBoreRadius': min(p[1] for p in bore_samples), 'tubeRadiusMax': float(np.linalg.norm(tube_tri[:,:,1:],axis=2).max()),
+    'boreSamples': bore_samples,
+    'objectiveFrontS': LENS_FRONT, 'objectiveS': LENS_BACK,
+    'objectiveLensDiameter': 2*LENS_SEMI, 'objectiveAperture': 2*APERTURE,
+    'objectiveClearStopRadius': landmarks[0]['radius'], 'cellBoreRadius': landmarks[0]['radius'],
+    'focalLength': TRACED_EFL, 'focalRatio': TRACED_EFL/(2*APERTURE), 'focusS': FOCUS_S,
+    'eyepieceElementRadius': EYE_SEMI, 'eyepieceFrontS': EYEPIECE_FRONT, 'eyepieceBackS': EYEPIECE_BACK,
+    'exitPupilRadius': APERTURE*EYEPIECE_F/TRACED_EFL,
+    'eyepieceFocalLength': EYEPIECE_F, 'magnification': TRACED_EFL/EYEPIECE_F,
+    'fieldAngleRad': max(FIELD_ANGLES), 'rays': rays,
+    'disclosure': 'Teaching approximation: paraxial equivalent thin lenses anchored to source glass. '
+                  'The on-axis viewing port is used; the side port is not part of this straight-through lesson.',
+}
 output['scenes'][0]['extras'] = metadata
 output['buffers'][0]['byteLength'] = len(binary)
 

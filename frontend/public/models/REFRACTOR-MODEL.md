@@ -1,116 +1,117 @@
 # Refractor telescope geometry review
 
-## Source and reproducibility
+## Reference vocabulary
 
-`telescope_refractor.glb` is retained unchanged. The file was supplied with a `.glb.log` that is an
-Autodesk ATF translation log, which is where the `Obj3d66-632255-*` node names and the six
-`fallback Material` entries come from: no node name and no material carries a functional meaning.
-The source has 16 nodes, 8 meshes, one primitive per mesh, and every node transform is a matrix. It
-contains **no textures, no images and no text geometry at all** - the only material property is a
-base colour - so there is nothing to strip out of it, and the lettering and badges visible in the
-reference photograph are deliberately not recreated.
+The classification follows the component diagrams in Sky-Watcher's official equatorial refractor
+manuals. They identify the optical-tube assembly as sun shade, objective lens, main body, tube
+rings, finder and bracket, focus tube/knob, diagonal and eyepiece; the support assembly is split into
+equatorial mount, controls/locks, counterweight rod and weight, tripod and accessory-tray/spreader
+parts.
 
-Run the pipeline in this order:
+- [EQ3-2 / EQ5 telescope parts diagram](https://inter-static.skywatcher.com/upfiles/en_download_caty01316546576.pdf)
+- [HEQ5 refractor parts diagram](https://inter-static.skywatcher.com/upfiles/en_download_caty01316546253.pdf)
+- [Equatorial-mount assembly guide](https://inter-static.skywatcher.com/upfiles/en_download_caty01461887945.pdf)
 
-| Step | Command | Output |
-| --- | --- | --- |
-| 1 | `tools/audit-refractor.py` | hierarchy, baked transforms, fragment metrics, rendered atlases |
-| 2 | `tools/build-refractor-model.py` | `telescope_refractor_classified.glb` |
-| 3 | `tools/refractor-measure-parts.py` | `fragments-measured.json` |
-| 4 | `tools/refractor-classify.py` | `part-of.json`, which step 2 reads |
+These references provide the vocabulary. The assignments themselves come from the source model's
+shape and assembled position, not from resemblance to one particular commercial product.
 
-Steps 2 and 4 depend on each other in one direction only: step 2 bakes the geometry, and step 4
-measures that baked geometry about the published optical frame and writes the mapping back. The
-builder refuses to run if the source SHA-256 changes. The geometry scripts need NumPy and Pillow;
-the review used a throwaway virtual environment at `.cache/venv-tools`, which is not committed.
+## Source and review method
 
-## Frame and measured layout
+`telescope_refractor.glb` remains unchanged. It has 16 nodes, 8 meshes, 87 connected fragments and
+57,480 triangles. Its generated `Obj3d66-632255-*` names and six `fallback Material` entries carry no
+functional information, so names and materials are deliberately excluded from classification.
 
-Every transform is baked before any measurement. The optical frame is the one the builder publishes
-in `scenes[0].extras.opticalFrame`: `s` runs along the tube, `s` decreasing in the direction the
-light travels, and the two perpendicular axes give the radial distance. The tube's own wall normals
-recover that axis to 0.000 deg, and the shell's centre sits 0.0 mm off it.
+The review uses four kinds of geometric evidence:
 
-| Landmark | Measured |
+1. relation to the main optical axis;
+2. order from the large objective end to the small eyepiece end;
+3. repeated shape, such as three legs, two tube rings or paired focus knobs;
+4. physical connection to neighbouring parts in the complete assembly.
+
+Run the reproducible pipeline with:
+
+| Command | Purpose |
 | --- | --- |
-| Tube shell | one 2160-face fragment, s −338.8 .. +304.5 mm, concentric radii 23.6 / 41.2 / 48.9 / 59.5 mm |
-| Front opening | throat r 23.6 mm at s +322.7 .. +338.8, cell rings r 25.3 .. 58.5 mm at s +270.8 .. +325.1 |
-| Solid discs | two 108.8 mm discs, 7–8 mm thick, exactly coaxial at s −294.2 .. −272.5 |
-| Coaxial train | 18.2 mm bore tube at s +367.4 .. +407.0, 23.0–24.6 mm and 29.9–41.1 mm collars further out |
-| Focuser | off-axis 60.6–73.7 mm at height 1.10–1.15 m, wheels r 53.1–71.6 and 61.1–76.5 mm, body r 56.1–67.4 mm |
-| Finder | off-axis 64.2–84.7 mm at height 1.20–1.23 m, i.e. the cluster that rides above the focuser |
-| Mount | 31 fragments off-axis 119–410 mm, the largest a 6412-face column |
-| Balance | 11 fragments 622–930 mm off-axis |
-| Ground end | 9 fragments, own cylinder fits 376–1190 mm from the axis |
+| `tools/audit-refractor.py` | bake transforms, split connected fragments and produce review renders |
+| `tools/refractor-measure-parts.py` | record axial/radial measurements for every fragment |
+| `tools/refractor-classify.py` | validate a one-to-one assignment for all 87 fragments |
+| `tools/build-refractor-model.py` | write `telescope_refractor_classified.glb` with reviewed `partId` values |
 
-## Reference-matched appearance
+The builder verifies the source SHA-256 and stops if the original geometry changes. The part renderer
+shows each selected fragment in assembly context and fits the camera to the full model, which avoids
+mistaking a small knob for a large standalone part.
 
-The classified GLB carries one material per reviewed category, painted to the reference photograph:
-an off-white tube, cell, rings, finder and mount; near-black optics, focuser, counterweight and
-retainer rings; a metallic silver finish for the small fittings; and translucent glass for the two
-teaching lenses. The scene reads those materials straight from the file and never repaints them, so
-the model looks the same in the demo as it does in any other viewer. `highlight` colours in
-`parts.ts` are used only for the selection glow and the list swatches.
+## Corrected orientation
+
+The objective is the large-aperture end. It contains two 108.8 mm convex, coaxial optical blanks
+inside a large stepped cell and sun shade. The opposite end contains the drawtube, paired focus
+controls, an angled diagonal and the small eyepiece lens. The teaching frame is fitted from these
+source landmarks, so its positive direction always runs from the objective towards the viewing end.
+
+The off-axis optical train above the tube contains two small glass lenses and three radial alignment screws,
+so it is the finder. Beneath the tube, two large split rings and longitudinal plates form the tube-ring
+and dovetail assembly. The intersecting castings below that are the equatorial head. A long shaft runs
+from its declination axis to one circular weight. Three repeated two-section legs, three spreader rods
+and a central polygonal hub form the tripod.
 
 ## Reviewed categories
 
-| ID | Measured evidence |
-| --- | --- |
-| opticalTube | one shell, 94.5% cylindrical wall, concentric radii 23.6/41.2/48.9/59.5 mm over 643 mm, 0.0 mm off the axis |
-| objectiveCell | the coaxial rings at the front opening, r 20.0–140.7 mm |
-| lensRetainer | the rings whose bore is 6–30 mm smaller than the cell bore, so they overhang it |
-| dewShield | the two solid discs that span the whole bore, so they read as baffles or covers |
-| eyepieceHolder | the coaxial train: an 18.2 mm bore tube with 23.0–41.1 mm collars, all within 0.3 mm of the axis |
-| focuser | two knurled wheel pairs plus a coaxial r 56.1–67.4 mm body, 60.6–73.7 mm off the axis |
-| finderScope | the two parts riding 31 mm higher than the focuser, out of the light path |
-| mount | 30 castings and linkages 119–410 mm off the axis |
-| counterweight | 11 parts 622–930 mm off the axis |
-| tripod | 9 long members reaching 376–1190 mm from the axis at the ground end |
-| hardware | 3 small fittings the measurements do not tie to one assembly |
-| unknown | the 6412-face column: 321 mm off the axis, and its bore does not match the tube, so its function is not established |
+| ID | Fragments | Shape and position evidence |
+| --- | ---: | --- |
+| `opticalTube` | 1 | 643 mm continuous coaxial shell; enlarged objective end also forms the sun shade |
+| `objectiveCell` | 1 | stepped coaxial collar directly around the objective pair |
+| `objectiveLens` | 2 | two large convex coaxial elements at s −294.2…−272.5 mm |
+| `tubeRings` | 5 | two split rings, curved saddle and dovetail plates |
+| `fasteners` | 24 | screws, nut-like thumb fasteners, clamping knobs and one locking lever |
+| `finderScope` | 7 | parallel off-axis mini-telescope with two lenses, barrel, bracket and tube-mounted shoe |
+| `focuser` | 6 | rear coaxial tube/body and paired focus wheels |
+| `diagonal` | 3 | angled housing and oblique reflecting surface |
+| `eyepieceLensGroup` | 2 | small convex lens and its separate black barrel at the viewing end |
+| `mount` | 9 | equatorial-axis castings and adjustment structures |
+| `counterweight` | 2 | circular weight and long shaft |
+| `tripod` | 25 | six leg sections, feet, three spreaders, connectors and central hub |
 
-The one unresolved part is 6412 of 57480 triangles, 11.2% of the face count.
+All 87 source fragments belong to one of these 12 categories. There is no residual `unknown` bucket.
+The reviewed fasteners form their own mechanical category so they can be selected and isolated as a
+single group in structure mode.
 
-## Optical teaching geometry
+## Optical roles and fastener classification
 
-**The source contains no optical elements at all.** No fragment has a spherical-cap pair and none is
-a two-faced blank with an edge wall, so there is no candidate objective, eyepiece, diagonal or
-corrector anywhere. That is recorded as "missing in the original" and the missing elements were
-added as separate nodes:
+The two source fragments in `eyepieceLensGroup` have distinct roles. `Eyepiece_n12_p0_c3` is the
+transparent eyepiece glass. `Eyepiece_n14_p0_c4` is its opaque outer barrel and therefore uses the
+black hardware finish. `FinderScope_n14_p0_c3` and `FinderScope_n14_p0_c7` are also barrel sections,
+not finder glass, and use the same black finish.
 
-- `objectiveLens`: a cemented doublet, 35 mm blank, 10 mm centre thickness, in the measured front
-  throat.
-- `eyepieceLensGroup`: a 26 mm biconvex element, 3.5 mm centre thickness, 30 mm focal length.
+`FinderScope_n12_p0_c2` and `FinderScope_n12_p0_c5` are the two finder lenses. They use a separate
+blue-green translucent glass material so the finder optics read as glass while the finder barrel and
+alignment hardware remain opaque.
 
-Both are closed solids with a front surface, a rear surface and an edge wall, centred on the measured
-tube axis to better than 2 µm.
+Fasteners use `partId: fasteners`, `hardwareClass: fastener` and a reviewed `fastenerType`:
 
-The model's own landmarks fix the prescription: the objective has to sit in the front throat and the
-eyepiece on the measured coaxial train at the far end, which puts the focal length at 769 mm. The
-builder bisects a real meridional sphere trace until the marginal ray crosses the axis on that
-plane, then places the eyepiece one eyepiece focal length further along the light path.
+| Fastener type | Fragments | Typical location |
+| --- | ---: | --- |
+| `screw` | 10 | finder alignment, tube-ring clamp, focuser and diagonal retention |
+| `clampingKnob` | 13 | finder bracket, mount, tube rings, counterweight and tripod leg clamps |
+| `lockLever` | 1 | tripod spreader / central lock |
 
-| Quantity | Value |
-| --- | --- |
-| Objective front vertex | s +301.0 mm |
-| Focal plane | s −478.0 mm |
-| Eyepiece | s −481.5 .. −485.0 mm |
-| Focal length | 769 mm |
-| Clear semi-aperture | 3.5 mm |
-| Magnification | 25.6× |
-| Emitted-beam spread inside one bundle | 3.9 mrad |
+All 24 fasteners use the opaque black hardware material. `FinderScope_n14_p0_c6` is included as a
+finder-bracket clamping knob.
 
-Known limitations, stated in the interface as well:
+## Teaching optics
 
-- The lens curvature is drawn deeper than the solved one. Fitted to this model the doublet is so
-  shallow that it would render as a flat disk, which is the failure the brief warns about. Only the
-  drawn surface changes: the aperture, the axis, the focal length and every traced ray keep the
-  solved values.
-- The two solid discs span the whole bore at s −294..−272 mm. They are kept as measured and labelled
-  as baffles or covers, because a solid disc cannot be an optical element.
-- The instrument is small: a 7 mm clear aperture on a 769 mm focal length is far slower than any real
-  refractor, which is what this model's own proportions allow.
-- The eyepiece is a single element, so the emitted beam is parallel to a few milliradians rather
-  than perfectly.
+The source objective, finder optics, diagonal surface and eyepiece remain part of the structural
+classification. The ray lesson also contains three generated closed solids for its idealised
+spherical objective/eyepiece calculation. These generated meshes carry
+`geometrySource: teaching-additive` and are excluded from the structure-mode part index; they appear
+only in optics mode. Their prescription is a teaching approximation and does not claim to reproduce a
+manufacturer design.
 
-No focal ratio, coating or lens prescription is asserted to match any real product.
+The published optical frame follows the physical light direction: `s` increases from the source
+objective front and rear vertices, through the focal plane, to the source eyepiece. The lesson draws
+18 calibrated rays, checks aperture,
+focus residual, exit parallelism and tube-wall clearance, and reports those values in the panel.
+The teaching blank is anchored to the reviewed objective and uses a 72 mm representative clear stop,
+which keeps the displayed ray fan proportional to the reviewed objective instead of collapsing it into
+an axial line.
+Structure mode also exposes the shared geometry-diagnostics overlay used by the Newtonian demo;
+it lists source nodes and the three teaching meshes with bounds in model coordinates.

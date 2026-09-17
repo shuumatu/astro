@@ -1,8 +1,8 @@
 """Render classification candidates for the refractor: each part highlighted over dim context.
 
 Usage: python tools/render-refractor-parts.py [mapping.json]
-Without a mapping file it renders a default candidate mapping so the assignment can be
-visually reviewed before it is frozen into tools/build-refractor-model.py.
+Without an argument it renders the reviewed ``part-of.json`` written by
+``tools/refractor-classify.py``. Both tag-to-part and part-to-tags JSON shapes are accepted.
 """
 import json
 import sys
@@ -32,8 +32,14 @@ for inst in instances:
 byTag = {f['tag']: f for f in frags}
 print(len(frags), 'fragments')
 
-mappingPath = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'tools/refractor-candidate-mapping.json'
-mapping = json.loads(mappingPath.read_text())
+mappingPath = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / '.cache/refractor-audit/part-of.json'
+rawMapping = json.loads(mappingPath.read_text())
+if rawMapping and all(isinstance(value, str) for value in rawMapping.values()):
+    mapping = {}
+    for tag, part in rawMapping.items():
+        mapping.setdefault(part, []).append(tag)
+else:
+    mapping = rawMapping
 allTri = np.concatenate([f['tri'] for f in frags])
 
 
@@ -42,14 +48,17 @@ def render(name, tags, views):
     cols = len(views)
     sheet = Image.new('RGB', (cols * 460, 960), '#0b1118')
     for k, view in enumerate(views):
-        draw_mesh(sheet, allTri, (k * 460 + 6, 30, k * 460 + 454, 474), view)
+        draw_mesh(sheet, allTri, (k * 460 + 6, 30, k * 460 + 454, 474), view,
+                  color=(45, 59, 72))
     for k, view in enumerate(views):
         for f in sel:
-            draw_mesh(sheet, f['tri'], (k * 460 + 6, 30, k * 460 + 454, 474), view)
+            draw_mesh(sheet, f['tri'], (k * 460 + 6, 30, k * 460 + 454, 474), view,
+                      color=(255, 190, 72), fit_triangles=allTri)
     # isolated views: the candidate fragments alone, fitted to their own box
     selTri = np.concatenate([f['tri'] for f in sel])
     for k, view in enumerate(views):
-        draw_mesh(sheet, selTri, (k * 460 + 6, 496, k * 460 + 454, 950), view)
+        draw_mesh(sheet, selTri, (k * 460 + 6, 496, k * 460 + 454, 950), view,
+                  color=(255, 190, 72))
     d = ImageDraw.Draw(sheet)
     d.text((8, 8), f'{name}  ({len(tags)} fragments, {selTri.shape[0]} faces)  top=context bottom=isolated',
            fill='#ffd479')
