@@ -1,4 +1,5 @@
 import type { Component } from 'vue'
+import type { DemoGuideDefinition } from './guide'
 import { featureCategoryKey, featureTitleKey, MOON_FEATURES } from './scenes/moon/hotspots'
 import type { DemoSceneModule, DemoSceneSettings } from './types'
 
@@ -72,6 +73,17 @@ export interface DemoDefinition {
   panel?: () => Promise<{ default: Component }>
   panelTitleKey?: string
   features?: DemoFeatureDefinition[]
+  /**
+   * Full control surface for a demo whose switches do not fit the shared chips.
+   *
+   * Unlike `panel`, which lists features, this is the demo's own cockpit: it is mounted inside the
+   * stage, receives the state the scene published through `DemoSceneOptions.onState`, and sends
+   * commands back with `DemoScene.runCommand`. The shell neither reads the state nor names a
+   * command, so a demo can grow its own controls without the shell learning its vocabulary.
+   */
+  controlPanel?: () => Promise<{ default: Component }>
+  /** Optional subtitle timeline. Cues are implemented by this demo's scene. */
+  guide?: DemoGuideDefinition
 }
 
 export const demos: DemoDefinition[] = [
@@ -117,6 +129,42 @@ export const demos: DemoDefinition[] = [
       titleKey: featureTitleKey(feature.id),
       categoryKey: featureCategoryKey(feature.category),
     })),
+  },
+  {
+    slug: 'eclipses',
+    titleKey: 'demos.items.eclipses.title',
+    summaryKey: 'demos.items.eclipses.summary',
+    hintKey: 'demos.items.eclipses.hint',
+    creditKey: 'demos.items.eclipses.credit',
+    loadScene: () => import('./scenes/eclipse/index'),
+    guide: {
+      titleKey: 'demos.items.eclipses.guide.title',
+      steps: [
+        { id: 'solar-alignment', subtitleKey: 'demos.items.eclipses.guide.solarAlignment', durationMs: 6500 },
+        { id: 'solar-partial', subtitleKey: 'demos.items.eclipses.guide.solarPartial', durationMs: 8000 },
+        { id: 'solar-total', subtitleKey: 'demos.items.eclipses.guide.solarTotal', durationMs: 8000 },
+        { id: 'lunar-alignment', subtitleKey: 'demos.items.eclipses.guide.lunarAlignment', durationMs: 7000 },
+        { id: 'lunar-partial', subtitleKey: 'demos.items.eclipses.guide.lunarPartial', durationMs: 8000 },
+        { id: 'lunar-total', subtitleKey: 'demos.items.eclipses.guide.lunarTotal', durationMs: 8500 },
+        { id: 'inclination', subtitleKey: 'demos.items.eclipses.guide.inclination', durationMs: 7000 },
+      ],
+    },
+    controlPanel: () => import('./scenes/eclipse/EclipseControlPanel.vue'),
+    defaultSettings: {
+      playing: true,
+      // Minutes of simulated time per second of wall clock: an eclipse unfolds over hours.
+      timeScale: 1.5,
+      showOrbits: true,
+      showLabels: true,
+    },
+    /**
+     * The eclipse panel carries every display switch - section, view, shadow cones, labels, the
+     * orbital plane and the teaching assumption - so the shared chips stay out of its way. Only the
+     * transport, reset and fullscreen controls remain in the shell.
+     */
+    controls: [],
+    speedUnitKey: 'demos.items.eclipses.speedValue',
+    speedRange: { min: 0.1, max: 20, step: 0.1 },
   },
   {
     slug: 'telescope-newtonian',

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import DemoTopBar from '../features/demos/components/DemoTopBar.vue'
 import DemoTransportBar from '../features/demos/components/DemoTransportBar.vue'
+import DemoGuideOverlay from '../features/demos/components/DemoGuideOverlay.vue'
 import { findDemo, type DemoControlId } from '../features/demos/registry'
 import {
   DEFAULT_DEMO_SETTINGS,
@@ -14,6 +15,7 @@ import {
   type DemoReadout,
   type DemoScene,
   type DemoSceneSettings,
+  type DemoSceneState,
 } from '../features/demos/types'
 
 /**
@@ -41,10 +43,17 @@ const surfaceComponent = shallowRef<Component | null>(null)
 const panoramaComponent = shallowRef<Component | null>(null)
 const panelComponent = shallowRef<Component | null>(null)
 /**
+ * A demo's own control surface, when it ships one. The shell holds the scene's published state and
+ * forwards the panel's commands, but never reads either: see `DemoDefinition.controlPanel`.
+ */
+const controlPanelComponent = shallowRef<Component | null>(null)
+const sceneState = shallowRef<DemoSceneState>({})
+/**
  * Whether the panorama viewer is open. It is the viewer's own state rather than a scene phase:
  * the scene keeps its focus on the feature, and closing the panorama returns to it unchanged.
  */
 const panoramaOpen = ref(false)
+const guideActive = ref(false)
 
 const controls = computed<DemoControlId[]>(() => demo.value?.controls ?? ['orbits', 'labels'])
 const actions = computed(() => demo.value?.actions ?? [])
@@ -64,11 +73,98 @@ const cinematicKey = computed(() => demo.value?.cinematicKey === undefined
  * labels, visible or not), so the template only creates nodes when a new id shows up and the
  * per-frame work stays an imperative style write rather than a re-render.
  */
-const labelEntries = ref<{ id: string, textKey: string }[]>([])
+const labelEntries = ref<{ id: string, textKey: string, descriptionKey?: string }[]>([])
 const labelElements = new Map<string, HTMLElement>()
 const labelWidths = new Map<string, number>()
 let disposed = false
 let loading = false
+
+/**
+ * The label the pointer is over, with the explanation to show for it.
+ *
+ * Hit-tested against the label elements rather than handled by hovering the labels themselves. The
+ * label layer has to stay `pointer-events: none` or dragging over a caption would stop rotating the
+ * scene, and a caption is not worth breaking the camera for. The test is a handful of rectangles per
+ * pointer move, and it only runs for labels that actually carry an explanation.
+ */
+const hoveredLabel = ref<{
+  id: string
+  textKey: string
+  descriptionKey: string
+  x: number
+  y: number
+  above: boolean
+} | null>(null)
+
+/**
+ * Finds the label under a viewport point and publishes its explanation.
+ *
+ * Separate from the event handlers because two of them want it: moving the pointer, and releasing it.
+ */
+function revealLabelAt(clientX: number, clientY: number): void {
+  const root = stageElement.value
+  if (!root) return
+  const bounds = root.getBoundingClientRect()
+  for (const entry of labelEntries.value) {
+    if (!entry.descriptionKey) continue
+    const element = labelElements.get(entry.id)
+    if (!element || element.style.opacity === '0') continue
+    const rect = element.getBoundingClientRect()
+    if (
+      clientX < rect.left || clientX > rect.right
+      || clientY < rect.top || clientY > rect.bottom
+    ) continue
+    // Above the label by default, below it when there is not room - a tooltip that runs off the top
+    // of the stage is worse than one on the wrong side of its label.
+    const above = rect.top - bounds.top > 150
+    // The tooltip is wider than the label and centred on it, so a label near an edge would have half
+    // its explanation clipped away. The width mirrors the stylesheet's `min(300px, 74vw)`.
+    const half = Math.min(300, window.innerWidth * 0.74) / 2 + 8
+    const centred = rect.left - bounds.left + rect.width / 2
+    hoveredLabel.value = {
+      id: entry.id,
+      textKey: entry.textKey,
+      descriptionKey: entry.descriptionKey,
+      x: bounds.width > half * 2
+        ? Math.min(bounds.width - half, Math.max(half, centred))
+        : bounds.width / 2,
+      y: (above ? rect.top : rect.bottom) - bounds.top,
+      above,
+    }
+    return
+  }
+  hoveredLabel.value = null
+}
+
+/**
+ * Pointing at a label explains it - but not while the camera is being dragged.
+ *
+ * A held button means the viewer is rotating the scene, and rotating sweeps the pointer across every
+ * label on the way, so without this the explanations would flash past for the whole gesture. Touch
+ * is covered by the same test, because a finger on the glass reports a held button too. Releasing
+ * runs the same hit test, so a tap or a click on a label still reveals it and stays put.
+ */
+function handleStagePointerMove(event: PointerEvent): void {
+  if (guideActive.value || event.buttons !== 0
+    || (event.target !== stageElement.value && !(event.target instanceof HTMLCanvasElement))) {
+    hoveredLabel.value = null
+    return
+  }
+  revealLabelAt(event.clientX, event.clientY)
+}
+
+function handleStagePointerUp(event: PointerEvent): void {
+  if (guideActive.value || (event.target !== stageElement.value
+    && !(event.target instanceof HTMLCanvasElement))) {
+    hoveredLabel.value = null
+    return
+  }
+  revealLabelAt(event.clientX, event.clientY)
+}
+
+function clearHoveredLabel(): void {
+  hoveredLabel.value = null
+}
 
 function collectLabelElements(): void {
   labelElements.clear()
@@ -90,6 +186,7 @@ function positionLabels(anchors: DemoLabelAnchor[]): void {
     const anchor = byId.get(id)
     if (!anchor || !anchor.visible) {
       element.style.opacity = '0'
+      if (hoveredLabel.value?.id === id) hoveredLabel.value = null
       continue
     }
     // Keep the whole label inside the stage: a label anchored near an edge would otherwise
@@ -108,7 +205,11 @@ function handleLabels(anchors: DemoLabelAnchor[]): void {
   const known = new Set(labelEntries.value.map((entry) => entry.id))
   const additions = anchors
     .filter((anchor) => !known.has(anchor.id))
-    .map((anchor) => ({ id: anchor.id, textKey: anchor.textKey ?? `demos.scene.${anchor.id}` }))
+    .map((anchor) => ({
+      id: anchor.id,
+      textKey: anchor.textKey ?? `demos.scene.${anchor.id}`,
+      descriptionKey: anchor.descriptionKey,
+    }))
   if (additions.length > 0) {
     labelEntries.value = [...labelEntries.value, ...additions]
     void nextTick(() => {
@@ -126,6 +227,7 @@ async function loadOverlays(): Promise<void> {
   surfaceComponent.value = null
   panoramaComponent.value = null
   panelComponent.value = null
+  controlPanelComponent.value = null
   if (definition.surfaceOverlay) {
     const module = await definition.surfaceOverlay()
     if (!disposed) surfaceComponent.value = module.default
@@ -137,6 +239,10 @@ async function loadOverlays(): Promise<void> {
   if (definition.panel) {
     const module = await definition.panel()
     if (!disposed) panelComponent.value = module.default
+  }
+  if (definition.controlPanel) {
+    const module = await definition.controlPanel()
+    if (!disposed) controlPanelComponent.value = module.default
   }
 }
 
@@ -151,6 +257,7 @@ async function mountScene(): Promise<void> {
     labelEntries.value = []
     labelElements.clear()
     labelWidths.clear()
+    hoveredLabel.value = null
     const created = module.createScene(container, {
       onLabels: handleLabels,
       onPhaseChange: (next) => {
@@ -170,6 +277,9 @@ async function mountScene(): Promise<void> {
       onSettingsResolved: (resolved) => {
         settings.value = { ...settings.value, ...resolved }
       },
+      onState: (next) => {
+        sceneState.value = next
+      },
     })
     scene.value = created
     created.applySettings({ ...settings.value })
@@ -185,15 +295,18 @@ async function mountScene(): Promise<void> {
 }
 
 function unmountScene(): void {
+  stopGuide()
   scene.value?.dispose()
   scene.value = null
   phase.value = 'orbit'
   hotspot.value = null
   readout.value = null
   panoramaOpen.value = false
+  sceneState.value = {}
   labelEntries.value = []
   labelElements.clear()
   labelWidths.clear()
+  hoveredLabel.value = null
 }
 
 function leaveSurface(): void {
@@ -217,12 +330,34 @@ function selectFeature(id: string): void {
   scene.value?.focusHotspot?.(id)
 }
 
+/** Carries one command from a demo's own control panel to its scene. */
+function sendCommand(command: unknown): void {
+  scene.value?.runCommand?.(command)
+}
+
+function startGuide(): void {
+  if (!demo.value?.guide?.steps.length || !scene.value?.beginGuide
+    || !scene.value.seekGuide || !scene.value.endGuide || guideActive.value) return
+  scene.value.beginGuide()
+  guideActive.value = true
+  hoveredLabel.value = null
+}
+
+function stopGuide(): void {
+  if (!guideActive.value) return
+  guideActive.value = false
+  scene.value?.endGuide?.()
+}
+
+const guideAvailable = computed(() => Boolean(demo.value?.guide?.steps.length
+  && scene.value?.beginGuide && scene.value.seekGuide && scene.value.endGuide))
+
 /**
  * The overlays only belong to the free-look phase; a scripted move plays without chrome. The
  * panorama viewer covers the stage, so the chrome goes with it rather than floating on top of a
  * photograph.
  */
-const overlaysVisible = computed(() => phase.value === 'orbit' && !panoramaOpen.value)
+const overlaysVisible = computed(() => phase.value === 'orbit' && !panoramaOpen.value && !guideActive.value)
 
 const selectedFeature = computed(() =>
   hotspot.value ? features.value.find((feature) => feature.id === hotspot.value?.id) ?? null : null)
@@ -258,6 +393,13 @@ async function toggleFullscreen(): Promise<void> {
 }
 
 function handleKeydown(event: KeyboardEvent): void {
+  if (guideActive.value) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      stopGuide()
+    }
+    return
+  }
   const target = event.target as HTMLElement | null
   if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.isContentEditable)) return
   if (panoramaOpen.value) {
@@ -329,18 +471,41 @@ watch(locale, async () => {
   await nextTick()
   collectLabelElements()
 })
+
+watch(() => hoveredLabel.value?.id ?? null, (id) => {
+  scene.value?.highlightLabel?.(id)
+}, { flush: 'sync' })
 </script>
 
 <template>
   <section class="demo-page">
-    <div v-if="demo" ref="stageElement" class="demo-stage">
+    <div
+      v-if="demo"
+      ref="stageElement"
+      class="demo-stage"
+      @pointermove="handleStagePointerMove"
+      @pointerup="handleStagePointerUp"
+      @pointerleave="clearHoveredLabel"
+    >
       <div class="demo-label-layer" aria-hidden="true">
         <span
           v-for="entry in labelEntries"
           :key="entry.id"
           class="demo-label"
+          :class="{ highlighted: hoveredLabel?.id === entry.id }"
           :data-demo-label="entry.id"
         >{{ t(entry.textKey) }}</span>
+      </div>
+
+      <div
+        v-if="hoveredLabel"
+        class="demo-label-tip"
+        :class="{ 'tip-below': !hoveredLabel.above }"
+        :style="{ left: `${hoveredLabel.x}px`, top: `${hoveredLabel.y}px` }"
+        role="tooltip"
+      >
+        <p class="demo-label-tip-title">{{ t(hoveredLabel.textKey) }}</p>
+        <p class="demo-label-tip-body">{{ t(hoveredLabel.descriptionKey) }}</p>
       </div>
 
       <component
@@ -363,12 +528,29 @@ watch(locale, async () => {
       <component
         v-if="panelComponent && features.length > 0"
         :is="panelComponent"
-        class="overlay-hidden-aware"
         :class="{ 'stage-hidden': !overlaysVisible }"
         :title-key="demo.panelTitleKey ?? ''"
         :items="features"
         :selected="hotspot?.id ?? null"
         @select="selectFeature"
+      />
+
+      <!-- The demo's own control surface. It covers the stage when it needs to, so it sits above
+           the feature panel and below the hotspot card. -->
+      <component
+        v-if="controlPanelComponent"
+        :is="controlPanelComponent"
+        :class="{ 'stage-hidden': !overlaysVisible && !guideActive }"
+        :state="sceneState"
+        :send="sendCommand"
+        :guided="guideActive"
+      />
+
+      <DemoGuideOverlay
+        v-if="guideActive && demo.guide"
+        :guide="demo.guide"
+        @seek="(id, progress) => scene?.seekGuide?.(id, progress)"
+        @exit="stopGuide"
       />
 
       <aside
@@ -430,6 +612,7 @@ watch(locale, async () => {
         :full-bright="settings.fullBright ?? false"
         :fullscreen="isFullscreen"
         :fullscreen-supported="fullscreenSupported"
+        :guide-available="guideAvailable"
         @toggle="(id, value) => {
           if (id === 'orbits') settings.showOrbits = value
           else if (id === 'labels') settings.showLabels = value
@@ -441,6 +624,7 @@ watch(locale, async () => {
         @update:full-bright="(value) => { settings.fullBright = value }"
         @reset="scene?.resetView()"
         @toggle-fullscreen="toggleFullscreen"
+        @start-guide="startGuide"
       />
 
       <div class="overlay bottom-left" :class="{ 'overlay-hidden': !overlaysVisible }">
@@ -571,19 +755,61 @@ watch(locale, async () => {
   z-index: 2;
 }
 
+/* The explanation a label shows when the pointer is over it. Informational only, so it never takes
+   pointer events: the hit test lives on the stage and the camera keeps working underneath. */
+.demo-label-tip {
+  position: absolute;
+  z-index: 5;
+  width: min(300px, 74vw);
+  padding: .5rem .62rem .55rem;
+  border: 1px solid #2b4661;
+  border-radius: 6px;
+  background: rgb(7 17 31 / 96%);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 58%);
+  transform: translate(-50%, calc(-100% - 10px));
+  pointer-events: none;
+}
+
+.demo-label-tip.tip-below { transform: translate(-50%, 10px); }
+
+.demo-label-tip-title {
+  margin: 0 0 .22rem;
+  color: #72d4d8;
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.demo-label-tip-body {
+  margin: 0;
+  color: #b9cade;
+  font-size: .72rem;
+  line-height: 1.52;
+}
+
 .demo-label {
   position: absolute;
   top: 0;
   left: 0;
-  padding: .05rem .35rem;
+  padding: .08rem .38rem;
+  border: 1px solid rgb(83 112 145 / 30%);
   border-radius: 3px;
   color: #eaf2ff;
   font-size: .85rem;
   letter-spacing: .06em;
+  background: rgb(4 11 21 / 68%);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 32%);
   white-space: nowrap;
   text-shadow: 0 1px 6px rgb(0 0 0 / 90%);
   opacity: 0;
   will-change: transform;
+}
+
+.demo-label.highlighted {
+  border-color: #8fe3e6;
+  color: #f4ffff;
+  background: rgb(17 57 68 / 94%);
+  box-shadow: 0 0 0 2px rgb(114 212 216 / 20%), 0 0 16px rgb(114 212 216 / 45%);
 }
 
 .hotspot-card {

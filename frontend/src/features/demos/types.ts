@@ -33,6 +33,14 @@ export interface DemoLabelAnchor {
    * how the meteor shower demo names its fixed set of labels.
    */
   textKey?: string
+  /**
+   * Locale key for a short explanation of what the label names, shown when the viewer points at it.
+   *
+   * A scene supplies one only for labels whose meaning is not obvious from the word: "umbra" is a
+   * term of art, "Sun" is not. Labels without one are inert, so a scene can add explanations
+   * gradually rather than all at once.
+   */
+  descriptionKey?: string
 }
 
 /**
@@ -99,7 +107,25 @@ export interface DemoSceneOptions {
    * it at registry-definition time, and without this the slider and the lighting disagree.
    */
   onSettingsResolved?: (settings: Partial<DemoSceneSettings>) => void
+  /**
+   * Reports the demo's own scene state for the custom control panel it ships, if any.
+   *
+   * The shell never looks inside: it hands the snapshot straight to the panel and the panel is the
+   * only thing that knows the shape. That is what keeps one demo's vocabulary out of
+   * `DemoSceneSettings`, where every other demo would have to carry and ignore it.
+   */
+  onState?: (state: DemoSceneState) => void
 }
+
+/**
+ * An opaque snapshot of a demo's own scene state.
+ *
+ * A demo whose controls do not fit the shared chips ships its own panel; the scene publishes
+ * whatever that panel needs here, and the two of them agree on the shape. `object` rather than a
+ * record type is deliberate - it accepts a demo's own interface without that interface having to
+ * pretend it is an open bag of keys.
+ */
+export type DemoSceneState = object
 
 export interface DemoScene {
   applySettings(settings: Partial<DemoSceneSettings>): void
@@ -115,6 +141,22 @@ export interface DemoScene {
   clearFocus?(): void
   /** Runs a demo-declared action button, e.g. a lunar phase preset. */
   runAction?(id: string): void
+  /**
+   * Runs one command from the demo's custom control panel.
+   *
+   * The command's shape is the demo's own business: its scene and its panel share a type, and the
+   * shell only carries the value across. Naming a command in the shell would defeat the point of
+   * the channel.
+   */
+  runCommand?(command: unknown): void
+  /** Highlight the object named by a visible label; null clears the hover emphasis. */
+  highlightLabel?(id: string | null): void
+  /** Save free-exploration state and take control of the scene for its declared guide. */
+  beginGuide?(): void
+  /** Seek a named cue deterministically to 0..1; called on entry, navigation and playback. */
+  seekGuide?(cueId: string, progress: number): void
+  /** Restore the viewer's pre-guide event, view, controls, time and playback. */
+  endGuide?(): void
 }
 
 export interface DemoSceneModule {

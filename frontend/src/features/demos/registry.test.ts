@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import en from '../../locales/en/common.json'
 import zh from '../../locales/zh-CN/common.json'
 import { CONTROL_LABEL_KEYS, demos } from './registry'
+import { ECLIPSE_LOCALE_KEYS } from './scenes/eclipse/messages'
 
 function resolve(bundle: unknown, key: string): unknown {
   return key.split('.').reduce<unknown>((value, part) => {
@@ -30,6 +31,14 @@ describe('demo registry locale keys', () => {
       'demos.controls.fullscreen',
       'demos.controls.exitFullscreen',
       'demos.controls.hint',
+      'demos.guide.start',
+      'demos.guide.exit',
+      'demos.guide.chapters',
+      'demos.guide.previous',
+      'demos.guide.next',
+      'demos.guide.play',
+      'demos.guide.pause',
+      'demos.guide.replay',
       'demos.card.back',
       'demos.cinematic.entering',
     ])
@@ -41,6 +50,10 @@ describe('demo registry locale keys', () => {
       if (demo.cinematicKey) keys.add(demo.cinematicKey)
       if (demo.creditKey) keys.add(demo.creditKey)
       if (demo.speedUnitKey) keys.add(demo.speedUnitKey)
+      if (demo.guide) {
+        keys.add(demo.guide.titleKey)
+        for (const step of demo.guide.steps) keys.add(step.subtitleKey)
+      }
       if (demo.panelTitleKey) keys.add(demo.panelTitleKey)
       for (const control of demo.controls ?? ['orbits', 'labels']) keys.add(CONTROL_LABEL_KEYS[control])
       for (const action of demo.actions ?? []) keys.add(action.labelKey)
@@ -63,6 +76,50 @@ describe('demo registry locale keys', () => {
     const slugs = demos.map((demo) => demo.slug)
     expect(new Set(slugs).size).toBe(slugs.length)
     for (const demo of demos) expect(typeof demo.loadScene).toBe('function')
+  })
+
+  /**
+   * A demo that ships its own control panel brings its own strings, which the registry walk above
+   * cannot see: the panel names them itself. So the demo declares its whole key list in one module
+   * and this resolves that list, which is the only way a renamed key in a panel would be caught.
+   */
+  it('resolves every key the eclipse panel and scene render', () => {
+    expect(ECLIPSE_LOCALE_KEYS.length).toBeGreaterThan(40)
+    expect(new Set(ECLIPSE_LOCALE_KEYS).size).toBe(ECLIPSE_LOCALE_KEYS.length)
+    for (const key of ECLIPSE_LOCALE_KEYS) {
+      for (const bundle of [zh, en]) {
+        const value = resolve(bundle, key)
+        expect(typeof value, `missing ${key}`).toBe('string')
+        expect((value as string).length, `empty ${key}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('loads the eclipse control panel lazily and keeps it out of the shared settings', () => {
+    const eclipse = demos.find((demo) => demo.slug === 'eclipses')
+    expect(eclipse).toBeDefined()
+    expect(typeof eclipse?.controlPanel).toBe('function')
+    // Every display switch belongs to the panel, so the shared chips stay out of its way.
+    expect(eclipse?.controls).toEqual([])
+    // And nothing eclipse-shaped leaks into the settings every other demo has to carry.
+    const settings = eclipse?.defaultSettings ?? {}
+    expect(Object.keys(settings).sort()).toEqual(['playing', 'showLabels', 'showOrbits', 'timeScale'])
+  })
+
+  it('names the eclipse demo\'s own timeline in minutes per second', () => {
+    const eclipse = demos.find((demo) => demo.slug === 'eclipses')
+    expect(eclipse?.speedUnitKey).toBe('demos.items.eclipses.speedValue')
+    expect(eclipse?.speedRange).toEqual({ min: 0.1, max: 20, step: 0.1 })
+  })
+
+  it('declares a complete, ordered eclipse tour with stable cue ids', () => {
+    const steps = demos.find((demo) => demo.slug === 'eclipses')?.guide?.steps ?? []
+    expect(steps.map((step) => step.id)).toEqual([
+      'solar-alignment', 'solar-partial', 'solar-total',
+      'lunar-alignment', 'lunar-partial', 'lunar-total', 'inclination',
+    ])
+    expect(steps.every((step) => step.durationMs >= 5000)).toBe(true)
+    expect(new Set(steps.map((step) => step.id)).size).toBe(steps.length)
   })
 
   /**

@@ -13,7 +13,7 @@ import {
 } from '../../types'
 import { COMET_ORBIT, EARTH_ORBIT, SCENE } from './config'
 import { CometTails } from './cometTails'
-import { createEarthGlobe } from './earth'
+import { createEarthGlobe } from '../../engine/globe'
 import {
   createOrbitFrame,
   eccentricAnomalyFromMean,

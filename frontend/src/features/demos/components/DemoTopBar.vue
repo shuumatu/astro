@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Compass, Maximize2, Minimize2, RotateCcw, Sun, SunDim } from 'lucide-vue-next'
+import { ChevronDown, Clapperboard, Compass, Maximize2, Minimize2, RotateCcw, SunDim } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -28,6 +28,7 @@ const props = defineProps<{
   fullBright: boolean
   fullscreen: boolean
   fullscreenSupported: boolean
+  guideAvailable: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,6 +39,7 @@ const emit = defineEmits<{
   'update:fullBright': [value: boolean]
   reset: []
   toggleFullscreen: []
+  startGuide: []
 }>()
 
 const expanded = ref(false)
@@ -73,6 +75,10 @@ const chips = computed(() => props.controls.map((id) => ({
 
     <div class="display-stack">
       <div class="display-controls">
+        <button v-if="guideAvailable" type="button" class="chip guide-entry" @click="emit('startGuide')">
+          <Clapperboard :size="15" aria-hidden="true" />
+          {{ t('demos.guide.start') }}
+        </button>
         <!-- One angle, because a real Sun position needs one: the selenographic longitude the Sun
              stands over, which is what sets the terminator. The old azimuth-plus-elevation pair
              described a light hung over the *camera*, which is not where the Sun is. The readout is

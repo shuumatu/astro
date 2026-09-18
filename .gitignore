@@ -9,6 +9,14 @@ dist/
 .vite/
 .yarn/
 
+# Python: the analysis scripts in tools/ are source, their bytecode cache is not
+__pycache__/
+*.pyc
+
+# Python bytecode from the scripts under tools/
+__pycache__/
+*.pyc
+
 # Local configuration and secrets
 .env
 .env.*
@@ -24,6 +32,11 @@ Thumbs.db
 # Local generated data
 data/
 logs/
+
+# Python bytecode from the tools/ scripts: regenerated on every run, and the .pyc files carry
+# absolute paths from whichever machine built them.
+__pycache__/
+*.pyc
 
 # Scratch: downloaded originals, headless-browser profiles, verification screenshots. None of this is
 # source, and a browser profile must never be committed even when it looks empty - one was, and it
