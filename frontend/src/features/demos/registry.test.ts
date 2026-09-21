@@ -3,6 +3,7 @@ import en from '../../locales/en/common.json'
 import zh from '../../locales/zh-CN/common.json'
 import { CONTROL_LABEL_KEYS, demos } from './registry'
 import { ECLIPSE_LOCALE_KEYS } from './scenes/eclipse/messages'
+import { STELLAR_EVOLUTION_LOCALE_KEYS } from './scenes/stellar-evolution/messages'
 
 function resolve(bundle: unknown, key: string): unknown {
   return key.split('.').reduce<unknown>((value, part) => {
@@ -154,6 +155,62 @@ describe('demo registry locale keys', () => {
       expect(phaseKeys, `unexpected phase strings: ${phaseKeys.join(', ')}`).toHaveLength(0)
       // The label and the plain readout remain.
       expect(typeof controls.sunLongitude).toBe('string')
+    }
+  })
+
+  /**
+   * The stellar-evolution demo brings a stage timeline, nine cards, twenty-eight labels with
+   * explanations and a data table about the Sun - well over a hundred strings, none of which the
+   * registry walk above can see. It declares the whole list in one module and this resolves it.
+   */
+  it('resolves every key the stellar evolution panel and scene render', () => {
+    expect(STELLAR_EVOLUTION_LOCALE_KEYS.length).toBeGreaterThan(120)
+    expect(new Set(STELLAR_EVOLUTION_LOCALE_KEYS).size).toBe(STELLAR_EVOLUTION_LOCALE_KEYS.length)
+    for (const key of STELLAR_EVOLUTION_LOCALE_KEYS) {
+      for (const bundle of [zh, en]) {
+        const value = resolve(bundle, key)
+        expect(typeof value, `missing ${key}`).toBe('string')
+        expect((value as string).length, `empty ${key}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('gives the stellar evolution demo its own panel and keeps the shared chips out of its way', () => {
+    const demo = demos.find((entry) => entry.slug === 'stellar-evolution')
+    expect(demo).toBeDefined()
+    expect(typeof demo?.controlPanel).toBe('function')
+    // The panel carries the stage timeline and its transport, so only the label switch is shared.
+    expect(demo?.controls).toEqual(['labels'])
+    expect(demo?.transport).toBe(false)
+    // And nothing astronomy-shaped leaks into the settings every other demo has to carry.
+    expect(Object.keys(demo?.defaultSettings ?? {}).sort())
+      .toEqual(['playing', 'showLabels', 'showOrbits', 'timeScale'])
+  })
+
+  /**
+   * The one thing the demo must never say. Every stage of the solar track is reachable by the Sun
+   * and every stage of the massive track is not, so a stray edit that moved the supernova onto the
+   * Sun's path would show up here rather than on screen.
+   */
+  it('keeps the Sun off the supernova branch in both languages', () => {
+    const demo = demos.find((entry) => entry.slug === 'stellar-evolution')
+    expect(demo).toBeDefined()
+    const sunNote = (bundle: unknown, stage: string): string =>
+      String(resolve(bundle, `demos.items.stellarEvolution.stages.${stage}.sun`))
+    // Each language is checked against its own wording, not against the other's: the point is that
+    // both say the Sun does not go there, not that one is a copy of the other.
+    const expectations: [unknown, string, RegExp][] = [
+      [zh, '太阳', /不会|永不/],
+      [en, 'The Sun', /cannot|never|not\b/i],
+    ]
+    for (const [bundle, subject, denial] of expectations) {
+      for (const stage of ['supernova', 'neutronStar', 'blackHole']) {
+        expect(sunNote(bundle, stage), stage).toContain(subject)
+        expect(sunNote(bundle, stage), stage).toMatch(denial)
+      }
+      // The three notes are three different sentences rather than one line pasted three times.
+      const notes = ['supernova', 'neutronStar', 'blackHole'].map((stage) => sunNote(bundle, stage))
+      expect(new Set(notes).size).toBe(3)
     }
   })
 })

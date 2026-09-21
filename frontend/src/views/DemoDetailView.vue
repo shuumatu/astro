@@ -29,6 +29,7 @@ const route = useRoute()
 const slug = computed(() => String(route.params.slug ?? ''))
 const demo = computed(() => findDemo(slug.value))
 const stageElement = ref<HTMLDivElement | null>(null)
+const topBarHeight = ref(64)
 const scene = shallowRef<DemoScene | null>(null)
 const settings = ref<DemoSceneSettings>({ ...DEFAULT_DEMO_SETTINGS })
 const phase = ref<DemoPhase>('orbit')
@@ -482,6 +483,7 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
     <div
       v-if="demo"
       ref="stageElement"
+      :style="{ '--demo-panels-top': `calc(max(12px, env(safe-area-inset-top)) + ${topBarHeight}px + 12px)` }"
       class="demo-stage"
       @pointermove="handleStagePointerMove"
       @pointerup="handleStagePointerUp"
@@ -597,6 +599,7 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
     <template v-if="demo">
       <DemoTopBar
         class="overlay top"
+        @resize="topBarHeight = $event"
         :class="{ 'overlay-hidden': !overlaysVisible }"
         :title="t(demo.titleKey)"
         :summary="t(demo.summaryKey)"
@@ -813,6 +816,9 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
 }
 
 .hotspot-card {
+  max-height: calc(100% - var(--demo-panels-top, 100px) - clamp(96px, 17vh, 156px) - 12px);
+  overflow-y: auto;
+  box-sizing: border-box;
   position: absolute;
   z-index: 5;
   left: clamp(12px, 2vw, 22px);
@@ -938,6 +944,6 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
   .overlay.bottom { inset: auto 0 max(12px, env(safe-area-inset-bottom)); }
   .overlay.bottom-left { display: none; }
   .demo-credit { display: none; }
-  .hotspot-card { bottom: 74px; }
+  .hotspot-card { bottom: 74px; max-height: calc(100% - var(--demo-panels-top, 100px) - 86px); }
 }
 </style>

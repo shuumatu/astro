@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Black-hole projection regression</title>
+<style>
+body{margin:0;background:#03060d;color:#dde5ed;font:13px system-ui}header{padding:12px}#views{display:grid;grid-template-columns:repeat(3,1fr)}figure{margin:0;padding:8px}canvas{width:100%;display:block}figcaption{text-align:center}pre{white-space:pre-wrap}#motion{max-width:640px;margin:auto}#motion canvas{max-height:480px;object-fit:contain}#motion input{width:55%}button{margin:8px;padding:6px 12px}
+</style></head><body>
+<header>Black-hole projection · GPU regression checks<pre id="result">Rendering…</pre></header>
+<section id="motion"><button id="play">播放跨盘面运动</button><label>仰角 <input id="elevation" type="range" min="-15" max="15" step=".1" value="10"><output id="angle">10°</output></label></section><main id="views"></main>
+<script type="module">
+import * as THREE from 'three'
+import { createBlackHoleImage } from '/src/features/demos/scenes/stellar-evolution/materials.ts'
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+const size = 384
+renderer.setSize(size,size)
+renderer.setClearColor(0x03060d,1)
+const failures = []
+renderer.debug.onShaderError = () => failures.push('Shader compilation failed')
+const scene = new THREE.Scene()
+const image = createBlackHoleImage()
+image.material.uniforms.opacity.value = .95
+image.material.uniforms.shadow.value = .2
+image.material.uniforms.time.value = 12
+scene.add(image)
+const camera = new THREE.OrthographicCamera(-1.05,1.05,1.05,-1.05,.1,20)
+const target = new THREE.WebGLRenderTarget(size,size)
+const parameters = new URLSearchParams(location.search)
+const cases = parameters.has('altitude')
+  ? [[Number(parameters.get('altitude')),Number(parameters.get('azimuth') || 0)]]
+  : parameters.has('transition')
+    ? [[8,0],[4,0],[2,0],[1,0],[0,0],[-1,0],[-2,0],[-4,0],[-8,0]]
+    : [[10,0],[0,0],[-10,0],[35,0],[90,0],[-35,0],[10,90],[-90,0],[-10,270]]
+if (cases.length === 1) document.querySelector('#views').style.gridTemplateColumns = '1fr'
+
+function positionCamera(altitude,azimuth) {
+  const a = THREE.MathUtils.degToRad(altitude), z = THREE.MathUtils.degToRad(azimuth)
+  camera.position.set(3*Math.cos(a)*Math.sin(z),3*Math.sin(a),3*Math.cos(a)*Math.cos(z))
+  camera.lookAt(0,0,0)
+  camera.updateMatrixWorld()
+}
+function render(altitude,azimuth) {
+  positionCamera(altitude,azimuth)
+  renderer.setRenderTarget(target)
+  renderer.render(scene,camera)
+  const pixels = new Uint8Array(size*size*4)
+  renderer.readRenderTargetPixels(target,0,0,size,size,pixels)
+  return pixels
+}
+function red(pixels,x,y) {
+  const px = Math.floor((x/2.1+.5)*size), py = Math.floor((y/2.1+.5)*size)
+  return pixels[(py*size+px)*4]
+}
+const reference = render(10,0)
+// Equal elevations on opposite sides must be vertical reflections, not clones.
+for (const altitude of [10,35,60]) {
+  const above = render(altitude,0), below = render(-altitude,0)
+  let mirroredError = 0, unchangedError = 0
+  for (let y=0;y<size;y++) for (let x=0;x<size;x++) {
+    const i = (y*size+x)*4, reflected = ((size-1-y)*size+x)*4
+    for (let c=0;c<3;c++) {
+      mirroredError += Math.abs(above[i+c]-below[reflected+c])
+      unchangedError += Math.abs(above[i+c]-below[i+c])
+    }
+  }
+  if (mirroredError/(size*size*3) > .5) failures.push(`Hemisphere reflection failed at ±${altitude}°`)
+  if (unchangedError/(size*size*3) < 1) failures.push(`Above/below views are identical at ±${altitude}°`)
+}
+// A sign flip must not create a visible pop as the camera crosses the plane.
+const justAbove = render(.001,0), justBelow = render(-.001,0)
+let equatorError = 0
+for (let i=0;i<justAbove.length;i++) equatorError += Math.abs(justAbove[i]-justBelow[i])
+if (equatorError/justAbove.length > .2) failures.push('Discontinuous equator crossing')
+// Track the actual arc positions while crossing the plane. A whole-image
+// crossfade could pass the infinitesimal continuity test above yet keep both
+// silhouettes stationary. The upper/lower contours must move toward each
+// other and agree at the edge-on limit.
+function verticalExtent(pixels, sign) {
+  let extent = 0
+  for (let y=0;y<size;y++) {
+    const position = ((y+.5)/size-.5)*2.1
+    if (position*sign <= 0) continue
+    const index = (y*size+Math.floor(size/2))*4
+    if (pixels[index] > 45) extent = Math.max(extent,Math.abs(position))
+  }
+  return extent
+}
+const contourSamples = [8,6,4,2,1,0].map((altitude) => {
+  const pixels = render(altitude,0)
+  return [verticalExtent(pixels,1),verticalExtent(pixels,-1)]
+})
+for (let i=1;i<contourSamples.length;i++) {
+  if (contourSamples[i][0] > contourSamples[i-1][0]+.015
+    || contourSamples[i][1] < contourSamples[i-1][1]-.015) failures.push('Lensed contours did not converge continuously')
+}
+if (contourSamples[0][0]-contourSamples[5][0] < .02
+  || contourSamples[5][1]-contourSamples[0][1] < .02) failures.push('Stationary mirror silhouettes instead of moving intersections')
+if (Math.abs(contourSamples[5][0]-contourSamples[5][1]) > .015) failures.push('Asymmetric edge-on contours')
+let sweepCount = 0
+// Exercise the intervening orbit angles too, not just the nine reference shots.
+for (let altitude=-90;altitude<=90;altitude+=10) {
+  const baseline = render(altitude,0)
+  for (const azimuth of [0,90,180,270]) {
+    const pixels = render(altitude,azimuth)
+    let difference = 0
+    for (let i=0;i<pixels.length;i++) difference = Math.max(difference,Math.abs(pixels[i]-baseline[i]))
+    if (difference > 2) failures.push(`Orbit roll at ${altitude}°/${azimuth}°`)
+    // At exactly edge-on an infinitely thin direct disk has zero projected
+    // area; demanding a bright horizontal strip there was testing the old art.
+    for (const x of altitude === 0 ? [] : [-.45,.45]) for (const y of [-.018,0,.018]) {
+      if (red(pixels,x,y) < 10) failures.push(`Orbit seam at ${altitude}°/${azimuth}°`)
+    }
+    sweepCount++
+  }
+}
+for (const [altitude,azimuth] of cases) {
+  const pixels = render(altitude,azimuth)
+  // The former half-disk join left a black wedge here. Sample both sides of
+  // the join, away from the actual inner hole and the outer fading boundary.
+  for (const x of Math.abs(altitude) < 10 ? [] : [-.45,.45]) for (const y of [-.018,-.006,0,.006,.018]) {
+    if (red(pixels,x,y) < 10) failures.push(`Dark seam at ${altitude}°/${azimuth}°, (${x},${y})`)
+  }
+  // The near-side disk can legitimately cross the centre of the shadow.
+  // Probe the opposite side, where no foreground material intercepts the ray.
+  if (red(pixels,0,(Math.sign(altitude)||1)*.08) > 2) failures.push(`Shadow leakage at ${altitude}°/${azimuth}°`)
+  if (altitude === 10) {
+    let difference = 0
+    for (let i=0;i<pixels.length;i++) difference = Math.max(difference,Math.abs(pixels[i]-reference[i]))
+    if (difference > 2) failures.push(`Azimuth changed the disk silhouette: ${azimuth}°, difference ${difference}`)
+  }
+  renderer.setRenderTarget(null)
+  renderer.render(scene,camera)
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  canvas.getContext('2d').drawImage(renderer.domElement,0,0)
+  const figure = document.createElement('figure'), caption = document.createElement('figcaption')
+  caption.textContent = `Altitude ${altitude}° · azimuth ${azimuth}°`
+  figure.append(canvas,caption)
+  document.querySelector('#views').append(figure)
+}
+document.querySelector('#result').textContent = failures.length ? failures.join('\n') : `PASS · ${cases.length} views + ${sweepCount} orbit samples + moving contour checks · hemisphere reflections, continuous equator crossing, opaque shadow, stable azimuth`
+target.dispose()
+const motion = document.querySelector('#motion'), slider = document.querySelector('#elevation')
+motion.append(renderer.domElement)
+function preview(angle) {
+  positionCamera(angle,0)
+  renderer.setRenderTarget(null)
+  renderer.render(scene,camera)
+  document.querySelector('#angle').textContent = `${angle.toFixed(1)}°`
+}
+let playing = false, previousTime = 0, phase = Math.asin(10/15)
+const play = document.querySelector('#play')
+play.onclick = () => {
+  playing = !playing
+  play.textContent = playing ? '暂停运动' : '播放跨盘面运动'
+}
+slider.oninput = () => {
+  playing = false
+  play.textContent = '播放跨盘面运动'
+  phase = Math.asin(Number(slider.value)/15)
+  preview(Number(slider.value))
+}
+function animate(now) {
+  if (playing) {
+    phase += Math.min((now-previousTime)/1000,.05)*.3
+    const angle = 15*Math.sin(phase)
+    slider.value = angle
+    preview(angle)
+  }
+  previousTime = now
+  requestAnimationFrame(animate)
+}
+preview(10)
+requestAnimationFrame(animate)
+window.addEventListener('pagehide', () => {
+  image.geometry.dispose()
+  image.material.dispose()
+  renderer.dispose()
+},{once:true})
+</script></body></html>

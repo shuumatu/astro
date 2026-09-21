@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ChevronDown, Clapperboard, Compass, Maximize2, Minimize2, RotateCcw, SunDim } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import {
@@ -40,8 +40,18 @@ const emit = defineEmits<{
   reset: []
   toggleFullscreen: []
   startGuide: []
+  resize: [height: number]
 }>()
 
+const element = ref<HTMLElement | null>(null)
+let observer: ResizeObserver | undefined
+onMounted(() => {
+  observer = new ResizeObserver(() => {
+    if (element.value) emit('resize', Math.ceil(element.value.getBoundingClientRect().height))
+  })
+  if (element.value) observer.observe(element.value)
+})
+onBeforeUnmount(() => observer?.disconnect())
 const expanded = ref(false)
 const { t } = useI18n()
 
@@ -53,7 +63,7 @@ const chips = computed(() => props.controls.map((id) => ({
 </script>
 
 <template>
-  <div class="top-bar">
+  <div ref="element" class="top-bar">
     <div class="info-card" :class="{ expanded }">
       <button
         type="button"
@@ -211,6 +221,9 @@ const chips = computed(() => props.controls.map((id) => ({
 .info-card.expanded .info-chevron { transform: rotate(180deg); }
 
 .info-body {
+  max-height: 30vh;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
   padding: 0 .7rem .7rem;
   border-top: 1px solid rgb(60 84 110 / 45%);
 }

@@ -597,12 +597,12 @@ const readings = computed(() => {  const state = props.state
 
 .eclipse-card {
   position: absolute;
-  top: clamp(72px, 13vh, 116px);
+  top: var(--demo-panels-top, 100px);
   left: clamp(12px, 2vw, 22px);
   display: flex;
   flex-direction: column;
   width: min(292px, 82vw);
-  max-height: min(74vh, 640px);
+  max-height: min(640px, calc(100% - var(--demo-panels-top, 100px) - 90px));
   border: 1px solid rgb(60 84 110 / 65%);
   border-radius: 8px;
   background: rgb(6 14 26 / 82%);
@@ -1003,7 +1003,7 @@ const readings = computed(() => {  const state = props.state
   .eclipse-card {
     top: auto;
     bottom: 72px;
-    max-height: 46vh;
+    max-height: min(46vh, calc(100% - var(--demo-panels-top, 100px) - 84px));
     width: min(280px, 88vw);
   }
 

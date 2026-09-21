@@ -88,6 +88,19 @@ export interface DemoDefinition {
 
 export const demos: DemoDefinition[] = [
   {
+    slug: 'supernova-remnant',
+    titleKey: 'demos.items.supernovaRemnant.title',
+    summaryKey: 'demos.items.supernovaRemnant.summary',
+    hintKey: 'demos.items.supernovaRemnant.hint',
+    creditKey: 'demos.items.supernovaRemnant.credit',
+    loadScene: () => import('./scenes/supernova-remnant/index'),
+    controlPanel: () => import('./scenes/supernova-remnant/RemnantControlPanel.vue'),
+    defaultSettings: { playing: false, timeScale: 1, showLabels: true, showOrbits: false },
+    controls: ['labels'],
+    transport: false,
+    cinematicKey: null,
+  },
+  {
     slug: 'meteor-shower',
     titleKey: 'demos.items.meteorShower.title',
     summaryKey: 'demos.items.meteorShower.summary',
@@ -187,6 +200,27 @@ export const demos: DemoDefinition[] = [
     defaultSettings: { playing: false, timeScale: 0, showLabels: true, showOrbits: false },
     controls: ['labels'],
     transport: false,
+  },
+  {
+    slug: 'stellar-evolution',
+    titleKey: 'demos.items.stellarEvolution.title',
+    summaryKey: 'demos.items.stellarEvolution.summary',
+    hintKey: 'demos.items.stellarEvolution.hint',
+    creditKey: 'demos.items.stellarEvolution.credit',
+    loadScene: () => import('./scenes/stellar-evolution/index'),
+    defaultSettings: {
+      playing: true,
+      // Inert for this demo: its timeline is a sequence of stages rather than a clock, so there is
+      // no rate for a speed slider to drive. The value is here only because the field is shared.
+      timeScale: 1,
+      showOrbits: false,
+      showLabels: true,
+    },
+    // The demo's own panel carries the stage timeline and its transport. Only the label switch is
+    // shared, because "show the captions" means the same thing here as everywhere else.
+    controls: ['labels'],
+    transport: false,
+    controlPanel: () => import('./scenes/stellar-evolution/StellarEvolutionControlPanel.vue'),
   },
 ]
 

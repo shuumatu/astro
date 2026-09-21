@@ -76,10 +76,10 @@ const groups = computed(() => {
 .feature-panel {
   position: absolute;
   z-index: 5;
-  top: clamp(70px, 12vh, 108px);
+  top: var(--demo-panels-top, 100px);
   right: clamp(10px, 2vw, 22px);
   width: min(230px, 46vw);
-  max-height: min(62vh, 520px);
+  max-height: min(62vh, 520px, calc(100% - var(--demo-panels-top, 100px) - 90px));
   display: flex;
   flex-direction: column;
   border: 1px solid rgb(60 84 110 / 65%);
@@ -181,6 +181,6 @@ const groups = computed(() => {
 .panel-item.selected .panel-bullet { opacity: 1; }
 
 @media (max-width: 720px) {
-  .feature-panel { top: auto; bottom: 84px; max-height: 42vh; }
+  .feature-panel { top: auto; bottom: 84px; max-height: min(42vh, calc(100% - var(--demo-panels-top, 100px) - 96px)); }
 }
 </style>
