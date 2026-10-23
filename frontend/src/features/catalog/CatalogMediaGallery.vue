@@ -106,32 +106,32 @@ defineExpose({ open })
 
 <style scoped>
 .media-gallery { min-width: 0; }
-h2, .gallery-toggle { display: flex; align-items: center; gap: 7px; width: 100%; margin: 0 0 10px; color: #91a6aa; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-h2 small, .gallery-toggle small { margin-left: auto; color: #668085; font: inherit; }
-.gallery-toggle { min-height: 34px; border: 0; border-bottom: 1px solid #263b40; padding: 0; background: transparent; cursor: pointer; }
+h2, .gallery-toggle { display: flex; align-items: center; gap: 7px; width: 100%; margin: 0 0 10px; color: var(--color-text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
+h2 small, .gallery-toggle small { margin-left: auto; color: var(--color-text-subtle); font: inherit; }
+.gallery-toggle { min-height: 34px; border: 0; border-bottom: 1px solid var(--color-border); padding: 0; background: transparent; cursor: pointer; }
 .gallery-toggle svg:last-child { margin-left: 3px; transition: transform .16s ease; }
 .gallery-toggle svg:last-child.collapsed { transform: rotate(-90deg); }
-.thumbnail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
-.thumbnail-grid button { position: relative; overflow: hidden; min-width: 0; aspect-ratio: 1; border: 0; padding: 0; background: #0b1216; cursor: zoom-in; }
+.thumbnail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.thumbnail-grid button { position: relative; overflow: hidden; min-width: 0; aspect-ratio: 1; border: 0; padding: 0; background: var(--color-bg); cursor: zoom-in; }
 .thumbnail-grid img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .16s ease, opacity .16s ease; }
 .thumbnail-grid button:hover img { opacity: .82; transform: scale(1.025); }
-.thumbnail-grid span { position: absolute; right: 5px; bottom: 5px; display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid rgb(255 255 255 / 30%); border-radius: 50%; color: white; background: rgb(4 10 13 / 72%); font-size: 10px; }
+.thumbnail-grid span { position: absolute; right: 5px; bottom: 5px; display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid var(--color-border); border-radius: 50%; color: var(--color-text); background: color-mix(in srgb, var(--color-surface) 94%, transparent); font-size: 10px; }
 .compact .thumbnail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.lightbox { position: fixed; z-index: 1000; inset: 0; display: grid; grid-template-rows: 54px minmax(0, 1fr) auto; color: #edf5f4; background: rgb(2 6 8 / 96%); }
-.lightbox header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; border-bottom: 1px solid #26383d; padding: 0 18px; }
-.lightbox header > span { color: #91a5a8; font-size: 12px; }
+.lightbox { position: fixed; z-index: 1000; inset: 0; display: grid; grid-template-rows: 54px minmax(0, 1fr) auto; color: var(--color-text); background: color-mix(in srgb, var(--color-bg) 97%, transparent); }
+.lightbox header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; border-bottom: 1px solid var(--color-border); padding: 0 18px; }
+.lightbox header > span { color: var(--color-text-muted); font-size: 12px; }
 .lightbox header > button { justify-self: end; }
-.lightbox button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #31484e; border-radius: 4px; color: #d9e5e4; background: #0b1418; cursor: pointer; }
+.lightbox button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 9px; color: var(--color-text); background: var(--color-bg); cursor: pointer; }
 .lightbox button:disabled { opacity: .35; cursor: default; }
 .zoom-controls { display: flex; align-items: center; gap: 6px; }
-.zoom-controls output { width: 52px; color: #aec0c1; font-size: 12px; text-align: center; }
+.zoom-controls output { width: 52px; color: var(--color-text-muted); font-size: 12px; text-align: center; }
 .lightbox-stage { position: relative; display: grid; overflow: auto; min-height: 0; place-items: center; padding: 24px 60px; }
 .zoom-surface { flex: none; transition: width .12s ease; }
 .zoom-surface img { display: block; width: 100%; max-height: none; object-fit: contain; }
 .lightbox-stage > button { position: fixed; top: 50%; transform: translateY(-50%); }
 .lightbox-stage .previous { left: 16px; }
 .lightbox-stage .next { right: 16px; }
-.lightbox footer { min-height: 42px; padding: 10px 20px 14px; color: #91a5a8; font-size: 12px; text-align: center; }
+.lightbox footer { min-height: 42px; padding: 10px 20px 14px; color: var(--color-text-muted); font-size: 12px; text-align: center; }
 @media (max-width: 720px) {
   .lightbox header { grid-template-columns: auto 1fr auto; padding: 0 8px; }
   .zoom-controls { justify-self: center; }
@@ -139,5 +139,11 @@ h2 small, .gallery-toggle small { margin-left: auto; color: #668085; font: inher
   .lightbox-stage { padding: 16px 42px; }
   .lightbox-stage .previous { left: 4px; }
   .lightbox-stage .next { right: 4px; }
+}
+.thumbnail-grid button { border-radius: 9px; }
+.gallery-toggle:hover, .lightbox button:hover:not(:disabled) { color: var(--color-blue); }
+.thumbnail-grid button:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .thumbnail-grid img, .zoom-surface, .gallery-toggle svg:last-child { transition: none; }
 }
 </style>

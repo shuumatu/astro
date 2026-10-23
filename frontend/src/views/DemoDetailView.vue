@@ -470,6 +470,7 @@ watch(slug, async () => {
 
 watch(locale, async () => {
   await nextTick()
+  stageElement.value?.querySelector('canvas')?.setAttribute('aria-label', t('demos.canvasAria'))
   collectLabelElements()
 })
 
@@ -668,7 +669,7 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
 </template>
 
 <style scoped>
-.demo-missing { padding: 3rem 0; color: #aabbd0; }
+.demo-missing { padding: 3rem 0; color: var(--color-text-muted); }
 
 .demo-page {
   position: relative;
@@ -765,10 +766,10 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
   z-index: 5;
   width: min(300px, 74vw);
   padding: .5rem .62rem .55rem;
-  border: 1px solid #2b4661;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: rgb(7 17 31 / 96%);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 58%);
+  background: color-mix(in srgb, var(--color-surface) 98%, transparent);
+  box-shadow: 0 10px 28px var(--color-shadow);
   transform: translate(-50%, calc(-100% - 10px));
   pointer-events: none;
 }
@@ -777,7 +778,7 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
 
 .demo-label-tip-title {
   margin: 0 0 .22rem;
-  color: #72d4d8;
+  color: var(--color-blue);
   font-size: .74rem;
   font-weight: 600;
   letter-spacing: .04em;
@@ -785,7 +786,7 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
 
 .demo-label-tip-body {
   margin: 0;
-  color: #b9cade;
+  color: var(--color-text-muted);
   font-size: .72rem;
   line-height: 1.52;
 }
@@ -825,34 +826,36 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
   bottom: clamp(96px, 17vh, 156px);
   width: min(320px, 74vw);
   padding: .85rem .9rem .95rem;
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: rgb(6 14 26 / 86%);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  color: var(--color-text);
+  box-shadow: 0 12px 32px var(--color-shadow);
   backdrop-filter: blur(8px);
   transition: opacity .3s ease;
 }
 
 .hotspot-category {
   margin: 0 0 .2rem;
-  color: #72d4d8;
+  color: var(--color-blue);
   font-size: .68rem;
   letter-spacing: .12em;
   text-transform: uppercase;
 }
 
-.hotspot-card h2 { margin: 0; color: #eaf2ff; font-size: 1.05rem; }
+.hotspot-card h2 { margin: 0; color: var(--color-text); font-size: 1.05rem; }
 
 .hotspot-facts {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
   margin: .35rem 0 .5rem;
-  color: #9fb4cf;
+  color: var(--color-text-muted);
   font-size: .76rem;
   letter-spacing: .03em;
 }
 
-.hotspot-body { margin: 0 0 .7rem; color: #b9c9dd; font-size: .84rem; line-height: 1.6; }
+.hotspot-body { margin: 0 0 .7rem; color: var(--color-text-muted); font-size: .84rem; line-height: 1.6; }
 
 .hotspot-panoramas { margin: 0 0 .5rem; }
 
@@ -871,21 +874,21 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
   max-width: 100%;
   min-height: 36px;
   padding: 0 .75rem;
-  border: 1px solid #72d4d8;
+  border: 1px solid var(--color-blue);
   border-radius: 5px;
-  color: #07111f;
+  color: var(--color-on-accent);
   font-size: .82rem;
   font-weight: 600;
   letter-spacing: .02em;
   white-space: nowrap;
-  background: #72d4d8;
+  background: var(--color-blue);
   cursor: pointer;
   transition: background .18s ease, border-color .18s ease;
 }
 
-.panorama-button:hover { background: #9ae7ea; border-color: #9ae7ea; }
+.panorama-button:hover { background: color-mix(in srgb, var(--color-blue) 88%, var(--color-text)); border-color: color-mix(in srgb, var(--color-blue) 88%, var(--color-text)); }
 
-.panorama-button:focus-visible { outline: 2px solid #eaf2ff; outline-offset: 2px; }
+.panorama-button:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 
 .panorama-button-icon { flex: none; width: 17px; height: 12px; }
 
@@ -901,11 +904,11 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
   border-radius: 999px;
   font-size: .66rem;
   font-weight: 700;
-  color: #d8f6f7;
-  background: rgb(7 17 31 / 72%);
+  color: var(--color-blue);
+  background: var(--color-surface);
 }
 
-.hotspot-note { margin: 0; color: #6d86a3; font-size: .74rem; line-height: 1.5; }
+.hotspot-note { margin: 0; color: var(--color-text-subtle); font-size: .74rem; line-height: 1.5; }
 
 .demo-fallback {
   position: absolute;
@@ -931,14 +934,14 @@ watch(() => hoveredLabel.value?.id ?? null, (id) => {
 .demo-button {
   min-height: 38px;
   padding: 0 .9rem;
-  border: 1px solid #35516e;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #c8d6e7;
+  color: var(--color-text);
   background: transparent;
   cursor: pointer;
 }
 
-.demo-button:hover { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
+.demo-button:hover { color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
 
 @media (max-width: 900px) {
   .overlay.bottom { inset: auto 0 max(12px, env(safe-area-inset-bottom)); }

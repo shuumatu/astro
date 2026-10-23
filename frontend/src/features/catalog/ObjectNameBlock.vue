@@ -25,7 +25,7 @@ const aliasText = computed(() => props.aliases.join(' · '))
 
 <style scoped>
 .object-name-block { min-width: 0; }
-.object-name-block h2 { margin: 0; overflow-wrap: anywhere; color: #edf4f3; font-size: 20px; line-height: 1.2; }
-.object-aliases { margin: 6px 0 0; overflow-wrap: anywhere; color: #91a5a6; font-size: 11px; line-height: 1.45; }
-.object-aliases span { color: #72c9bd; }
+.object-name-block h2 { margin: 0; overflow-wrap: anywhere; color: var(--color-text); font-size: 20px; line-height: 1.2; }
+.object-aliases { margin: 6px 0 0; overflow-wrap: anywhere; color: var(--color-text-muted); font-size: 11px; line-height: 1.45; }
+.object-aliases span { color: var(--color-blue); }
 </style>

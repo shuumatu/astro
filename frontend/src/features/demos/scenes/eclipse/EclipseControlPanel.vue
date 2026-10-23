@@ -603,9 +603,11 @@ const readings = computed(() => {  const state = props.state
   flex-direction: column;
   width: min(292px, 82vw);
   max-height: min(640px, calc(100% - var(--demo-panels-top, 100px) - 90px));
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: rgb(6 14 26 / 82%);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+  color: var(--color-text);
+  box-shadow: 0 12px 32px var(--color-shadow);
   backdrop-filter: blur(8px);
   overflow: hidden;
 }
@@ -618,12 +620,12 @@ const readings = computed(() => {  const state = props.state
   justify-content: space-between;
   gap: .5rem;
   padding: .5rem .5rem .5rem .7rem;
-  border-bottom: 1px solid rgb(60 84 110 / 45%);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .card-head h2 {
   margin: 0;
-  color: #eaf2ff;
+  color: var(--color-text);
   font-size: .86rem;
   font-weight: 600;
   letter-spacing: .04em;
@@ -636,12 +638,12 @@ const readings = computed(() => {  const state = props.state
   height: 26px;
   border: none;
   border-radius: 4px;
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   background: transparent;
   cursor: pointer;
 }
 
-.card-collapse:hover { color: #eaf2ff; background: rgb(60 84 110 / 45%); }
+.card-collapse:hover { color: var(--color-text); background: var(--color-border); }
 .eclipse-card.collapsed .card-collapse { transform: rotate(-90deg); }
 
 .card-body {
@@ -652,7 +654,7 @@ const readings = computed(() => {  const state = props.state
 
 .row-label {
   margin: .6rem 0 .28rem;
-  color: #72d4d8;
+  color: var(--color-blue);
   font-size: .66rem;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -670,43 +672,43 @@ const readings = computed(() => {  const state = props.state
 
 .switch button {
   min-height: 34px;
-  border: 1px solid #35516e;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  color: #9fb4cf;
+  color: var(--color-text-muted);
   font-size: .8rem;
   background: transparent;
   cursor: pointer;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 
-.switch button:hover { color: #eaf2ff; border-color: #72d4d8; }
+.switch button:hover { color: var(--color-text); border-color: var(--color-blue); }
 
 .switch button.active {
-  border-color: #72d4d8;
-  color: #07111f;
+  border-color: var(--color-blue);
+  color: var(--color-on-accent);
   font-weight: 600;
-  background: #72d4d8;
+  background: var(--color-blue);
 }
 
 .note {
   margin: .3rem 0 .1rem;
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   font-size: .7rem;
   line-height: 1.45;
 }
 
 .note.warn {
   padding: .34rem .42rem;
-  border-left: 2px solid #ffb457;
-  color: #e6c79a;
-  background: rgb(53 38 20 / 55%);
+  border-left: 2px solid var(--color-warning);
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-surface));
 }
 
 .scale-note {
   padding: .3rem .42rem;
-  border-left: 2px solid #72d4d8;
-  color: #a9c6cd;
-  background: rgb(17 40 48 / 55%);
+  border-left: 2px solid var(--color-blue);
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-blue) 8%, var(--color-surface));
 }
 
 .event-list {
@@ -721,8 +723,8 @@ const readings = computed(() => {  const state = props.state
 
 .event-picker {
   margin: .55rem 0 .3rem;
-  border-top: 1px solid #35516e;
-  border-bottom: 1px solid #35516e;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   padding: .35rem 0 .2rem;
 }
 
@@ -731,12 +733,12 @@ const readings = computed(() => {  const state = props.state
   flex-wrap: wrap;
   align-items: center;
   gap: .15rem .45rem;
-  color: #72d4d8;
+  color: var(--color-blue);
   font-size: .72rem;
   cursor: pointer;
 }
 
-.selected-event { color: #c8d6e7; font-variant-numeric: tabular-nums; }
+.selected-event { color: var(--color-text); font-variant-numeric: tabular-nums; }
 .event-picker .event-list { margin-top: .4rem; }
 
 .event-list button {
@@ -749,17 +751,17 @@ const readings = computed(() => {  const state = props.state
   padding: 0 .45rem;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: #c3d3e6;
+  color: var(--color-text);
   font-size: .74rem;
-  background: rgb(255 255 255 / 3%);
+  background: var(--color-surface-raised);
   cursor: pointer;
 }
 
-.event-list button:hover { background: rgb(60 84 110 / 38%); color: #eaf2ff; }
-.event-list button.active { border-color: #72d4d8; color: #8fe3e6; background: rgb(114 212 216 / 16%); }
+.event-list button:hover { background: color-mix(in srgb, var(--color-blue) 12%, var(--color-surface)); color: var(--color-text); }
+.event-list button.active { border-color: var(--color-blue); color: var(--color-blue); background: color-mix(in srgb, var(--color-blue) 12%, var(--color-surface)); }
 .event-date { font-variant-numeric: tabular-nums; }
-.event-kind { color: #9fb4cf; font-size: .7rem; }
-.event-list button.active .event-kind { color: #8fe3e6; }
+.event-kind { color: var(--color-text-muted); font-size: .7rem; }
+.event-list button.active .event-kind { color: var(--color-blue); }
 
 .scrub { position: relative; padding: .1rem 0 .1rem; }
 
@@ -768,7 +770,7 @@ const readings = computed(() => {  const state = props.state
   height: 8px;
   margin: 0 4px 4px;
   border-radius: 3px;
-  background: rgb(255 255 255 / 6%);
+  background: var(--color-surface-raised);
 }
 
 .scrub-band {
@@ -789,18 +791,18 @@ const readings = computed(() => {  const state = props.state
   top: -2px;
   width: 2px;
   height: 12px;
-  background: #8fe3e6;
+  background: var(--color-blue);
   transform: translateX(-1px);
 }
 
-.scrub-input { width: 100%; accent-color: #72d4d8; }
+.scrub-input { width: 100%; accent-color: var(--color-blue); }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
   gap: .2rem .6rem;
   margin: .1rem 0 .25rem;
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   font-size: .68rem;
 }
 
@@ -823,43 +825,43 @@ const readings = computed(() => {  const state = props.state
 .preset {
   min-height: 28px;
   padding: 0 .5rem;
-  border: 1px solid #35516e;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #c2d8e9;
+  color: var(--color-text);
   font-size: .7rem;
   background: transparent;
   cursor: pointer;
 }
 
-.preset:hover { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
+.preset:hover { color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
 
 .glossary {
   margin: .55rem 0 .1rem;
-  border-top: 1px solid #1c2d43;
+  border-top: 1px solid var(--color-border);
   padding-top: .45rem;
 }
 
 .glossary summary {
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   font-size: .7rem;
   letter-spacing: .06em;
   cursor: pointer;
 }
 
-.glossary summary:hover { color: #72d4d8; }
+.glossary summary:hover { color: var(--color-blue); }
 
 .glossary dl { margin: .45rem 0 0; }
 
 .glossary dt {
   margin-top: .45rem;
-  color: #c2d8e9;
+  color: var(--color-text);
   font-size: .72rem;
   font-weight: 600;
 }
 
 .glossary dd {
   margin: .12rem 0 0;
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   font-size: .7rem;
   line-height: 1.5;
 }
@@ -869,12 +871,12 @@ const readings = computed(() => {  const state = props.state
   justify-content: space-between;
   gap: .4rem;
   margin: .1rem 0 .2rem;
-  color: #b9c9dd;
+  color: var(--color-text-muted);
   font-size: .72rem;
   font-variant-numeric: tabular-nums;
 }
 
-.time-readout .kind { color: #8fe3e6; }
+.time-readout .kind { color: var(--color-blue); }
 
 .slider {
   display: grid;
@@ -882,12 +884,12 @@ const readings = computed(() => {  const state = props.state
   align-items: center;
   gap: .2rem .4rem;
   margin-bottom: .3rem;
-  color: #9fb4cf;
+  color: var(--color-text-muted);
   font-size: .72rem;
 }
 
-.slider input { grid-column: 1 / -1; width: 100%; accent-color: #72d4d8; }
-.slider output { color: #c8d6e7; font-variant-numeric: tabular-nums; }
+.slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--color-blue); }
+.slider output { color: var(--color-text); font-variant-numeric: tabular-nums; }
 
 .toggles {
   display: flex;
@@ -901,13 +903,13 @@ const readings = computed(() => {  const state = props.state
   display: inline-flex;
   align-items: center;
   gap: .32rem;
-  color: #c8d6e7;
+  color: var(--color-text);
   font-size: .74rem;
   cursor: pointer;
 }
 
 .toggles input,
-.teaching input { accent-color: #72d4d8; }
+.teaching input { accent-color: var(--color-blue); }
 .teaching { margin-top: .15rem; }
 
 .readings {
@@ -918,10 +920,10 @@ const readings = computed(() => {  const state = props.state
   font-size: .72rem;
 }
 
-.readings dt { color: #8fa4bd; }
+.readings dt { color: var(--color-text-muted); }
 .readings dd {
   margin: 0;
-  color: #dce8f6;
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -997,7 +999,8 @@ const readings = computed(() => {  const state = props.state
 }
 
 .eclipse-card button:focus-visible,
-.eclipse-card input:focus-visible { outline: 2px solid #8ee7e9; outline-offset: 2px; }
+.eclipse-card input:focus-visible,
+.eclipse-card summary:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 
 @media (max-width: 900px) {
   .eclipse-card {

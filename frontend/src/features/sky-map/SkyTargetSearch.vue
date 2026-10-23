@@ -177,10 +177,14 @@ function handleKeydown(event: KeyboardEvent): void {
 <style scoped>
 .sky-target-search { position: relative; min-width: 0; }
 .search-row { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: 6px; }
-input { width: 100%; min-width: 0; min-height: 36px; border: 1px solid #34444c; border-radius: 4px; padding: 0 9px; color: #e8efef; background: #090e12; }
-.search-row > button { display: grid; width: 36px; min-height: 36px; place-items: center; border: 1px solid #3b5057; border-radius: 4px; color: #c6dddd; background: #10191d; cursor: pointer; }
-ul { position: absolute; z-index: 30; top: calc(100% + 4px); right: 42px; left: 0; overflow: hidden; margin: 0; padding: 3px; border: 1px solid #3a4c54; border-radius: 4px; list-style: none; background: #0b1115; box-shadow: 0 10px 24px rgb(0 0 0 / 42%); }
-li > button { display: grid; gap: 2px; width: 100%; border: 0; border-radius: 2px; padding: 7px 9px; color: #dce8e8; background: transparent; text-align: left; cursor: pointer; }
-li > button:hover, li > button.active { background: #193039; }
-small { color: #82999d; font-size: 11px; }
+input { width: 100%; min-width: 0; min-height: 36px; border: 1px solid var(--color-border); border-radius: 9px; padding: 0 9px; color: var(--color-text); background: var(--color-bg); }
+.search-row > button { display: grid; width: 36px; min-height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 9px; color: var(--color-text); background: var(--color-surface); cursor: pointer; }
+ul { position: absolute; z-index: 30; top: calc(100% + 4px); right: 42px; left: 0; overflow: hidden; margin: 0; padding: 3px; border: 1px solid var(--color-border); border-radius: 9px; list-style: none; background: var(--color-surface); box-shadow: 0 10px 24px var(--color-shadow); }
+li > button { display: grid; gap: 2px; width: 100%; border: 0; border-radius: 6px; padding: 7px 9px; color: var(--color-text); background: transparent; text-align: left; cursor: pointer; }
+li > button:hover, li > button.active { background: var(--color-surface-raised); }
+small { color: var(--color-text-muted); font-size: 11px; }
+input::placeholder { color: var(--color-text-subtle); }
+input:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.search-row > button:hover { border-color: var(--color-blue); color: var(--color-blue); background: var(--color-surface-raised); }
+li > button.active { color: var(--color-blue); }
 </style>

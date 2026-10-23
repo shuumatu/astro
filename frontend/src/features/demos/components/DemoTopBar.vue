@@ -190,9 +190,9 @@ const chips = computed(() => props.controls.map((id) => ({
 
 .info-card {
   max-width: min(420px, 60vw);
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: rgb(7 15 26 / 78%);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
   backdrop-filter: blur(8px);
 }
 
@@ -211,13 +211,13 @@ const chips = computed(() => props.controls.map((id) => ({
 
 .info-heading { display: grid; gap: .15rem; min-width: 0; }
 .info-kicker {
-  color: #72d4d8;
+  color: var(--color-blue);
   font-size: .66rem;
   letter-spacing: .14em;
   text-transform: uppercase;
 }
-.info-title { color: #eaf2ff; font-size: 1rem; font-weight: 600; line-height: 1.25; }
-.info-chevron { flex: none; color: #9fb4cf; transition: transform .2s ease; }
+.info-title { color: var(--color-text); font-size: 1rem; font-weight: 600; line-height: 1.25; }
+.info-chevron { flex: none; color: var(--color-text-muted); transition: transform .2s ease; }
 .info-card.expanded .info-chevron { transform: rotate(180deg); }
 
 .info-body {
@@ -225,17 +225,17 @@ const chips = computed(() => props.controls.map((id) => ({
   overflow-y: auto;
   overflow-wrap: anywhere;
   padding: 0 .7rem .7rem;
-  border-top: 1px solid rgb(60 84 110 / 45%);
+  border-top: 1px solid var(--color-border);
 }
 
 .info-summary {
   margin: .6rem 0 .5rem;
-  color: #b9c9dd;
+  color: var(--color-text-muted);
   font-size: .84rem;
   line-height: 1.55;
 }
 
-.info-back { color: #72d4d8; font-size: .82rem; }
+.info-back { color: var(--color-blue); font-size: .82rem; }
 .info-back:hover { text-decoration: underline; }
 
 .display-stack {
@@ -255,22 +255,22 @@ const chips = computed(() => props.controls.map((id) => ({
   gap: .35rem;
   min-height: 30px;
   padding: 0 .6rem;
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: #c8d6e7;
+  color: var(--color-text);
   font-size: .78rem;
-  background: rgb(7 15 26 / 78%);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
   backdrop-filter: blur(8px);
   cursor: pointer;
 }
 
-.chip:hover { color: #eaf2ff; border-color: #72d4d8; }
-.chip input { accent-color: #72d4d8; }
+.chip:hover { color: var(--color-text); border-color: var(--color-blue); }
+.chip input { accent-color: var(--color-blue); }
 .chip.icon { width: 30px; padding: 0; justify-content: center; }
 .chip.slider { gap: .4rem; cursor: default; }
-.chip.slider input[type='range'] { width: 84px; accent-color: #72d4d8; }
+.chip.slider input[type='range'] { width: 84px; accent-color: var(--color-blue); }
 .chip.light-slider input[type='range'] { width: 72px; }
-.chip-value { min-width: 34px; color: #9fb4cf; font-size: .72rem; text-align: right; }
+.chip-value { min-width: 34px; color: var(--color-text-muted); font-size: .72rem; text-align: right; }
 .chip-value.angle { min-width: 30px; }
 
 @media (max-width: 640px) {

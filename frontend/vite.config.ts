@@ -45,7 +45,7 @@ function assetContentType(path: string): string {
 export default defineConfig({
   plugins: [vue(), localVditorAssets()],
   server: {
-    port: 5173,
+    port: 15173,
     proxy: {
       '/api': process.env.VITE_DEV_PROXY_TARGET || 'http://localhost:8080'
     }

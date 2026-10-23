@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import en from '../../locales/en/common.json'
 import zh from '../../locales/zh-CN/common.json'
+import positionalZh from './scenes/positional-astronomy/zh.json'
+import positionalEn from './scenes/positional-astronomy/en.json'
+import solarWindZh from './scenes/solar-wind/zh.json'
+import solarWindEn from './scenes/solar-wind/en.json'
 import { CONTROL_LABEL_KEYS, demos } from './registry'
 import { ECLIPSE_LOCALE_KEYS } from './scenes/eclipse/messages'
 import { STELLAR_EVOLUTION_LOCALE_KEYS } from './scenes/stellar-evolution/messages'
 
 function resolve(bundle: unknown, key: string): unknown {
+  if (key.startsWith('demos.items.solarWind.')) {
+    bundle = bundle === zh ? solarWindZh : solarWindEn
+    key = key.replace('demos.items.solarWind.', '')
+  }
+  if (key.startsWith('demos.items.positionalAstronomy.')) {
+    bundle = bundle === zh ? positionalZh : positionalEn
+    key = key.replace('demos.items.positionalAstronomy.', '')
+  }
   return key.split('.').reduce<unknown>((value, part) => {
     if (!value || typeof value !== 'object') return undefined
     return (value as Record<string, unknown>)[part]

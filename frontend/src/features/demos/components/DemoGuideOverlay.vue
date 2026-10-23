@@ -88,7 +88,7 @@ onBeforeUnmount(() => cancelAnimationFrame(frameId))
 </template>
 
 <style scoped>
-.guide-overlay { position: absolute; z-index: 6; inset: 0; pointer-events: none; color: #edf5fb; }
+.guide-overlay { position: absolute; z-index: 6; inset: 0; pointer-events: none; color: var(--color-text); }
 .guide-header {
   position: absolute;
   top: max(14px, env(safe-area-inset-top));
@@ -97,13 +97,13 @@ onBeforeUnmount(() => cancelAnimationFrame(frameId))
   align-items: center;
   gap: .8rem;
   padding: .3rem .35rem .3rem .75rem;
-  border: 1px solid rgb(107 141 167 / 45%);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: rgb(5 13 23 / 88%);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   pointer-events: auto;
 }
 .guide-heading { font-size: .8rem; font-weight: 600; white-space: nowrap; }
-.guide-heading span { margin-left: .45rem; color: #90a6bd; font-variant-numeric: tabular-nums; font-weight: 400; }
+.guide-heading span { margin-left: .45rem; color: var(--color-text-muted); font-variant-numeric: tabular-nums; font-weight: 400; }
 .guide-bottom {
   position: absolute;
   inset: auto 0 0;
@@ -111,7 +111,7 @@ onBeforeUnmount(() => cancelAnimationFrame(frameId))
   justify-items: center;
   gap: .65rem;
   padding: 1.15rem max(18px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, rgb(3 9 17 / 90%) 30%, rgb(3 9 17 / 97%));
+  background: linear-gradient(transparent, color-mix(in srgb, var(--color-surface) 96%, transparent) 24%, var(--color-surface));
   pointer-events: auto;
 }
 .guide-subtitle {
@@ -122,26 +122,25 @@ onBeforeUnmount(() => cancelAnimationFrame(frameId))
   line-height: 1.5;
   text-align: center;
   text-wrap: balance;
-  text-shadow: 0 2px 8px #000;
 }
 .guide-timeline { display: flex; gap: 5px; width: min(520px, 90vw); }
-.guide-segment { flex: 1; height: 8px; padding: 0; border: 0; border-radius: 2px; background: #425465; cursor: pointer; overflow: hidden; }
-.guide-segment span { display: block; height: 100%; background: #83e1df; }
-.guide-segment:focus-visible, .guide-icon:focus-visible, .guide-play:focus-visible { outline: 2px solid #eaf2ff; outline-offset: 3px; }
+.guide-segment { flex: 1; height: 8px; padding: 0; border: 0; border-radius: 2px; background: var(--color-border); cursor: pointer; overflow: hidden; }
+.guide-segment span { display: block; height: 100%; background: var(--color-blue); }
+.guide-segment:focus-visible, .guide-icon:focus-visible, .guide-play:focus-visible { outline: 2px solid var(--color-text); outline-offset: 3px; }
 .guide-controls { display: flex; align-items: center; gap: .7rem; }
 .guide-icon, .guide-play {
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
-  border: 1px solid #54728a;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  color: #edf5fb;
-  background: rgb(14 31 47 / 90%);
+  color: var(--color-text);
+  background: var(--color-surface-raised);
   cursor: pointer;
 }
-.guide-play { width: 42px; height: 42px; color: #071521; background: #83e1df; border-color: #83e1df; }
-.guide-icon:hover, .guide-play:hover { border-color: #b6f3f0; }
+.guide-play { width: 42px; height: 42px; color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
+.guide-icon:hover, .guide-play:hover { border-color: var(--color-gold); }
 .guide-icon:disabled { opacity: .35; cursor: default; }
 @media (max-width: 640px) {
   .guide-subtitle { min-height: 4.4em; font-size: .85rem; }

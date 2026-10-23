@@ -16,6 +16,7 @@
 
 | 服务 | 端口 |
 | --- | ---: |
+| Frontend dev server | 15173 |
 | API Gateway | 8080 |
 | Identity | 8081 |
 | Content | 8082 |
@@ -47,6 +48,8 @@ cd frontend
 yarn install --immutable
 yarn dev
 ~~~
+
+前端默认访问 `http://localhost:15173`。使用该端口是为了避开部分 Windows 环境中包含 `5173` 的系统保留端口范围；需要其他端口时可运行 `yarn dev --port <端口>`。
 
 基础设施：
 

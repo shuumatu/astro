@@ -467,6 +467,12 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .pano {
+  /* Captions sit directly on photography, so their ink remains bright in both UI themes. */
+  --pano-text: #edf1fa;
+  --pano-text-muted: #a6b2c9;
+  --pano-blue: #8abcf4;
+  --pano-gold: #e9c582;
+  --pano-danger: #f0aaa2;
   position: absolute;
   inset: 0;
   z-index: 6;
@@ -511,13 +517,13 @@ onBeforeUnmount(() => {
 
 .pano-site {
   margin: 0 0 .15rem;
-  color: #72d4d8;
+  color: var(--pano-blue);
   font-size: .68rem;
   letter-spacing: .12em;
   text-transform: uppercase;
 }
 
-.pano-heading h2 { margin: 0; color: #eaf2ff; font-size: 1.05rem; text-shadow: 0 1px 6px rgb(0 0 0 / 90%); }
+.pano-heading h2 { margin: 0; color: var(--pano-text); font-size: 1.05rem; text-shadow: 0 1px 6px rgb(0 0 0 / 90%); }
 
 .pano-actions {
   display: flex;
@@ -533,18 +539,18 @@ onBeforeUnmount(() => {
 .pano-tab {
   min-height: 32px;
   padding: 0 .7rem;
-  border: 1px solid rgb(80 110 140 / 70%);
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  color: #c8d6e7;
+  color: var(--color-text);
   font-size: .74rem;
-  background: rgb(6 14 26 / 72%);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
   cursor: pointer;
   transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
 
-.pano-tab:hover { border-color: #72d4d8; color: #eaf2ff; background: rgb(14 30 48 / 88%); }
+.pano-tab:hover { border-color: var(--color-blue); color: var(--color-text); background: var(--color-surface-raised); }
 
-.pano-tab-active { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
+.pano-tab-active { color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
 
 /**
  * The way back out of the viewer.
@@ -557,21 +563,21 @@ onBeforeUnmount(() => {
 .pano-exit {
   min-height: 38px;
   padding: 0 1.05rem;
-  border: 1px solid #72d4d8;
+  border: 1px solid var(--color-blue);
   border-radius: 5px;
-  color: #d8f6f7;
+  color: var(--color-on-accent);
   font-size: .8rem;
   font-weight: 600;
   letter-spacing: .04em;
   white-space: nowrap;
-  background: rgb(10 34 46 / 88%);
+  background: var(--color-blue);
   cursor: pointer;
   transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 
-.pano-exit:hover { color: #07111f; background: #72d4d8; }
+.pano-exit:hover { background: color-mix(in srgb, var(--color-blue) 88%, var(--color-text)); }
 
-.pano-exit:focus-visible { outline: 2px solid #eaf2ff; outline-offset: 2px; }
+.pano-exit:focus-visible { outline: 2px solid var(--pano-text); outline-offset: 2px; }
 
 .pano-status {
   position: absolute;
@@ -579,14 +585,14 @@ onBeforeUnmount(() => {
   inset: 50% 1rem auto;
   transform: translateY(-50%);
   margin: 0;
-  color: #b9c9dd;
+  color: var(--pano-text-muted);
   font-size: .9rem;
   letter-spacing: .06em;
   text-align: center;
   text-shadow: 0 1px 8px rgb(0 0 0 / 90%);
 }
 
-.pano-error { color: #ffb4a2; }
+.pano-error { color: var(--pano-danger); }
 
 .pano-foot {
   position: relative;
@@ -596,13 +602,13 @@ onBeforeUnmount(() => {
   background: linear-gradient(transparent, rgb(0 0 0 / 78%));
 }
 
-.pano-caption { max-width: 62ch; margin: 0 0 .35rem; color: #dce7f6; font-size: .84rem; line-height: 1.6; }
+.pano-caption { max-width: 62ch; margin: 0 0 .35rem; color: var(--pano-text); font-size: .84rem; line-height: 1.6; }
 
-.pano-meta { display: flex; flex-direction: column; gap: .12rem; margin: 0 0 .3rem; color: #8fa4bd; font-size: .7rem; }
+.pano-meta { display: flex; flex-direction: column; gap: .12rem; margin: 0 0 .3rem; color: var(--pano-text-muted); font-size: .7rem; }
 
-.pano-caveat { color: #f0c98a; }
+.pano-caveat { color: var(--pano-gold); }
 
-.pano-hint { margin: 0; color: #6d86a3; font-size: .7rem; }
+.pano-hint { margin: 0; color: var(--pano-text-muted); font-size: .7rem; }
 
 @media (max-width: 900px) {
   .pano-caption { font-size: .78rem; }

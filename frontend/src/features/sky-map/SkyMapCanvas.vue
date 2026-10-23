@@ -1335,9 +1335,9 @@ text {
   grid-template-columns: 34px 58px repeat(3, 34px);
   align-items: center;
   overflow: hidden;
-  border: 1px solid #3a4b51;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: rgb(9 14 18 / 92%);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
 }
 
 .telescope-tools {
@@ -1352,15 +1352,15 @@ text {
   place-items: center;
   width: 34px;
   height: 36px;
-  border: 1px solid #3a4b51;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 0;
-  color: #d2dddd;
-  background: rgb(9 14 18 / 92%);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
   cursor: pointer;
 }
 
-.telescope-toggle:hover { color: #07110f; background: #6fcbbb; }
+.telescope-toggle:hover { color: var(--color-on-accent); background: var(--color-blue); }
 
 .telescope-panel {
   position: absolute;
@@ -1372,13 +1372,13 @@ text {
   overflow: hidden;
   width: 134px;
   height: 34px;
-  border: 1px solid #3a4b51;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background: rgb(9 14 18 / 94%);
+  background: color-mix(in srgb, var(--color-surface) 96%, transparent);
 }
 
 .telescope-panel output {
-  color: #d2dddd;
+  color: var(--color-text);
   font-size: .72rem;
   text-align: center;
 }
@@ -1387,17 +1387,17 @@ text {
   min-width: 0;
   height: 32px;
   border: 0;
-  border-left: 1px solid #303e44;
+  border-left: 1px solid var(--color-border);
   padding: 0 5px;
-  color: #d2dddd;
-  background: #090e12;
+  color: var(--color-text);
+  background: var(--color-bg);
   font: inherit;
   font-size: .72rem;
   cursor: pointer;
 }
 
 .telescope-toggle:focus-visible,
-.telescope-panel select:focus-visible { outline: 2px solid #6fcbbb; outline-offset: -2px; }
+.telescope-panel select:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -2px; }
 
 .navigation-tools button {
   display: grid;
@@ -1405,15 +1405,15 @@ text {
   width: 34px;
   height: 34px;
   border: 0;
-  border-right: 1px solid #303e44;
+  border-right: 1px solid var(--color-border);
   padding: 0;
-  color: #d2dddd;
+  color: var(--color-text);
   background: transparent;
   cursor: pointer;
 }
 
-.navigation-tools button:last-child { border-right: 0; border-left: 1px solid #303e44; }
-.navigation-tools button:hover:not(:disabled) { color: #07110f; background: #6fcbbb; }
-.navigation-tools button:disabled { color: #526065; cursor: default; }
-.navigation-tools output { color: #9fb1b3; font-size: .72rem; text-align: center; }
+.navigation-tools button:last-child { border-right: 0; border-left: 1px solid var(--color-border); }
+.navigation-tools button:hover:not(:disabled) { color: var(--color-on-accent); background: var(--color-blue); }
+.navigation-tools button:disabled { color: var(--color-text-subtle); cursor: default; }
+.navigation-tools output { color: var(--color-text-muted); font-size: .72rem; text-align: center; }
 </style>

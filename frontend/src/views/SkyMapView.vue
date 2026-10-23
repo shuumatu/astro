@@ -896,7 +896,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
 .sky-map-kicker {
   margin: 0 0 .3rem;
-  color: #6fcbbb;
+  color: var(--color-blue);
   font-size: .78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -913,7 +913,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: .45rem 1rem;
-  color: #99aaad;
+  color: var(--color-text-muted);
   font-size: .82rem;
 }
 
@@ -922,17 +922,17 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
   height: 8px;
   margin-top: .3rem;
   border-radius: 50%;
-  background: #d2ab52;
+  background: var(--color-gold);
 }
 
-.status-dot.ready { background: #65c49f; }
-.status-dot.error { background: #e47b72; }
+.status-dot.ready { background: var(--color-success); }
+.status-dot.error { background: var(--color-danger); }
 
 .sky-map-workspace {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
-  border: 1px solid #26333a;
-  background: #080c10;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .sky-map-workspace.controls-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
@@ -940,8 +940,8 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 
 .sky-controls {
   min-height: 0;
-  border-right: 1px solid #26333a;
-  background: #10161b;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .sky-controls form { display: grid; }
@@ -953,13 +953,13 @@ fieldset {
   margin: 0;
   padding: .8rem;
   border: 0;
-  border-bottom: 1px solid #26333a;
+  border-bottom: 1px solid var(--color-border);
 }
 
 legend {
   width: 100%;
   padding: 0 0 .15rem;
-  color: #d9e4e4;
+  color: var(--color-text);
   font-size: .82rem;
   font-weight: 700;
 }
@@ -969,7 +969,7 @@ legend {
   display: grid;
   gap: .38rem;
   min-width: 0;
-  color: #91a3a7;
+  color: var(--color-text-muted);
   font-size: .76rem;
 }
 
@@ -983,8 +983,8 @@ legend {
 .time-adjustments {
   display: grid;
   overflow: hidden;
-  border: 1px solid #3a4c54;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
 }
 
 .time-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -995,9 +995,9 @@ legend {
   min-width: 0;
   min-height: 42px;
   border: 0;
-  border-right: 1px solid #3a4c54;
+  border-right: 1px solid var(--color-border);
   padding: .35rem .2rem;
-  color: #9eafb2;
+  color: var(--color-text-muted);
   background: transparent;
   font-size: .68rem;
   line-height: 1.25;
@@ -1006,9 +1006,9 @@ legend {
 
 .time-presets button:last-child,
 .time-adjustments button:last-child { border-right: 0; }
-.time-presets button.active { color: #07110f; background: #86cbc1; font-weight: 700; }
+.time-presets button.active { color: var(--color-on-accent); background: var(--color-blue); font-weight: 700; }
 .time-presets button:hover:not(:disabled, .active),
-.time-adjustments button:hover:not(:disabled) { color: #dfe8e8; background: #182329; }
+.time-adjustments button:hover:not(:disabled) { color: var(--color-text); background: var(--color-surface-raised); }
 
 input[type="datetime-local"],
 input[type="number"],
@@ -1016,14 +1016,14 @@ input[type="search"],
 select {
   width: 100%;
   min-height: 36px;
-  border: 1px solid #34444c;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
   padding: 0 .55rem;
-  color: #e8efef;
-  background: #090e12;
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
-select { color-scheme: dark; }
+select { color-scheme: inherit; }
 
 .target-search-shell { position: relative; min-width: 0; }
 .target-search { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: .4rem; }
@@ -1037,11 +1037,11 @@ select { color-scheme: dark; }
   overflow: hidden;
   margin: 0;
   padding: 3px;
-  border: 1px solid #3a4c54;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
   list-style: none;
-  background: #0b1115;
-  box-shadow: 0 10px 24px rgb(0 0 0 / 42%);
+  background: var(--color-bg);
+  box-shadow: 0 10px 24px var(--color-shadow);
 }
 
 .target-suggestion {
@@ -1052,52 +1052,52 @@ select { color-scheme: dark; }
   border: 0;
   border-radius: 2px;
   padding: .5rem .55rem;
-  color: #dce6e6;
+  color: var(--color-text);
   background: transparent;
   text-align: left;
   cursor: pointer;
 }
 
 .target-suggestion:hover,
-.target-suggestion.active { background: #19262b; }
+.target-suggestion.active { background: var(--color-surface-raised); }
 .suggestion-name { overflow-wrap: anywhere; font-size: .78rem; line-height: 1.25; }
-.suggestion-meta { color: #82979b; font-size: .65rem; line-height: 1.3; }
+.suggestion-meta { color: var(--color-text-subtle); font-size: .65rem; line-height: 1.3; }
 
 .icon-command {
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
-  border: 1px solid #3a4c54;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
   padding: 0;
-  color: #c7d4d5;
+  color: var(--color-text);
   background: transparent;
   cursor: pointer;
 }
 
-.icon-command:hover:not(:disabled) { color: #07110f; background: #6fcbbb; }
-.target-message { margin: 0; color: #d9bd75; font-size: .72rem; line-height: 1.45; }
+.icon-command:hover:not(:disabled) { color: var(--color-on-accent); background: var(--color-blue); }
+.target-message { margin: 0; color: var(--color-gold); font-size: .72rem; line-height: 1.45; }
 
 .range-field { grid-template-columns: 1fr auto; }
-.range-field input { grid-column: 1 / -1; width: 100%; accent-color: #6fcbbb; }
-.range-field output { color: #f3ce70; font-variant-numeric: tabular-nums; }
+.range-field input { grid-column: 1 / -1; width: 100%; accent-color: var(--color-blue); }
+.range-field output { color: var(--color-gold); font-variant-numeric: tabular-nums; }
 
 .toggle-row {
   display: flex;
   align-items: center;
   gap: .55rem;
-  color: #becacc;
+  color: var(--color-text-muted);
   font-size: .82rem;
   cursor: pointer;
 }
 
-.toggle-row input { width: 15px; height: 15px; margin: 0; accent-color: #6fcbbb; }
+.toggle-row input { width: 15px; height: 15px; margin: 0; accent-color: var(--color-blue); }
 
 .featured-pattern-menu {
-  border: 1px solid #34444c;
-  border-radius: 4px;
-  background: #090e12;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-bg);
 }
 
 .featured-pattern-menu summary {
@@ -1107,14 +1107,14 @@ select { color-scheme: dark; }
   gap: .4rem;
   min-height: 36px;
   padding: 0 .55rem;
-  color: #becacc;
+  color: var(--color-text-muted);
   font-size: .78rem;
   cursor: pointer;
   list-style: none;
 }
 
 .featured-pattern-menu summary::-webkit-details-marker { display: none; }
-.featured-pattern-menu summary:hover { color: #e1e9e9; background: #141d22; }
+.featured-pattern-menu summary:hover { color: var(--color-text); background: var(--color-surface-raised); }
 .featured-pattern-menu[open] .menu-chevron { transform: rotate(180deg); }
 .menu-chevron { transition: transform .16s ease; }
 
@@ -1122,8 +1122,8 @@ select { color-scheme: dark; }
   min-width: 20px;
   border-radius: 10px;
   padding: .08rem .35rem;
-  color: #07110f;
-  background: #d6ad52;
+  color: var(--color-on-accent);
+  background: var(--color-gold);
   font-size: .65rem;
   font-weight: 700;
   text-align: center;
@@ -1132,20 +1132,20 @@ select { color-scheme: dark; }
 .featured-pattern-options {
   display: grid;
   gap: .65rem;
-  border-top: 1px solid #26333a;
+  border-top: 1px solid var(--color-border);
   padding: .7rem .55rem;
 }
 
 .secondary-command {
   min-height: 36px;
-  border-radius: 4px;
+  border-radius: 9px;
   cursor: pointer;
 }
 
 .secondary-command {
-  border: 1px solid #3a4c54;
+  border: 1px solid var(--color-border);
   padding: 0 .7rem;
-  color: #c7d4d5;
+  color: var(--color-text);
   background: transparent;
 }
 
@@ -1170,15 +1170,15 @@ button:disabled { cursor: wait; opacity: .55; }
   place-items: center;
   width: 36px;
   height: 36px;
-  border: 1px solid #3a4b51;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
   padding: 0;
-  color: #d2dddd;
-  background: rgb(9 14 18 / 92%);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
   cursor: pointer;
 }
 
-.controls-toggle:hover { color: #07110f; background: #6fcbbb; }
+.controls-toggle:hover { color: var(--color-on-accent); background: var(--color-blue); }
 
 .sky-map-stage:fullscreen {
   width: 100vw;
@@ -1199,7 +1199,7 @@ button:disabled { cursor: wait; opacity: .55; }
   .sky-controls {
     overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-color: #455860 #10161b;
+    scrollbar-color: var(--color-border) var(--color-bg);
     scrollbar-width: thin;
   }
 
@@ -1231,6 +1231,14 @@ button:disabled { cursor: wait; opacity: .55; }
 }
 
 .stage-state {
+  /* Status text stays legible over the astronomical canvas in either interface theme. */
+  --color-text: #edf1fa;
+  --color-text-muted: #a6b2c9;
+  --color-border: #28344b;
+  --color-blue: #8abcf4;
+  --color-surface-raised: #172238;
+  --color-danger: #f0aaa2;
+  color-scheme: dark;
   position: absolute;
   inset: 0;
   display: grid;
@@ -1238,7 +1246,7 @@ button:disabled { cursor: wait; opacity: .55; }
   justify-items: center;
   gap: .75rem;
   padding: 2rem;
-  color: #bac7c8;
+  color: var(--color-text-muted);
   background: rgb(3 6 9 / 82%);
   text-align: center;
 }
@@ -1246,19 +1254,19 @@ button:disabled { cursor: wait; opacity: .55; }
 .loading-indicator {
   width: 28px;
   height: 28px;
-  border: 2px solid #2a4648;
-  border-top-color: #6fcbbb;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-blue);
   border-radius: 50%;
   animation: spin .8s linear infinite;
 }
 
-.error-state { color: #e9b1ab; }
-.error-state span { max-width: 34rem; color: #aebbbc; font-size: .82rem; }
+.error-state { color: var(--color-danger); }
+.error-state span { max-width: 34rem; color: var(--color-text-muted); font-size: .82rem; }
 
 .sky-readout {
-  border: 1px solid #26333a;
+  border: 1px solid var(--color-border);
   border-top: 0;
-  background: #10161b;
+  background: var(--color-surface);
 }
 
 .sky-readout dl {
@@ -1267,12 +1275,12 @@ button:disabled { cursor: wait; opacity: .55; }
   margin: 0;
 }
 
-.sky-readout dl > div { min-width: 0; padding: .8rem 1rem; border-right: 1px solid #26333a; }
+.sky-readout dl > div { min-width: 0; padding: .8rem 1rem; border-right: 1px solid var(--color-border); }
 .sky-readout dl > div:last-child { border-right: 0; }
-.sky-readout dt { margin-bottom: .25rem; color: #71878b; font-size: .68rem; }
+.sky-readout dt { margin-bottom: .25rem; color: var(--color-text-subtle); font-size: .68rem; }
 .sky-readout dd {
   margin: 0;
-  color: #dce6e6;
+  color: var(--color-text);
   font-size: .82rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -1283,14 +1291,14 @@ button:disabled { cursor: wait; opacity: .55; }
 @media (max-width: 900px) {
   .sky-map-workspace,
   .sky-map-workspace.controls-collapsed { grid-template-columns: 1fr; }
-  .sky-controls { border-right: 0; border-bottom: 1px solid #26333a; }
-  .sky-map-workspace.controls-collapsed .sky-controls { overflow: visible; visibility: visible; border-bottom: 1px solid #26333a; }
+  .sky-controls { border-right: 0; border-bottom: 1px solid var(--color-border); }
+  .sky-map-workspace.controls-collapsed .sky-controls { overflow: visible; visibility: visible; border-bottom: 1px solid var(--color-border); }
   .controls-toggle { display: none; }
   .sky-controls form { grid-template-columns: repeat(3, 1fr); }
-  fieldset { border-right: 1px solid #26333a; border-bottom: 0; }
+  fieldset { border-right: 1px solid var(--color-border); border-bottom: 0; }
   .sky-readout dl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .sky-readout dl > div:nth-child(4) { border-right: 0; }
-  .sky-readout dl > div:nth-child(-n + 4) { border-bottom: 1px solid #26333a; }
+  .sky-readout dl > div:nth-child(-n + 4) { border-bottom: 1px solid var(--color-border); }
 }
 
 @media (max-width: 620px) {
@@ -1298,14 +1306,25 @@ button:disabled { cursor: wait; opacity: .55; }
   .sky-map-header { align-items: start; flex-direction: column; gap: .65rem; }
   .catalog-meta { justify-content: flex-start; }
   .sky-controls form { grid-template-columns: 1fr; }
-  fieldset { border-right: 0; border-bottom: 1px solid #26333a; }
+  fieldset { border-right: 0; border-bottom: 1px solid var(--color-border); }
   .sky-readout dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sky-readout dl > div { border-right: 1px solid #26333a; border-bottom: 1px solid #26333a; }
+  .sky-readout dl > div { border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
   .sky-readout dl > div:nth-child(even) { border-right: 0; }
   .sky-readout dl > div:nth-last-child(-n + 2) { border-bottom: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .loading-indicator { animation: none; }
+}
+.sky-map-workspace { border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.sky-controls { border-radius: var(--radius-card) 0 0 0; }
+.sky-readout { border-radius: 0 0 var(--radius-card) var(--radius-card); overflow: hidden; }
+.sky-map-stage { border-top-right-radius: var(--radius-card); }
+.sky-map-stage:fullscreen { border-radius: 0; }
+input:focus-visible, select:focus-visible { outline: 2px solid var(--color-blue); outline-offset: 2px; }
+.secondary-command:hover:not(:disabled) { border-color: var(--color-blue); background: var(--color-surface-raised); }
+@media (max-width: 900px) {
+  .sky-controls { border-radius: var(--radius-card) var(--radius-card) 0 0; }
+  .sky-map-stage { border-top-right-radius: 0; }
 }
 </style>

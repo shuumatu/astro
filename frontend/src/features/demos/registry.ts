@@ -88,6 +88,32 @@ export interface DemoDefinition {
 
 export const demos: DemoDefinition[] = [
   {
+    slug: 'solar-wind',
+    titleKey: 'demos.items.solarWind.title',
+    summaryKey: 'demos.items.solarWind.summary',
+    hintKey: 'demos.items.solarWind.hint',
+    creditKey: 'demos.items.solarWind.credit',
+    loadScene: () => import('./scenes/solar-wind/index'),
+    controlPanel: () => import('./scenes/solar-wind/WindControlPanel.vue'),
+    defaultSettings: { playing: true, showLabels: true },
+    controls: ['labels'],
+    transport: false,
+    cinematicKey: null,
+  },
+  {
+    slug: 'positional-astronomy',
+    titleKey: 'demos.items.positionalAstronomy.title',
+    summaryKey: 'demos.items.positionalAstronomy.summary',
+    hintKey: 'demos.items.positionalAstronomy.hint',
+    creditKey: 'demos.items.positionalAstronomy.credit',
+    loadScene: () => import('./scenes/positional-astronomy/index'),
+    controlPanel: () => import('./scenes/positional-astronomy/AstronomyPanel.vue'),
+    defaultSettings: { playing: false, showLabels: true },
+    controls: ['labels'],
+    transport: false,
+    cinematicKey: null,
+  },
+  {
     slug: 'supernova-remnant',
     titleKey: 'demos.items.supernovaRemnant.title',
     summaryKey: 'demos.items.supernovaRemnant.summary',

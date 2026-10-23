@@ -1,0 +1,424 @@
+{
+  "title": "Positional astronomy",
+  "summary": "Explore four celestial coordinate systems, the daily motion of stars, and the slow precession of Earth's axis.",
+  "hint": "Drag to orbit · Scroll to zoom · Choose a lesson and adjust its parameters",
+  "credit": "Based on supplied Cambridge astronomy guide pages 15–19 · Educational model, not an ephemeris",
+  "panel": "How do we locate the sky?",
+  "chaptersTitle": "Lessons",
+  "latitude": "Observer latitude φ",
+  "ra": "Target right ascension α",
+  "dec": "Target declination δ",
+  "lst": "Local sidereal time θ",
+  "years": "Elapsed years",
+  "yearsUnit": " years",
+  "play": "▶ Play motion",
+  "pause": "Ⅱ Pause motion",
+  "reset": "Reset parameters",
+  "altitude": "Altitude h",
+  "azimuth": "Azimuth A",
+  "above": "Above the horizon",
+  "below": "Below the horizon",
+  "circumpolar": "Circumpolar",
+  "never": "Never rises",
+  "grazing": "Touches or follows the horizon",
+  "rises": "Rises and sets",
+  "try": "Try it yourself",
+  "answer": "Show explanation",
+  "hide": "Hide explanation",
+  "cone": "Pole's precession path",
+  "notesTitle": "Model conventions and references",
+  "reference": "Coordinate reference",
+  "notes": "The celestial sphere represents directions, not distances. Latitude is positive north; azimuth increases from north through east; 1h of RA = 15°. Sidereal time is not civil time. Hour angle H = θ − α. Refraction, parallax, proper motion and nutation are omitted. Obliquity is fixed at 23.43928°. Ecliptic and Galactic conversions use a fixed J2000/ICRS approximate teaching frame. On the precession page, blue is the initial equator, white is the moving equator, and the origin represents Earth's center. The uniform 26,000-year cone cannot predict future pole stars. Azimuth at zenith or nadir is undefined and shown as a dash. The globe reuses the project’s existing Earth texture, with exaggerated size. The teaching site lies on the prime meridian; sidereal time controls its orientation relative to the equinox. Local tangent and geocentric planes are distinct. Stellar parallax is ignored. Lighting reveals shape and does not model day and night.",
+  "labels": {
+    "north": "N · 0°",
+    "east": "E · 90°",
+    "south": "S · 180°",
+    "west": "W · 270°",
+    "zenith": "Zenith · 90°",
+    "equator": "Celestial equator",
+    "pole": "North celestial pole",
+    "observer": "Observer O",
+    "target": "Target star",
+    "horizon": "Horizon",
+    "ecliptic": "Ecliptic",
+    "equinox": "Vernal equinox · 0h",
+    "galactic": "Galactic plane",
+    "center": "Galactic longitude origin",
+    "eclipticPole": "North ecliptic pole",
+    "earth": "Earth center",
+    "southPole": "South celestial pole",
+    "foot": "Horizon direction P",
+    "azimuthArc": "Azimuth A →",
+    "altitudeArc": "Altitude h",
+    "raArc": "RA α →",
+    "decArc": "Declination δ",
+    "longitudeArc": "Longitude →",
+    "latitudeArc": "Latitude",
+    "movingEquator": "Precessed equator",
+    "dailyPath": "Daily stellar path",
+    "footShort": "P",
+    "observerShort": "O",
+    "earthModel": "Earth (enlarged)",
+    "surfaceEquator": "Earth’s equator",
+    "surfaceObserver": "Surface site O",
+    "tangentHorizon": "Local horizon at O",
+    "poleAltitude": "Pole altitude = ∣latitude∣",
+    "declinationCircle": "Fixed declination circle",
+    "fixedStar": "Distant star (fixed direction)"
+  },
+  "chapters": {
+    "horizon": {
+      "title": "Sky & horizon",
+      "body": "Place the observer at the center of an imaginary sphere. The teal circle is the horizon. Gold arcs measure azimuth from north through east, then altitude along a vertical circle. The horizon is at 0° altitude; the zenith is at 90°.",
+      "task": "Load “Southeast, altitude 35°”. Compare top and side views. Change one slider and watch which angle changes.",
+      "answer": "Southeast is 135° from north through east; altitude 35° is elevation above the horizon. Changing azimuth preserves altitude, and changing altitude preserves horizon direction."
+    },
+    "equatorial": {
+      "title": "RA & declination",
+      "body": "Extend Earth's equator and poles onto the sky. Declination is positive north of the equator. Right ascension increases eastward from the vernal equinox: 24h equals 360°. The gold arcs show RA and declination.",
+      "task": "Set RA to 6h and declination to 0°. How far is it from the equinox? Does changing sidereal time change declination?",
+      "answer": "6h × 15° = 90° along the celestial equator. Sidereal time changes the position relative to the horizon, while RA and declination remain fixed in this model."
+    },
+    "daily": {
+      "title": "Daily motion",
+      "body": "Earth's rotation makes stars appear to circle a celestial pole. The gold circle traces the target's daily path at constant declination. Play advances local sidereal time and reveals whether the target rises or sets.",
+      "task": "At latitude +40°, play with declination +60°, then −60°. What changes at latitude −40°?",
+      "answer": "At +40°, the +60° star never sets and the −60° star never rises. At −40° the roles reverse. When ∣latitude∣ + ∣declination∣ > 90°, matching signs mean circumpolar; opposite signs mean never rising. Equality is the horizon boundary."
+    },
+    "ecliptic": {
+      "title": "Ecliptic frame",
+      "body": "The orange ecliptic is the great circle of Earth's orbital plane, tilted about 23.44° to the blue celestial equator. Longitude λ starts at the vernal equinox; latitude β measures angular distance from the ecliptic.",
+      "task": "Set RA to 6h and declination to 23°. Is the target near the ecliptic? Read its ecliptic latitude.",
+      "answer": "Longitude is about 90° and latitude about −0.44°. The northernmost ecliptic point has declination about +23.44°. Declination and ecliptic latitude refer to different planes."
+    },
+    "galactic": {
+      "title": "Galactic frame",
+      "body": "The purple great circle represents the Galactic plane. Longitude l begins near the Galactic center direction; latitude b measures distance from that plane. Switching coordinate systems does not move the target.",
+      "task": "Keep RA and declination fixed and switch between the ecliptic and Galactic lessons. Does the target move? Why do its coordinates change?",
+      "answer": "The direction stays fixed. The reference plane and origin change, so the same direction receives different coordinates. Galactic coordinates describe position relative to the Milky Way's disk."
+    },
+    "precession": {
+      "title": "Axial precession",
+      "body": "Earth's axis slowly precesses like a spinning top. Advance the years: the north celestial pole follows a teal circle around the ecliptic pole, and the white equator tilts with it. Blue retains the initial equator. Daily motion is paused here.",
+      "task": "Advance to 13,000 years, then 26,000 years. Where is the pole on its path?",
+      "answer": "Half a cycle takes it to the opposite side; one cycle returns it to the start. Real precession is not perfectly uniform and obliquity changes. This model explains why pole stars and coordinate reference epochs change."
+    }
+  },
+  "followSteps": "Build the picture in three steps",
+  "adjust": "Move the target and observe",
+  "lineNote": "Reference circles close a full turn. Thick arcs measure only an angle; arrows indicate the measurement path. The grid starts hidden.",
+  "grid": "Show coordinate grid",
+  "examplesTitle": "Load a worked example",
+  "chapterNotes": "Lesson background",
+  "liveExplanation": "What this picture means",
+  "compassTitle": "Looking down from the zenith: target direction on the horizon",
+  "previousStep": "Previous",
+  "nextStep": "Next step",
+  "views": {
+    "oblique": "3D view",
+    "top": "Horizon top view",
+    "side": "Side view",
+    "axis": "Polar view"
+  },
+  "compass": {
+    "n": "N 0°",
+    "e": "E",
+    "s": "S 180°",
+    "w": "W"
+  },
+  "eclipticLongitude": "Longitude λ",
+  "eclipticLatitude": "Latitude β",
+  "galacticLongitude": "Longitude l",
+  "galacticLatitude": "Latitude b",
+  "liveHorizon": "Turn {az}° from north through east, then look {alt}° above the horizon. Negative altitude is below the horizon.",
+  "liveEquatorial": "Measure RA {ra}h ({deg}°) east from the equinox, then declination {dec}° from the equator.",
+  "liveDaily": "Latitude {lat}°, declination {dec}°: {result}. Play to see whether the gold path crosses the teal horizon.",
+  "livePrecession": "Elapsed: {years} years. The white axis moves around the fixed orange ecliptic pole in this approximate 26,000-year model.",
+  "liveFrame": "The same star: {lonName} = {lon}°, {latName} = {lat}°. A new reference plane changes coordinates, not direction.",
+  "examples": {
+    "southeast": "Southeast, altitude 35°",
+    "transit": "Upper transit: 70° altitude",
+    "circumpolar": "Circumpolar at 40° N",
+    "southern": "Southern circumpolar star",
+    "solstice": "Northern ecliptic point",
+    "galacticCenter": "Galactic longitude / latitude 0°",
+    "halfCycle": "Half cycle: 13,000 years"
+  },
+  "controlHelp": {
+    "azimuth": "Change direction along the horizon: N 0° → E 90° → S 180° → W 270°.",
+    "altitude": "Change elevation only: horizon 0°, zenith 90°, negative below ground.",
+    "latitude": "Positive north, negative south; controls the pole height above the horizon.",
+    "ra": "Position along the equator; one hour equals 15°.",
+    "dec": "Angular distance from the equator: north positive, south negative.",
+    "lst": "Change observing time. RA and declination stay fixed as the sky moves.",
+    "years": "Accelerate slow axial precession; this does not predict actual future dates."
+  },
+  "steps": {
+    "horizon": [
+      {
+        "title": "Identify horizon and zenith",
+        "body": "The teal circle is the horizon, with observer O at its center. The star’s true distance does not matter here: follow the line of sight from O."
+      },
+      {
+        "title": "Find azimuth along the horizon",
+        "body": "P is where the target’s vertical circle meets the horizon. The thick gold arc starts north and turns east to direction OP. Compare the top view with the compass."
+      },
+      {
+        "title": "Measure altitude above it",
+        "body": "The pink arc runs from P to the target along a vertical circle. It measures an angle, so it is intentionally partial. The teal horizon remains a complete circle."
+      }
+    ],
+    "equatorial": [
+      {
+        "title": "Use the celestial equator",
+        "body": "The complete blue circle extends Earth’s equator onto the sky. The marked equinox is RA zero. The horizon is hidden so you can focus on one reference frame."
+      },
+      {
+        "title": "Measure RA from the equinox",
+        "body": "The thick gold arc runs eastward from the equinox along the equator to the target’s hour circle. RA is in hours: 6h is one quarter turn."
+      },
+      {
+        "title": "Measure declination from the equator",
+        "body": "The pink arc runs from the equator to the target, positive north and negative south. Together these two angles locate the target on the sky."
+      }
+    ],
+    "daily": [
+      {
+        "title": "Locate your celestial pole",
+        "body": "Teal is the horizon; the blue axis points to the poles. Change latitude and watch the tilt: the visible pole’s altitude equals the absolute latitude."
+      },
+      {
+        "title": "Trace a full daily path",
+        "body": "The complete gold circle is the target’s daily path, parallel to the blue equator. Check whether it crosses the teal horizon to determine rising and setting."
+      },
+      {
+        "title": "Play and try a circumpolar star",
+        "body": "Play advances sidereal time. The target moves around its gold circle at fixed declination. Load northern and southern circumpolar examples to compare."
+      }
+    ],
+    "ecliptic": [
+      {
+        "title": "Start with the familiar equator",
+        "body": "Blue is the celestial equator. Keep the target’s RA and declination fixed: changing coordinates means choosing a new reference plane."
+      },
+      {
+        "title": "Add the tilted ecliptic",
+        "body": "The orange ecliptic intersects the blue equator at about 23.44°. The vernal equinox is one intersection and is also zero ecliptic longitude."
+      },
+      {
+        "title": "Read ecliptic longitude and latitude",
+        "body": "Gold measures along the ecliptic; pink measures away from it. Load the northern ecliptic point: ecliptic latitude is zero although declination is about +23.44°."
+      }
+    ],
+    "galactic": [
+      {
+        "title": "Keep the same target direction",
+        "body": "Start with the blue equator and the star. The white sightline fixes its direction. Switching coordinate systems does not move that line."
+      },
+      {
+        "title": "Add the Milky Way’s reference plane",
+        "body": "The complete purple circle is the Galactic plane. Longitude zero lies near the Galactic center, distinct from the equinox and equatorial plane."
+      },
+      {
+        "title": "Read Galactic longitude and latitude",
+        "body": "Gold measures along the Galactic plane; pink measures away from it. In the zero-point example both angles are zero, so no measurement arcs appear."
+      }
+    ],
+    "precession": [
+      {
+        "title": "Separate the two polar axes",
+        "body": "White is Earth’s rotation axis; orange points to the ecliptic pole. They differ. Blue retains the initial equator, and the center represents Earth."
+      },
+      {
+        "title": "Follow the pole’s circular path",
+        "body": "The small teal circle is the north pole’s slow path. Advance the years: the white axis tip follows it while the orange ecliptic axis stays fixed."
+      },
+      {
+        "title": "Watch the equator change too",
+        "body": "The complete white great circle stays perpendicular to the moving axis. Compare this precessed equator with the initial blue circle to see why coordinates need reference epochs.At year zero the two equators coincide; advance to 13,000 years to separate them."
+      }
+    ]
+  },
+  "undefinedAzimuth": "At the zenith or nadir azimuth is undefined, so no azimuth arc is drawn.",
+  "perspectiveTitle": "Viewpoint",
+  "perspectives": {
+    "earth": "Earth & sky",
+    "observer": "Observer’s sky"
+  },
+  "perspectiveNotes": {
+    "earth": "Look from outside Earth at its axis, surface site and celestial sphere. Sizes and distances are illustrative.",
+    "observer": "Use the observer as the origin of directions and measure the sky in altitude, azimuth and other coordinates."
+  },
+  "earthAxisEquator": "Earth axis / equator",
+  "visiblePoleAltitude": "Visible pole altitude",
+  "northPoleVisible": "North pole above the horizon; on it at the equator.",
+  "southPoleVisible": "South pole above the horizon.",
+  "liveEarthHorizon": "Latitude {lat}° → visible pole altitude {height}°. The teal patch is tangent at the site; it does not pass through Earth’s center.",
+  "liveEarthDaily": "Local sidereal time {lst}h: Earth and O rotate while the distant star stays fixed. Switch to the observer to see apparent stellar motion.",
+  "enterObserver": "Go to the observer",
+  "returnEarth": "Return to Earth",
+  "earthSteps": {
+    "horizon": [
+      {
+        "title": "O is on the surface, not at the center",
+        "body": "The gold point O marks the observer. The teal radial line extends outward toward the local zenith. Change latitude to move O on the globe."
+      },
+      {
+        "title": "Place the horizon at O",
+        "body": "The teal patch is tangent to Earth at O, perpendicular to the center–O–zenith direction. A different site has a different local horizontal plane."
+      },
+      {
+        "title": "Why does pole altitude equal latitude?",
+        "body": "The blue ray from O is parallel to Earth’s axis and points toward the visible celestial pole. Pink measures its angle above the local horizon: 0° at the equator, 90° at the poles. Then switch to O to practice azimuth and altitude."
+      }
+    ],
+    "equatorial": [
+      {
+        "title": "Start at Earth’s equator",
+        "body": "The small blue surface ring is Earth’s equator. The blue axis passes through its geographic poles. These provide familiar reference directions."
+      },
+      {
+        "title": "Extend equator and poles into the sky",
+        "body": "Extend the same equatorial plane outward to get the blue celestial equator. Extend the axis to get the celestial poles. The small and large circles lie in the same plane."
+      },
+      {
+        "title": "Locate a target with RA and declination",
+        "body": "The gold arc measures RA east from the equinox; pink measures declination from the equator. Earth at the center shows why declination resembles terrestrial latitude."
+      }
+    ],
+    "daily": [
+      {
+        "title": "The observer is attached to Earth",
+        "body": "The gold O is fixed on the surface; blue is the spin axis. In this view from outside Earth, the distant star’s direction stays fixed."
+      },
+      {
+        "title": "The local horizon moves with the site",
+        "body": "The teal patch is tangent at O and rotates with Earth. Gold is a fixed declination circle; the star does not move along it in this external view."
+      },
+      {
+        "title": "Play Earth’s spin, then switch viewpoints",
+        "body": "Play rotates the textured Earth, O and its horizon together. The star stays fixed. From O, the horizon stays put and the sky appears to rotate about a pole: two views of the same motion."
+      }
+    ],
+    "ecliptic": [
+      {
+        "title": "Earth’s equator sets the celestial equator",
+        "body": "Start with the small blue equator ring on Earth. The axis is perpendicular to this plane, which will be extended in the next step."
+      },
+      {
+        "title": "Orbit and equator have different planes",
+        "body": "Blue is the celestial equator and orange the ecliptic, separated by about 23.44°. Earth’s axis is therefore tilted relative to the ecliptic normal. Distances to the Sun are not depicted."
+      },
+      {
+        "title": "Keep the star and measure from the ecliptic",
+        "body": "Gold measures ecliptic longitude, pink latitude. Earth stays at the center to compare reference planes. Load the northern ecliptic point to compare declination with ecliptic latitude."
+      }
+    ],
+    "galactic": [
+      {
+        "title": "Begin with Earth’s reference directions",
+        "body": "The blue surface ring is Earth’s equator; the blue axis joins its poles. Next compare this frame with the Galactic reference plane."
+      },
+      {
+        "title": "Add the direction of the Milky Way’s disk",
+        "body": "Blue is the celestial equator; purple is the Galactic plane on the sky. The purple circle represents directions, not a Galaxy orbiting Earth."
+      },
+      {
+        "title": "Read Galactic coordinates of the same direction",
+        "body": "Gold measures longitude along the Galactic plane from its zero point, pink measures away from the plane. The zero-point example has zero-length arcs, so no thick arcs appear."
+      }
+    ],
+    "precession": [
+      {
+        "title": "Distinguish Earth’s axis and the ecliptic pole",
+        "body": "Earth’s blue axis points to the celestial pole; orange points to the ecliptic pole, about 23.44° away. The surface equator stays perpendicular to Earth’s axis."
+      },
+      {
+        "title": "Advance years to tilt the whole Earth",
+        "body": "The celestial pole slowly follows the teal circle around the ecliptic pole. The globe, axis and surface equator all change orientation; orange stays fixed."
+      },
+      {
+        "title": "Extend the new equator into the sky",
+        "body": "White extends the current terrestrial equator. Blue retains the initial equator. They coincide at year zero; try 13,000 years. The roughly 26,000-year cycle is a teaching approximation."
+      }
+    ]
+  },
+  "liveEarthPrecession": "Elapsed {years} years. Earth and its blue axis tilt together; the white great circle extends the current equatorial plane.",
+  "insights": {
+    "title": "Live readings",
+    "live": "In sync",
+    "latitude": "Observer latitude",
+    "poleAltitude": "Visible pole altitude",
+    "northPole": "North celestial pole above horizon",
+    "southPole": "South celestial pole above horizon",
+    "equatorPoles": "Both celestial poles on the horizon",
+    "altitude": "Altitude h",
+    "azimuth": "Azimuth A",
+    "undefinedAzimuth": "Azimuth undefined at zenith / nadir",
+    "above": "Above horizon",
+    "on": "On horizon",
+    "below": "Below horizon",
+    "ra": "Right ascension α",
+    "dec": "Declination δ",
+    "eclipticLongitude": "Ecliptic longitude λ",
+    "eclipticLatitude": "Ecliptic latitude β",
+    "galacticLongitude": "Galactic longitude l",
+    "galacticLatitude": "Galactic latitude b",
+    "sameTarget": "Same target · Different reference frame",
+    "circumpolar": "Circumpolar · Never sets",
+    "never": "Never rises",
+    "grazing": "Grazes the horizon",
+    "rises": "Rises and sets",
+    "curveTitle": "Altitude over one sidereal day",
+    "curveLabel": "Target altitude against local sidereal time: 0 to 24 hours horizontally, −90 to 90 degrees vertically",
+    "curveHint": "Tap or drag horizontally to select a time",
+    "siderealNote": "The time axis is local sidereal time, not civil clock time.",
+    "lst": "Local sidereal time",
+    "timeSlider": "Select local sidereal time",
+    "timeValue": "{time} hours",
+    "horizon": "Horizon",
+    "hourAngle": "Hour angle H",
+    "hourAngleHelp": "Hour angle = local sidereal time − right ascension. Negative is east of the meridian; positive is west.",
+    "upperTransit": "Upper transit",
+    "lowerTransit": "Lower transit",
+    "transitAction": "Jump to {label} at local sidereal time {time} hours, altitude {altitude} degrees",
+    "visibleHours": "Above horizon {hours}h / sidereal day",
+    "elapsedYears": "Years elapsed",
+    "yearsUnit": "yr",
+    "cycleProgress": "Cycle progress",
+    "precessionCycle": "About 26,000 years / cycle",
+    "initial": "Start",
+    "halfCycle": "Half cycle",
+    "fullCycle": "Full cycle",
+    "precessionNote": "A uniform cone model for learning, not a prediction for a calendar date.",
+    "yearAction": "Jump to year {years}"
+  },
+  "ui": {
+    "unavailable": "The scene is not ready. Model notes remain available if WebGL is unsupported.",
+    "panelSections": "Panel sections",
+    "explore": "Explore",
+    "learn": "Learning notes",
+    "play": "Play motion",
+    "pause": "Pause motion",
+    "speed": "Speed",
+    "resetLesson": "Reset chapter",
+    "precise": "Exact value",
+    "latitudePresets": "Latitude presets",
+    "lat-40": "40° S",
+    "lat0": "Equator",
+    "lat40": "40° N",
+    "lat90": "N. Pole",
+    "display": "Camera & guides",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "homeView": "Restore oblique view",
+    "readings": "Live observation",
+    "legend": "Diagram legend",
+    "expandCaption": "Expand explanation",
+    "collapseCaption": "Collapse explanation",
+    "compareView": "Compare views",
+    "nextChapter": "Next chapter",
+    "startAgain": "Explore again",
+    "belowPath": "Below horizon · dashed"
+  }
+}

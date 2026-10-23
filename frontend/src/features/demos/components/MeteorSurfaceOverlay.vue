@@ -63,6 +63,7 @@ const nightSkyUrl = `${import.meta.env.BASE_URL}demos/meteor-shower/night-sky.jp
 
 .demo-surface-caption {
   margin: 0;
+  /* This caption is on the night-sky canvas, independent of the control theme. */
   color: #d8e4f4;
   font-size: .86rem;
   text-shadow: 0 1px 6px rgb(0 0 0 / 90%);
@@ -71,18 +72,18 @@ const nightSkyUrl = `${import.meta.env.BASE_URL}demos/meteor-shower/night-sky.jp
 .demo-surface-bar .demo-button {
   min-height: 34px;
   padding: 0 .9rem;
-  background: rgb(10 23 40 / 78%);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
 }
 
 /* Scoped styles do not cross the component boundary, so the button carries its own rules. */
 .demo-button {
   min-height: 38px;
-  border: 1px solid #35516e;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #c8d6e7;
+  color: var(--color-text);
   background: transparent;
   cursor: pointer;
 }
 
-.demo-button:hover { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
+.demo-surface-bar .demo-button:hover { color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
 </style>

@@ -82,9 +82,9 @@ const groups = computed(() => {
   max-height: min(62vh, 520px, calc(100% - var(--demo-panels-top, 100px) - 90px));
   display: flex;
   flex-direction: column;
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: rgb(6 14 26 / 78%);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
   backdrop-filter: blur(6px);
   overflow: hidden;
 }
@@ -101,14 +101,14 @@ const groups = computed(() => {
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 1px solid rgb(60 84 110 / 65%);
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  color: #c8d6e7;
-  background: rgb(10 23 40 / 78%);
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 94%, transparent);
   cursor: pointer;
 }
 
-.panel-tab:hover { color: #07111f; background: #72d4d8; border-color: #72d4d8; }
+.panel-tab:hover { color: var(--color-on-accent); background: var(--color-blue); border-color: var(--color-blue); }
 
 .panel-head {
   display: flex;
@@ -116,12 +116,12 @@ const groups = computed(() => {
   justify-content: space-between;
   gap: .5rem;
   padding: .5rem .5rem .5rem .75rem;
-  border-bottom: 1px solid rgb(60 84 110 / 45%);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .panel-head h2 {
   margin: 0;
-  color: #d8e4f4;
+  color: var(--color-text);
   font-size: .82rem;
   font-weight: 600;
   letter-spacing: .04em;
@@ -134,12 +134,12 @@ const groups = computed(() => {
   height: 26px;
   border: none;
   border-radius: 4px;
-  color: #8fa4bd;
+  color: var(--color-text-muted);
   background: transparent;
   cursor: pointer;
 }
 
-.panel-collapse:hover { color: #eaf2ff; background: rgb(60 84 110 / 45%); }
+.panel-collapse:hover { color: var(--color-text); background: var(--color-surface-raised); }
 
 .panel-body {
   padding: .4rem .35rem .55rem;
@@ -151,7 +151,7 @@ const groups = computed(() => {
 
 .panel-category {
   margin: .25rem .5rem .2rem;
-  color: #6d86a3;
+  color: var(--color-text-subtle);
   font-size: .68rem;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -167,15 +167,15 @@ const groups = computed(() => {
   padding: .32rem .45rem;
   border: none;
   border-radius: 4px;
-  color: #c3d3e6;
+  color: var(--color-text-muted);
   font-size: .82rem;
   text-align: left;
   background: transparent;
   cursor: pointer;
 }
 
-.panel-item:hover { background: rgb(60 84 110 / 38%); color: #eaf2ff; }
-.panel-item.selected { background: rgb(114 212 216 / 16%); color: #8fe3e6; }
+.panel-item:hover { background: var(--color-surface-raised); color: var(--color-text); }
+.panel-item.selected { background: color-mix(in srgb, var(--color-blue) 14%, var(--color-surface)); color: var(--color-blue); }
 
 .panel-bullet { opacity: .45; flex: none; }
 .panel-item.selected .panel-bullet { opacity: 1; }
