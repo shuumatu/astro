@@ -18,7 +18,8 @@ const navigation = [
   { to: '/catalog', key: 'catalog', icon: BookOpen },
   { to: '/explore', key: 'explore', icon: Compass },
   { to: '/demos', key: 'demos', icon: Orbit },
-  { to: '/sky-map', key: 'skyMap', icon: ScanLine }
+  { to: '/sky-map', key: 'skyMap', icon: ScanLine },
+  { to: '/learn/sky', key: 'skyLearning', icon: Compass }
 ]
 
 watch(locale, value => { document.documentElement.lang = value }, { immediate: true })
@@ -45,8 +46,8 @@ function switchLocale(localeCode: string) {
         v-for="item in navigation"
         :key="item.key"
         :to="item.to"
-        :class="{ 'nav-current': route.path === item.to || route.path.startsWith(`${item.to}/`) }"
-        :aria-current="route.path === item.to ? 'page' : route.path.startsWith(`${item.to}/`) ? 'location' : undefined"
+        :class="{ 'nav-current': route.path === item.to || route.path.startsWith(`${item.to}/`) || item.key === 'skyLearning' && route.path === '/learn/chinese' }"
+        :aria-current="route.path === item.to ? 'page' : route.path.startsWith(`${item.to}/`) || item.key === 'skyLearning' && route.path === '/learn/chinese' ? 'location' : undefined"
       >
         <component :is="item.icon" :size="16" :stroke-width="1.6" aria-hidden="true" />
         {{ t(`nav.${item.key}`) }}

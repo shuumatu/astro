@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "referenceFrame": "ICRS",
+  "note": "Two Chinese-figure vertices outside the naked-eye catalog's V <= 6.5 selection. Positions are copied from the existing Hipparcos-2 I/311 cache (epoch J1991.25); Johnson V and B-V were queried from CDS I/239 on 2026-10-24. These are retained as faint figure members, not introduced as naked-eye targets.",
+  "sources": [
+    {
+      "title": "Hipparcos-2 learning supplement positions",
+      "url": "https://cdsarc.cds.unistra.fr/viz-bin/cat/I/311",
+      "attribution": "van Leeuwen (2007), Hipparcos, the New Reduction; ICRS positions at epoch J1991.25."
+    },
+    {
+      "title": "Hipparcos learning supplement photometry",
+      "url": "https://cdsarc.cds.unistra.fr/viz-bin/cat/I/239",
+      "attribution": "ESA (1997), The Hipparcos and Tycho Catalogues; Johnson Vmag and B-V, retrieved via CDS TAPVizieR."
+    }
+  ],
+  "photometryQuery": "SELECT HIP, Vmag, RAICRS, DEICRS, \"B-V\" FROM \"I/239/hip_main\" WHERE HIP IN (53975,57320)",
+  "photometryResponseCsv": "HIP,Vmag,RAICRS,DEICRS,B-V\n53975,7.32,165.63027398,-9.99483632,1.488\n57320,6.51,176.29774406,14.26332609,1.165\n",
+  "stars": [
+    { "id": "HIP:53975", "raDeg": 165.63027396, "decDeg": -9.9948365, "visualMagnitude": 7.32, "colorIndex": 1.488, "epochYear": 1991.25 },
+    { "id": "HIP:57320", "raDeg": 176.29774376, "decDeg": 14.26332625, "visualMagnitude": 6.51, "colorIndex": 1.165, "epochYear": 1991.25 }
+  ]
+}

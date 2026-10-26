@@ -21,7 +21,11 @@ const router = createRouter({
     { path: '/admin/explore', name: 'explore-admin', component: () => import('../views/ExploreAdminView.vue') },
     { path: '/demos', name: 'demos', component: () => import('../views/DemosView.vue') },
     { path: '/demos/:slug', name: 'demo-detail', component: () => import('../views/DemoDetailView.vue') },
-    { path: '/sky-map', component: () => import('../views/SkyMapView.vue') }
+    { path: '/sky-map', component: () => import('../views/SkyMapView.vue') },
+    { path: '/learn/sky', name: 'sky-learning', component: () => import('../views/SkyLearningView.vue') },
+    { path: '/learn/chinese', name: 'chinese-learning', component: () => import('../views/SkyLearningView.vue') },
+    { path: '/learn/sky/session', name: 'sky-learning-session', component: () => import('../views/SkyLearningView.vue') },
+    { path: '/learn/sky/progress', name: 'sky-learning-progress', component: () => import('../views/SkyLearningView.vue') }
   ]
 })
 
