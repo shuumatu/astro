@@ -10,6 +10,7 @@ import type {
   SkyWorkerResponse,
 } from './types'
 import { SkyMapError } from './types'
+import type { TonightRequest, TonightResult } from '../tonight/types'
 
 type PendingRequest = {
   resolve: (response: SkyWorkerResponse) => void
@@ -21,6 +22,7 @@ type SkyWorkerRequestPayload =
   | Omit<Extract<SkyWorkerRequest, { type: 'calculate' }>, 'requestId'>
   | Omit<Extract<SkyWorkerRequest, { type: 'search' }>, 'requestId'>
   | Omit<Extract<SkyWorkerRequest, { type: 'star-names' }>, 'requestId'>
+  | Omit<Extract<SkyWorkerRequest, { type: 'plan-tonight' }>, 'requestId'>
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '')
 export const defaultCatalogManifestUrl = `${apiBaseUrl}/astronomy/catalogs/naked-eye/manifest`
@@ -60,6 +62,12 @@ export class SkyMapWorkerClient {
     if (response.type !== 'search-results') {
       throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
     }
+    return response.result
+  }
+
+  async planTonight(parameters: TonightRequest): Promise<TonightResult> {
+    const response = await this.send({ type: 'plan-tonight', parameters })
+    if (response.type !== 'tonight-plan') throw new SkyMapError('WORKER_FAILURE', 'Unexpected worker response')
     return response.result
   }
 

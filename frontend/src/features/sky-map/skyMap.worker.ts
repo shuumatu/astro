@@ -11,6 +11,7 @@ import type {
   SkyWorkerResponse,
 } from './types'
 import { SkyMapError } from './types'
+import { planTonight } from '../tonight/engine'
 
 interface InitializedCatalogs {
   catalog: Awaited<ReturnType<typeof loadSkyCatalog>>
@@ -24,12 +25,15 @@ interface InitializedCatalogs {
 let initializationPromise: Promise<InitializedCatalogs> | null = null
 let skyContentManifestUrl = ''
 const culturePromises = new Map<string, Promise<SkyCulturePack>>()
+let planningGeneration = 0
 
 self.addEventListener('message', (event: MessageEvent<SkyWorkerRequest>) => {
   void handleRequest(event.data)
 })
 
 async function handleRequest(request: SkyWorkerRequest): Promise<void> {
+  const generation = request.type === 'plan-tonight' || request.type === 'initialize'
+    ? ++planningGeneration : planningGeneration
   try {
     if (request.type === 'initialize') {
       skyContentManifestUrl = request.skyContentManifestUrl
@@ -61,6 +65,21 @@ async function handleRequest(request: SkyWorkerRequest): Promise<void> {
       throw new SkyMapError('CATALOG_NOT_READY', 'The sky catalog has not been initialized')
     }
     const initialized = await initializationPromise
+    if (request.type === 'plan-tonight') {
+      const culture = await loadCulture(initialized, request.parameters.cultureId)
+      const result = await planTonight(
+        initialized.catalog.catalog, culture, initialized.featuredPatterns, request.parameters,
+        {
+          catalogVersion: initialized.catalog.manifest.version,
+          skyContentVersion: initialized.skyContentManifest.version,
+          cancelled: () => generation !== planningGeneration,
+          yieldControl: () => new Promise((resolve) => setTimeout(resolve, 0)),
+        },
+      )
+      if (generation !== planningGeneration) throw new SkyMapError('CALCULATION_CANCELLED', 'Observing request superseded')
+      post({ type: 'tonight-plan', requestId: request.requestId, result })
+      return
+    }
     if (request.type === 'search') {
       const culture = await loadCulture(initialized, request.parameters.cultureId)
       post({

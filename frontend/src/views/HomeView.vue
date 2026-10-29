@@ -21,6 +21,7 @@ const pathways = [
         <h1 id="home-heading">{{ t('theme.titleFirst') }}<br><span>{{ t('theme.titleSecond') }}</span></h1>
         <p class="hero-copy">{{ t('theme.description') }}</p>
         <div class="hero-actions">
+          <RouterLink class="button secondary" to="/tonight"><Sparkles :size="17" aria-hidden="true" />{{ t('nav.tonight') }}</RouterLink>
           <RouterLink class="button primary" to="/demos">{{ t('home.start') }}<ArrowUpRight :size="18" aria-hidden="true" /></RouterLink>
           <RouterLink class="button secondary" to="/sky-map"><ScanLine :size="17" aria-hidden="true" />{{ t('theme.openSky') }}</RouterLink>
         </div>

@@ -1,3 +1,5 @@
+import type { TonightRequest, TonightResult } from '../tonight/types'
+
 export type AstrometrySource = 'GAIA_DR3' | 'HIPPARCOS_2' | 'HIPPARCOS'
 
 export interface CatalogSource {
@@ -386,12 +388,14 @@ export type SkyWorkerRequest =
   | { type: 'calculate'; requestId: string; parameters: SkyCalculationParameters }
   | { type: 'search'; requestId: string; parameters: SkySearchParameters }
   | { type: 'star-names'; requestId: string; parameters: StarNamePresentationParameters }
+  | { type: 'plan-tonight'; requestId: string; parameters: TonightRequest }
 
 export type SkyWorkerResponse =
   | { type: 'ready'; requestId: string; catalog: CatalogSummary }
   | { type: 'frame'; requestId: string; frame: SkyFrame; calculationDurationMs: number }
   | { type: 'search-results'; requestId: string; result: SkySearchResult }
   | { type: 'star-names'; requestId: string; result: StarNamePresentation }
+  | { type: 'tonight-plan'; requestId: string; result: TonightResult }
   | { type: 'error'; requestId: string; code: SkyMapErrorCode; message: string }
 
 export type SkyMapErrorCode =
@@ -404,6 +408,7 @@ export type SkyMapErrorCode =
   | 'SKY_CONTENT_INTEGRITY_FAILED'
   | 'INVALID_PARAMETERS'
   | 'WORKER_FAILURE'
+  | 'CALCULATION_CANCELLED'
 
 export class SkyMapError extends Error {
   constructor(

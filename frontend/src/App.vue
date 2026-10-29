@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { BookOpen, Compass, Moon, Orbit, ScanLine, Sun } from 'lucide-vue-next'
@@ -8,6 +8,25 @@ import { useTheme } from './composables/useTheme'
 const { t, locale } = useI18n()
 const route = useRoute()
 const { theme, toggleTheme } = useTheme()
+const siteHeader = ref<HTMLElement | null>(null)
+let headerObserver: ResizeObserver | null = null
+
+onMounted(() => {
+  const header = siteHeader.value
+  if (!header) return
+  const updateHeaderHeight = () => {
+    document.documentElement.style.setProperty('--site-header-height', `${Math.ceil(header.getBoundingClientRect().height)}px`)
+  }
+  updateHeaderHeight()
+  if (typeof ResizeObserver !== 'undefined') {
+    headerObserver = new ResizeObserver(updateHeaderHeight)
+    headerObserver.observe(header)
+  }
+})
+onBeforeUnmount(() => {
+  headerObserver?.disconnect()
+  document.documentElement.style.removeProperty('--site-header-height')
+})
 const isSkyMapRoute = computed(() => route.path === '/sky-map')
 const isDemoRoute = computed(() => route.path.startsWith('/demos/'))
 const locales = [
@@ -19,6 +38,7 @@ const navigation = [
   { to: '/explore', key: 'explore', icon: Compass },
   { to: '/demos', key: 'demos', icon: Orbit },
   { to: '/sky-map', key: 'skyMap', icon: ScanLine },
+  { to: '/tonight', key: 'tonight', icon: Moon },
   { to: '/learn/sky', key: 'skyLearning', icon: Compass }
 ]
 
@@ -32,7 +52,7 @@ function switchLocale(localeCode: string) {
 
 <template>
   <a class="skip-link" href="#main-content">{{ t('theme.skip') }}</a>
-  <header class="site-header">
+  <header ref="siteHeader" class="site-header">
     <RouterLink class="brand" to="/" :aria-label="t('theme.home')">
       <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
         <ellipse cx="20" cy="20" rx="18" ry="10" transform="rotate(-38 20 20)" stroke="currentColor" stroke-width=".8" />

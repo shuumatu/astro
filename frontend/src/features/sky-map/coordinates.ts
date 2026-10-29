@@ -18,6 +18,7 @@ import type {
   EquatorialCoordinate,
   FeaturedPatternPack,
   HorizontalCoordinate,
+  ObserverLocation,
   SkyCulturePack,
   SolarSystemBodyId,
   SkyCalculationParameters,
@@ -77,6 +78,42 @@ interface PreparedSkyCulture {
   starIndexes: Int32Array
   artworkAnchorStarIndexes: Int32Array
   localizedByLanguage: Map<string, LocalizedSkyCulture>
+}
+
+/** Unfiltered positions shared by the sky renderer and the observing planner. */
+export class SkyCoordinateSampler {
+  private readonly prepared: PreparedSkyCatalog
+
+  constructor(catalog: SkyCatalog) {
+    this.prepared = prepareSkyCatalog(catalog)
+  }
+
+  at(date: Date, location: ObserverLocation, applyRefraction = true) {
+    const observer = new Observer(location.latitudeDeg, location.longitudeDeg, location.elevationMeters)
+    const rotation = Rotation_EQJ_HOR(date, observer).rot
+    const year = julianYear(date)
+    const starCache = new Map<string, HorizontalCoordinate>()
+    const bodyCache = new Map<SolarSystemBodyId, ComputedSolarSystemBody>()
+    return {
+      star: (id: string): HorizontalCoordinate | null => {
+        const cached = starCache.get(id)
+        if (cached) return cached
+        const index = this.prepared.starIndexById.get(id)
+        if (index === undefined) return null
+        const position = preparedStarToHorizontal(this.prepared.astrometry, index, year, rotation, applyRefraction)
+        starCache.set(id, position)
+        return position
+      },
+      body: (id: SolarSystemBodyId): ComputedSolarSystemBody => {
+        let value = bodyCache.get(id)
+        if (!value) {
+          value = calculateSolarSystemBody(id, date, observer, applyRefraction)
+          bodyCache.set(id, value)
+        }
+        return value
+      },
+    }
+  }
 }
 
 export class SkyFrameCalculator {
@@ -422,32 +459,29 @@ function calculateSolarSystemBodies(
   applyRefraction: boolean,
 ): ComputedSolarSystemBody[] {
   return SOLAR_SYSTEM_BODY_IDS
-    .map((id): ComputedSolarSystemBody => {
-      const body = ASTRONOMY_BODY_BY_ID[id]
-      const equatorial = Equator(body, date, observer, true, true)
-      const horizontal = Horizon(
-        date,
-        observer,
-        equatorial.ra,
-        equatorial.dec,
-        applyRefraction ? 'normal' : '',
-      )
-      const illumination = Illumination(body, date)
-
-      return {
-        id,
-        azimuthDeg: horizontal.azimuth,
-        altitudeDeg: horizontal.altitude,
-        rightAscensionHours: equatorial.ra,
-        declinationDeg: equatorial.dec,
-        visualMagnitude: illumination.mag,
-        phaseAngleDeg: illumination.phase_angle,
-        phaseFraction: illumination.phase_fraction,
-        distanceAu: equatorial.dist,
-        ringTiltDeg: illumination.ring_tilt ?? null,
-      }
-    })
+    .map((id) => calculateSolarSystemBody(id, date, observer, applyRefraction))
     .filter((body) => body.altitudeDeg >= minimumAltitudeDeg)
+}
+
+function calculateSolarSystemBody(
+  id: SolarSystemBodyId, date: Date, observer: Observer, applyRefraction: boolean,
+): ComputedSolarSystemBody {
+  const body = ASTRONOMY_BODY_BY_ID[id]
+  const equatorial = Equator(body, date, observer, true, true)
+  const horizontal = Horizon(date, observer, equatorial.ra, equatorial.dec, applyRefraction ? 'normal' : '')
+  const illumination = Illumination(body, date)
+  return {
+    id,
+    azimuthDeg: horizontal.azimuth,
+    altitudeDeg: horizontal.altitude,
+    rightAscensionHours: equatorial.ra,
+    declinationDeg: equatorial.dec,
+    visualMagnitude: illumination.mag,
+    phaseAngleDeg: illumination.phase_angle,
+    phaseFraction: illumination.phase_fraction,
+    distanceAu: equatorial.dist,
+    ringTiltDeg: illumination.ring_tilt ?? null,
+  }
 }
 
 export function propagateIcrs(star: StarRecord, targetYear: number): CartesianVector {

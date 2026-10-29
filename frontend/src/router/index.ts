@@ -4,7 +4,10 @@ const router = createRouter({
   history: createWebHistory(),
   scrollBehavior(to, _from, savedPosition) {
     if (savedPosition) return savedPosition
-    if (to.hash) return { el: to.hash, top: 24 }
+    if (to.hash) {
+      const headerHeight = document.querySelector('.site-header')?.getBoundingClientRect().height ?? 0
+      return { el: to.hash, top: headerHeight + 24 }
+    }
     return { top: 0, left: 0 }
   },
   routes: [
@@ -22,6 +25,7 @@ const router = createRouter({
     { path: '/demos', name: 'demos', component: () => import('../views/DemosView.vue') },
     { path: '/demos/:slug', name: 'demo-detail', component: () => import('../views/DemoDetailView.vue') },
     { path: '/sky-map', component: () => import('../views/SkyMapView.vue') },
+    { path: '/tonight', name: 'tonight', component: () => import('../views/TonightView.vue') },
     { path: '/learn/sky', name: 'sky-learning', component: () => import('../views/SkyLearningView.vue') },
     { path: '/learn/chinese', name: 'chinese-learning', component: () => import('../views/SkyLearningView.vue') },
     { path: '/learn/sky/session', name: 'sky-learning-session', component: () => import('../views/SkyLearningView.vue') },

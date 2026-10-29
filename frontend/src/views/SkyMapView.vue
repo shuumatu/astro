@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ChevronDown, PanelLeftClose, PanelLeftOpen, Triangle } from 'lucide-vue-next'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import { parseSkyMapLink, selectionForObservingLink } from '../features/tonight/skyMapLink'
+import type { SkyMapLink } from '../features/tonight/skyMapLink'
 import { loadCatalogEntry } from '../features/catalog/api'
 import CatalogInfoCard from '../features/catalog/CatalogInfoCard.vue'
 import { catalogIdentityForSelection, catalogSelectionAction } from '../features/catalog/catalogIdentity'
@@ -54,6 +57,12 @@ const DEFAULT_OBSERVER_PRESET: ObserverPresetId = 'shenzhen'
 const defaultObserverLocation = observerLocationForPreset(DEFAULT_OBSERVER_PRESET)
 
 const { t, locale } = useI18n({ useScope: 'global' })
+const route = useRoute()
+const observingLinkError = ref('')
+const observingTimeZone = ref('')
+const deviceTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+let pendingObservingLink: SkyMapLink | null = null
+let linkedInstant: { local: string; utc: string } | null = null
 const controls = reactive({
   observedAt: localDateTimeValue(new Date()),
   ...defaultObserverLocation,
@@ -105,7 +114,7 @@ let pendingFeaturedPatternId = ''
 
 const statusText = computed(() => t(`skyMap.status.${status.value}`))
 const observedAtLabel = computed(() => frame.value
-  ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' })
+  ? new Intl.DateTimeFormat(locale.value, { timeZone: observingTimeZone.value || undefined, dateStyle: 'medium', timeStyle: 'short' })
     .format(new Date(frame.value.observedAt))
   : '—')
 const visibleStarCount = computed(() => frame.value
@@ -171,7 +180,10 @@ watch(
   () => { void loadSelectedStarNames() },
   { flush: 'sync' },
 )
-watch(() => controls.observedAt, requestCalculation, { flush: 'sync' })
+watch(() => controls.observedAt, () => {
+  if (linkedInstant && linkedInstant.local !== controls.observedAt) linkedInstant = null
+  requestCalculation()
+}, { flush: 'sync' })
 watch(() => [...controls.enabledFeaturedPatternIds], requestCalculation, { flush: 'sync' })
 watch(() => [controls.cultureId, locale.value] as const, () => {
   requestCalculation()
@@ -189,6 +201,7 @@ watch(
 )
 
 onMounted(() => {
+  applyObservingLink()
   timeWheelBatcher = new ObservationTimeWheelBatcher(applyObservationMinuteDelta)
   window.addEventListener('wheel', handlePageWheel, { passive: false })
   document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -197,6 +210,33 @@ onMounted(() => {
     && typeof HTMLElement.prototype.requestFullscreen === 'function'
   void initialize()
 })
+watch(() => route.query, applyObservingLink)
+
+function applyObservingLink(): void {
+  observingLinkError.value = ''
+  pendingObservingLink = null
+  linkedInstant = null
+  observingTimeZone.value = ''
+  try {
+    const link = parseSkyMapLink(route.query)
+    if (!link) return
+    const local = localDateTimeValue(new Date(link.at))
+    linkedInstant = { local, utc: link.at }
+    Object.assign(controls, link.observer, { cultureId: link.cultureId, observedAt: local, magnitudeLimit: 6.5, applyRefraction: true, showSolarSystemBodies: true,
+      enabledFeaturedPatternIds: link.targetType === 'asterism' ? [link.targetId] : [] })
+    pendingObservingLink = link
+    observingTimeZone.value = link.timeZone
+    activeTimePreset.value = 'custom'
+    activeLocationPreset.value = 'custom'
+    requestCalculation()
+  } catch (error) {
+    observingLinkError.value = error instanceof Error ? error.message : String(error)
+  }
+}
+
+const observingTimeLabel = computed(() => observingTimeZone.value && frame.value
+  ? new Intl.DateTimeFormat(locale.value, { timeZone: observingTimeZone.value, dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(frame.value.observedAt)) + ` (${observingTimeZone.value})`
+  : '')
 onBeforeUnmount(() => {
   window.removeEventListener('wheel', handlePageWheel)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
@@ -265,6 +305,21 @@ function applyCalculationResult(result: SkyCalculationResult): void {
     : null
   calculationDurationMs.value = result.calculationDurationMs
   status.value = 'ready'
+  const link = pendingObservingLink
+  if (link && link.at === result.frame.observedAt && link.cultureId === result.frame.cultureId
+    && Object.entries(link.observer).every(([key, value]) => result.frame.observer[key as keyof typeof link.observer] === value)) {
+    const selection = selectionForObservingLink(link, result.frame)
+    if (selection) void nextTick(() => {
+      if (pendingObservingLink === link && frame.value === result.frame) {
+        pendingObservingLink = null
+        locateTarget(selection)
+      }
+    })
+    else {
+      pendingObservingLink = null
+      observingLinkError.value = t('skyMap.targetNotVisible', { id: link.targetId })
+    }
+  }
   if (pendingFeaturedPatternId) {
     const id = pendingFeaturedPatternId
     pendingFeaturedPatternId = ''
@@ -279,7 +334,7 @@ function applyCalculationResult(result: SkyCalculationResult): void {
 }
 
 function currentCalculationParameters(): SkyCalculationParameters | null {
-  const observedAt = new Date(controls.observedAt)
+  const observedAt = new Date(linkedInstant?.local === controls.observedAt ? linkedInstant.utc : controls.observedAt)
   const latitudeDeg = controls.latitudeDeg
   const longitudeDeg = controls.longitudeDeg
   const elevationMeters = controls.elevationMeters
@@ -615,6 +670,12 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
       </div>
     </header>
 
+    <div class="observing-link-note">
+      <RouterLink to="/tonight">{{ t('nav.tonight') }}</RouterLink>
+      <span v-if="observingTimeLabel">{{ observingTimeLabel }}</span>
+    </div>
+    <p v-if="observingLinkError" class="observing-link-error" role="alert">{{ observingLinkError }}</p>
+
     <div class="sky-map-workspace" :class="{ 'controls-collapsed': controlsCollapsed }">
       <aside class="sky-controls">
         <form @submit.prevent>
@@ -628,6 +689,7 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
                 required
                 @input="useCustomTime"
               >
+              <small v-if="observingTimeZone && observingTimeZone !== deviceTimeZone" class="device-time-note">{{ locale.startsWith('zh') ? `输入框使用设备时区 ${deviceTimeZone}；观测地时间见页面上方。` : `Input uses device time (${deviceTimeZone}); observing-location time is shown above.` }}</small>
             </label>
             <div class="time-presets" role="group" :aria-label="t('skyMap.quickTimes')">
               <button
@@ -872,6 +934,9 @@ function formatSelectedDataFor(selection: Extract<SkyObjectSelection, { kind: 's
 </template>
 
 <style scoped>
+.observing-link-note { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0 0 1rem; font-size: .8rem; color: var(--color-text-muted); }
+.observing-link-note a { color: var(--color-gold); }
+.observing-link-error { color: var(--color-danger, #e6a08d); font-size: .85rem; }
 .sky-map-page { padding: 1rem 0 2rem; }
 
 @media (min-width: 901px) {
